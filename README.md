@@ -1,4 +1,4 @@
 store
 =====
 
-An e-commerce plugin to WordPress
+An e-commerce plugin to WordPress.
