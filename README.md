@@ -1,5 +1,5 @@
 ```
-STORE: A Wordpress e-commerce toolkit by Funkhaus
+STORE: An e-commerce toolkit for Wordpress
       ___ _   _ _  _ _  __
      | __| | | | \| | |/ /
      | _|| |_| | .` | ' <
