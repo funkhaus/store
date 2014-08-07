@@ -24,6 +24,10 @@
 		}
 		add_action( 'admin_init', 'store_admin_scripts' );
 
+	/*
+	 * Add Meta boxes
+	 */
+		include_once( trailingslashit( pp() ) . 'ui/store-metaboxes.php');
 
 	/*
 	 * Add top-level menu page for 'Store'
