@@ -61,8 +61,8 @@
 			// Labels
 			$labels = array(
 	            'name'					=> __('Products', 'products'),
-	            'singular_name'			=> __('Products', 'products'),
-	            'add_new'				=> __('Add New Products', 'products'),
+	            'singular_name'			=> __('Product', 'products'),
+	            'add_new'				=> __('Add New Product', 'products'),
 	            'add_new_item'			=> __('Add New Product', 'products'),
 	            'edit'					=> __('Edit', 'products'),
 	            'edit_item'				=> __('Edit Product', 'products'),
@@ -91,7 +91,6 @@
 			        'editor',
 			        'excerpt',
 			        'thumbnail',
-			        'page-attributes'
 			    ),
 				'rewrite'			 => array(
 					'slug'	=> 'store/products',

@@ -26,7 +26,7 @@
 				'show_in_nav_menus'	=> true,
 				'show_admin_column' => true,
 				'query_var'         => true,
-				'rewrite'           => array( 'slug' => 'storecategory' ),
+				'rewrite'           => array( 'slug' => 'store/category' ),
 			);
 			register_taxonomy( 'store-category', array( 'products' ), $args );
 
