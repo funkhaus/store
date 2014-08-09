@@ -14,4 +14,7 @@
 	// Setup taxonomies
 	include_once( trailingslashit( pp() ) . 'core/store-taxonomy.php' );
 
+	// Hook saving functionality
+	include_once( trailingslashit( pp() ) . 'core/store-save-products.php' );
+
 ?>

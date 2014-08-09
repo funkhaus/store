@@ -9,6 +9,9 @@ var store = {
     	// Update options input names
 		store.updateOptionsNames();
 		store.toggleMetaVariations();
+		store.disableVariations();
+		store.toggleDisabling();
+
     },
 
 	updateOptionsNames: function(){
@@ -28,6 +31,36 @@ var store = {
 			jQuery('#store-variation-table-wrapper').toggleClass('hidden');
 			jQuery('#store-edit-options').toggleClass('hidden');
 		});
+
+	},
+
+	toggleDisabling: function(){
+
+		jQuery('input#store-enable-variant').change(function(){
+			store.disableVariations();
+		});
+
+	},
+
+	disableVariations: function(){
+
+		if ( ! jQuery('input#store-enable-variant').length ) return;
+
+		if ( ! jQuery('input#store-enable-variant').attr('checked') ) {
+
+			jQuery('#wpbody-content input, #wpbody-content textarea').not('#store-enable-variant').each(function(){
+				jQuery(this).attr('disabled', false);
+				jQuery('.postbox, .postarea, #titlediv').not('#store_enable_meta').css('opacity', 0.5);
+			});
+
+		} else {
+
+			jQuery('#wpbody-content input, #wpbody-content textarea').not('#store-enable-variant').each(function(){
+				jQuery(this).attr('disabled');
+				jQuery('.postbox, .postarea, #titlediv').not('#store_enable_meta').css('opacity', 1);
+			});
+
+		}
 
 	}
 
