@@ -57,8 +57,6 @@
 
 	};
 
-
-
 	
 /*
  * @Description: Get all variants of a product

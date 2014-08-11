@@ -145,7 +145,8 @@
 			        'editor',
 			        'excerpt',
 			        'thumbnail',
-			        'page-attributes'
+			        'page-attributes',
+			        'author'
 			    ),
 				'rewrite'			 => array(
 					'slug'	=> 'orders',

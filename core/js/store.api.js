@@ -12,8 +12,12 @@ var storeAPI = {
 	 */
 	addToCart: function(data){
 
+		// The PHP AJAX action hook to call
+		data['action'] = 'add_to_cart';
+
+		// Submit to PHP		
 		var jqxhr = jQuery.post( storeAPI.ajaxURL, data, function(results) {
-			console.log('success', results);
+			console.log(results);
 		});
 
 		return jqxhr;

@@ -21,10 +21,13 @@
 	include_once( trailingslashit( pp() ) . 'core/store-cart-functions.php' );	
 	
 	// Add cart AJAX functions
-	include_once( trailingslashit( pp() ) . 'core/store-cart-functions.php' );		
+	include_once( trailingslashit( pp() ) . 'core/store-ajax-api.php' );		
 	
 	// Setup user meta functions
 	include_once( trailingslashit( pp() ) . 'core/store-user-meta.php' );			
+	
+	// Setup store conditionals functions
+	include_once( trailingslashit( pp() ) . 'core/store-conditionals.php' );				
 
 	/*
 	 * Enqueue JavaScript API Scripts
