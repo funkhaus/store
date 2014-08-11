@@ -37,7 +37,7 @@ var store_admin = {
 	toggleDisabling: function(){
 
 		jQuery('input#store-enable-variant').change(function(){
-			store.disableVariations();
+			store_admin.disableVariations();
 		});
 
 	},

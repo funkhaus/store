@@ -156,23 +156,23 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 			return false;			
 		}
 		
-		// If cart ID set, then try to use that cart ID
-		if( isset($cart_id) ) {
-			$cart_id = store_get_cart();
-		}
-		
-		// If set cart has expired, use active cart
-		if( !store_is_cart_available($cart_id) ) {
-			$cart_id = store_get_active_cart_id();
+		// Test cart is set and is still avaible
+		if( !empty($cart_id) && store_is_cart_available($cart_id) ) {
+			// Cart is set, and is avaible, use it!
+			$cart_id = $cart_id;
+			
+		} else {
+			// Fallback to active cart
+			$cart_id = store_get_active_cart_id();						
 		}
 
 		// If still no cart, make one!
 		if( empty($cart_id) ) {
-			$active_cart_id = store_create_active_cart($active_cart_id);
+			$cart_id = store_create_active_cart($cart_id);
 		}
 
 		// Get cart product meta as array
-		$products = get_post_meta($active_cart_id, '_store_cart_products', true);
+		$products = get_post_meta($cart_id, '_store_cart_products', true);
 
 		// Add product ID to array
 		$products[$product_id] = array(
@@ -181,7 +181,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 		);
 
 		// Save meta array, return result
-		return update_post_meta($active_cart_id, '_store_cart_products', $products);
+		return update_post_meta($cart_id, '_store_cart_products', $products);
 		die;
 	};
 	
