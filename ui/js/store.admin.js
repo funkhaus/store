@@ -1,16 +1,16 @@
-var store = {
+var store_admin = {
 
 	// Globals
-	homeURL: store_vars.homeURL,
+	homeURL: store_admin_vars.homeURL,
 
 	// Init things
     init: function() {
     	
     	// Update options input names
-		store.updateOptionsNames();
-		store.toggleMetaVariations();
-		store.disableVariations();
-		store.toggleDisabling();
+		store_admin.updateOptionsNames();
+		store_admin.toggleMetaVariations();
+		store_admin.disableVariations();
+		store_admin.toggleDisabling();
 
     },
 
@@ -68,6 +68,6 @@ var store = {
 
 jQuery(document).ready(function(){
 
-    store.init();
+    store_admin.init();
 
 });

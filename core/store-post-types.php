@@ -33,6 +33,7 @@
 				'menu_icon'			 => 'dashicons-products',
 				'hierarchical'       => true,
 				'menu_position'      => 20,
+				'exclude_from_search'=> true,
 			    'supports'			 => array(
 			        'title',
 			        'editor',
@@ -44,7 +45,7 @@
 					'slug'	=> 'store'
 				)
 			);
-			register_post_type( 'store', $args );
+			register_post_type( 'store', $args ); // We could make the post type a setting that could be changed/filtered?
 
 		}
 		add_action( 'init', 'create_post_type_store' );
@@ -82,7 +83,7 @@
 				'show_in_menu'       => 'store/store-admin.php',
 				'query_var'          => true,
 				'capability_type'    => 'page',
-				'has_archive'        => true,
+				'has_archive'        => false,
 				'menu_icon'			 => 'dashicons-tag',
 				'hierarchical'       => true,
 				'menu_position'      => 20,
@@ -93,10 +94,10 @@
 			        'thumbnail',
 			    ),
 				'rewrite'			 => array(
-					'slug'	=> 'store/products',
+					'slug'	=> 'products',
 				)
 			);
-			register_post_type( 'products', $args );		
+			register_post_type( 'products', $args ); // We could make the post type a setting that could be changed/filtered?
 			
 		}
 		add_action( 'init', 'create_post_type_products' );
@@ -133,10 +134,11 @@
 				'publicly_queryable' => true,
 				'show_in_menu'       => 'store/store-admin.php',
 				'query_var'          => true,
-				'capability_type'    => 'page',
-				'has_archive'        => true,
+				'capability_type'    => 'post',
+				'has_archive'        => false,
 				'menu_icon'			 => 'dashicons-cart',
 				'hierarchical'       => true,
+				'exclude_from_search'=> true,				
 				'menu_position'      => 20,
 			    'supports'			=> array(
 			        'title',
@@ -146,10 +148,10 @@
 			        'page-attributes'
 			    ),
 				'rewrite'			 => array(
-					'slug'	=> 'store/orders',
+					'slug'	=> 'orders',
 				)
 			);
-			register_post_type( 'orders', $args );		
+			register_post_type( 'orders', $args ); // We could make the post type a setting that could be changed/filtered?
 			
 		}
 		add_action( 'init', 'create_post_type_orders' );

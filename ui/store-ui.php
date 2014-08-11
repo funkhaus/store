@@ -6,23 +6,22 @@
 	 * Plugin Scripts and styles
 	 */
 		function store_admin_scripts() {
-			wp_register_style( 'store_css', plugins_url( 'ui/css/store.admin.css', dirname(__FILE__) ));
-			wp_register_script( 'store_js', plugins_url( 'ui/js/store.admin.js', dirname(__FILE__) ));
+			wp_register_style( 'store_admin_css', plugins_url( 'ui/css/store.admin.css', dirname(__FILE__) ));
+			wp_register_script( 'store_admin_js', plugins_url( 'ui/js/store.admin.js', dirname(__FILE__) ));
 
-			if ( is_admin() ) {
-				wp_enqueue_style( 'store_css');
-				wp_enqueue_script( 'store_js');
-			}
+			wp_enqueue_style( 'store_admin_css');
+			wp_enqueue_script( 'store_admin_js');
 
 	        // Setup JS variables in scripts
-			wp_localize_script('store_js', 'store_vars', 
+			wp_localize_script('store_admin_js', 'store_admin_vars', 
 				array(
 					'homeURL'		=> home_url()
 				)
 			);
 
 		}
-		add_action( 'admin_init', 'store_admin_scripts' );
+		add_action( 'admin_enqueue_scripts', 'store_admin_scripts' );
+
 
 	/*
 	 * Add Meta boxes

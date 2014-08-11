@@ -25,5 +25,13 @@
 
 	// Get UI
 	include_once( trailingslashit( pp() ) . 'ui/store-ui.php');
+	
+	// Flush Permalinks rules on activation of plugin
+	function store_flush_rewrite_rules() {
+	
+	    // ATTENTION: This is *only* done during plugin activation hook.
+	    flush_rewrite_rules();
+	}
+	register_activation_hook( trailingslashit( pp() ), 'store_flush_rewrite_rules' );
 
 ?>
