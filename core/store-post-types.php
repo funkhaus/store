@@ -94,19 +94,11 @@
 			        'thumbnail',
 			    ),
 				'rewrite'			 => array(
-<<<<<<< HEAD
 					'slug'	=> 'product',
 				)
 			);
 			register_post_type( 'product', $args ); // We could make the post type a setting that could be changed/filtered?
 
-=======
-					'slug'	=> 'products',
-				)
-			);
-			register_post_type( 'products', $args ); // We could make the post type a setting that could be changed/filtered?
-			
->>>>>>> FETCH_HEAD
 		}
 		add_action( 'init', 'create_post_type_products' );
 
@@ -149,12 +141,6 @@
 			    'supports'			=> array(
 			        'title',
 			        'editor',
-<<<<<<< HEAD
-=======
-			        'excerpt',
-			        'thumbnail',
-			        'page-attributes',
->>>>>>> FETCH_HEAD
 			        'author'
 			    ),
 				'rewrite'			 => array(
@@ -162,10 +148,6 @@
 				)
 			);
 			register_post_type( 'orders', $args ); // We could make the post type a setting that could be changed/filtered?
-<<<<<<< HEAD
 
-=======
-			
->>>>>>> FETCH_HEAD
 		}
 		add_action( 'init', 'create_post_type_orders' );

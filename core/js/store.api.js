@@ -3,11 +3,7 @@ var storeAPI = {
 	// Globals
 	homeURL: store_api_vars.homeURL,
 	ajaxURL: store_api_vars.ajaxURL,
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> FETCH_HEAD
 	/*
 	 * @Description: Add a product to a cart
 	 *
@@ -17,21 +13,14 @@ var storeAPI = {
 	addToCart: function(data){
 
 		// The PHP AJAX action hook to call
-<<<<<<< HEAD
 		data.action = 'add_to_cart';
 
 		// Submit to PHP
-=======
-		data['action'] = 'add_to_cart';
-
-		// Submit to PHP		
->>>>>>> FETCH_HEAD
 		var jqxhr = jQuery.post( storeAPI.ajaxURL, data, function(results) {
 			console.log(results);
 		});
 
 		return jqxhr;
-<<<<<<< HEAD
 	},
 
 	getCartContents: function(){
@@ -44,8 +33,6 @@ var storeAPI = {
 		// Submit to PHP		
 		var jqxhr = jQuery.post( storeAPI.ajaxURL, data);
 		return jqxhr;
-=======
->>>>>>> FETCH_HEAD
 	}
 
 };

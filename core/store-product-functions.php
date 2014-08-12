@@ -17,11 +17,7 @@
 		if ( $product === false ) {
 
 			// if $post is not a product, abort
-<<<<<<< HEAD
 			if ( $post->post_type !== 'product' ) return false;
-=======
-			if ( $post->post_type !== 'products' ) return false;
->>>>>>> FETCH_HEAD
 			$product = $post;
 
 		}
@@ -37,11 +33,7 @@
 		// query children
 	    $args = array(
 			'posts_per_page'   => -1,
-<<<<<<< HEAD
 			'post_type'        => 'product',
-=======
-			'post_type'        => 'products',
->>>>>>> FETCH_HEAD
 			'post_parent'      => $product->ID,
 			'post_status'      => 'any'
 		);
@@ -112,11 +104,7 @@
 			'posts_per_page'   => -1,
 			'orderby'          => 'menu_order',
 			'order'            => 'ASC',
-<<<<<<< HEAD
 			'post_type'        => 'product', // We could make the post type a setting that could be changed/filtered?
-=======
-			'post_type'        => 'products', // We could make the post type a setting that could be changed/filtered?
->>>>>>> FETCH_HEAD
 			'post_parent'      => $parent_id,
 			'post_status'      => 'publish'
 		);
