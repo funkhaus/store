@@ -28,7 +28,7 @@
 				'query_var'         => true,
 				'rewrite'           => array( 'slug' => 'store/category' ),
 			);
-			register_taxonomy( 'store-category', array( 'products' ), $args );
+			register_taxonomy( 'store-category', array( 'product' ), $args );
 
 		}
 		add_action( 'init', 'store_create_taxonomy_category', 0 );

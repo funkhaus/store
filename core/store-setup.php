@@ -42,6 +42,19 @@
 
 			}
 
+			// If no api page, create one
+			$args['name'] = 'api';
+			if ( ! get_posts($args) ) {
+
+				$post['post_name'] = 'api';
+				$post['post_title'] = 'api';
+				wp_insert_post( $post );
+
+			}
+
+			// Flush permalinks
+		    flush_rewrite_rules();
+
 		}
 		register_activation_hook( trailingslashit( pp() ) . 'store.php', 'store_activation' );
 

@@ -4,7 +4,7 @@
 	 * Make required store pages
 	 */
 		function create_post_type_store() {
-			
+
 			// Labels
 			$labels = array(
 	            'name'					=> __('Store', 'store'),
@@ -20,7 +20,7 @@
 	            'not_found'				=> __('No Store Pages found', 'store'),
 	            'not_found_in_trash'	=> __('No Store Pages found in Trash', 'store')
 			);
-	
+
 			// Create store post type
 			$args = array(
 				'labels'             => $labels,
@@ -33,6 +33,7 @@
 				'menu_icon'			 => 'dashicons-products',
 				'hierarchical'       => true,
 				'menu_position'      => 20,
+				'exclude_from_search'=> true,
 			    'supports'			 => array(
 			        'title',
 			        'editor',
@@ -44,7 +45,7 @@
 					'slug'	=> 'store'
 				)
 			);
-			register_post_type( 'store', $args );
+			register_post_type( 'store', $args ); // We could make the post type a setting that could be changed/filtered?
 
 		}
 		add_action( 'init', 'create_post_type_store' );
@@ -57,23 +58,23 @@
 	 * Make product post type
 	 */
 		function create_post_type_products() {
-			
+
 			// Labels
 			$labels = array(
-	            'name'					=> __('Products', 'products'),
-	            'singular_name'			=> __('Product', 'products'),
-	            'add_new'				=> __('Add New Product', 'products'),
-	            'add_new_item'			=> __('Add New Product', 'products'),
-	            'edit'					=> __('Edit', 'products'),
-	            'edit_item'				=> __('Edit Product', 'products'),
-	            'new_item'				=> __('New Product', 'products'),
-	            'view'					=> __('View Products', 'products'),
-	            'view_item'				=> __('View Product', 'products'),
-	            'search_items'			=> __('Search Products', 'products'),
-	            'not_found'				=> __('No Products found', 'products'),
-	            'not_found_in_trash'	=> __('No Products found in Trash', 'products')
+	            'name'					=> __('Products', 'product'),
+	            'singular_name'			=> __('Product', 'product'),
+	            'add_new'				=> __('Add New Product', 'product'),
+	            'add_new_item'			=> __('Add New Product', 'product'),
+	            'edit'					=> __('Edit', 'product'),
+	            'edit_item'				=> __('Edit Product', 'product'),
+	            'new_item'				=> __('New Product', 'product'),
+	            'view'					=> __('View Products', 'product'),
+	            'view_item'				=> __('View Product', 'product'),
+	            'search_items'			=> __('Search Products', 'product'),
+	            'not_found'				=> __('No Products found', 'product'),
+	            'not_found_in_trash'	=> __('No Products found in Trash', 'product')
 			);
-	
+
 			// Create products post type
 			$args = array(
 				'labels'             => $labels,
@@ -82,7 +83,7 @@
 				'show_in_menu'       => 'store/store-admin.php',
 				'query_var'          => true,
 				'capability_type'    => 'page',
-				'has_archive'        => true,
+				'has_archive'        => false,
 				'menu_icon'			 => 'dashicons-tag',
 				'hierarchical'       => true,
 				'menu_position'      => 20,
@@ -93,23 +94,21 @@
 			        'thumbnail',
 			    ),
 				'rewrite'			 => array(
-					'slug'	=> 'store/products',
+					'slug'	=> 'product',
 				)
 			);
-			register_post_type( 'products', $args );		
-			
+			register_post_type( 'product', $args ); // We could make the post type a setting that could be changed/filtered?
+
 		}
 		add_action( 'init', 'create_post_type_products' );
 
 
 
-	
-	
 	/*
 	 * Make orders/carts post type
 	 */
 		function create_post_type_orders() {
-			
+
 			// Labels
 			$labels = array(
 	            'name'					=> __('Orders', 'orders'),
@@ -133,23 +132,22 @@
 				'publicly_queryable' => true,
 				'show_in_menu'       => 'store/store-admin.php',
 				'query_var'          => true,
-				'capability_type'    => 'page',
-				'has_archive'        => true,
+				'capability_type'    => 'post',
+				'has_archive'        => false,
 				'menu_icon'			 => 'dashicons-cart',
 				'hierarchical'       => true,
+				'exclude_from_search'=> true,				
 				'menu_position'      => 20,
 			    'supports'			=> array(
 			        'title',
 			        'editor',
-			        'excerpt',
-			        'thumbnail',
-			        'page-attributes'
+			        'author'
 			    ),
 				'rewrite'			 => array(
-					'slug'	=> 'store/orders',
+					'slug'	=> 'orders',
 				)
 			);
-			register_post_type( 'orders', $args );		
-			
+			register_post_type( 'orders', $args ); // We could make the post type a setting that could be changed/filtered?
+
 		}
 		add_action( 'init', 'create_post_type_orders' );

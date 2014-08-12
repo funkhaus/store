@@ -1,15 +1,14 @@
 <?php
-
 /*
  * Add custom metabox to the new/edit page
  */
  	function store_add_variations(){
  		global $post;
-	 	add_meta_box("store_price_meta", "Stock/Price", "store_price_meta", "products", "side", "default");
+	 	add_meta_box("store_price_meta", "Stock/Price", "store_price_meta", "product", "side", "default");
 	 	if ( $post->post_parent != 0 ) {
-		 	add_meta_box("store_enable_meta", "Enable Editing", "store_enable_meta", "products", "side", "high");
+		 	add_meta_box("store_enable_meta", "Enable Editing", "store_enable_meta", "product", "side", "high");
 		} else {
-		 	add_meta_box("store_options_meta", "Options/Variations", "store_options_meta", "products", "normal", "low");
+		 	add_meta_box("store_options_meta", "Options/Variations", "store_options_meta", "product", "normal", "low");
 		}
 	}
  	add_action("add_meta_boxes", "store_add_variations");
@@ -22,13 +21,13 @@
 	    $args = array(
 			'posts_per_page'	=> -1,
 			'orderby'			=> 'title',
-			'post_type'			=> 'products',
+			'post_type'			=> 'product',
 			'post_parent'		=> $post->ID
 		);
 		$variations = get_posts($args);
 
 		$meta = get_post_meta($post->ID);
-		
+
 		// Build empty options meta
 		?>
 			<div id="store-edit-options" class="<?php echo $variations ? 'hidden' : ''; ?>">
@@ -55,7 +54,7 @@
 			<strong>Edit Existing Option</strong> 		
 		 	<?php foreach($options as $key => $value) :  ?>
 				<?php $i++; ?>
-				
+
 				<div class="store-options-meta">
 					<label for="option-<?php echo $key; ?>">Option <?php echo $i +1; ?>:</label>
 					<input id="option-<?php echo $i +1; ?>-key" class="short" title="" name="" type="text" disabled value="<?php echo store_format_option_key($key); ?>">
@@ -95,7 +94,7 @@
 
 						<?php foreach ( $variations as $i => $post ) : setup_postdata($post); ?>
 
-							<tr id="post-<?php $post->ID; ?>" class="post-<?php $post->ID; ?> type-products <?php echo $i % 2 == 0 ? 'alternate' : '';?>">
+							<tr id="post-<?php $post->ID; ?>" class="post-<?php $post->ID; ?> <?php echo $i % 2 == 0 ? 'alternate' : '';?>">
 								<th scope="row" class="check-column">
 									<?php if ( $post->_store_enable_variant ) : ?>
 										<div class="dashicons dashicons-yes store-variant-enabled" style="margin-left: 5px;"></div>
@@ -113,9 +112,9 @@
 									<?php edit_post_link( 'edit', '<span class="edit" style="float: right;">', '</span>' ); ?>
 								</td>
 							</tr>
-	
+
 						<?php endforeach; ?>
-	
+
 					</tbody>
 				</table>
 				<p style="text-align: right; margin-bottom: 0;">
@@ -202,7 +201,7 @@
 		// Meta for stock/price
 		if( isset($_POST["_store_qty"]) ) {
 			update_post_meta($post->ID, "_store_qty", $_POST["_store_qty"]);
-			
+
 			// Update a parent (if it has one)
 		}
 		if( isset($_POST["_store_price"]) ) {
@@ -221,10 +220,84 @@
  * Hide children of products in admin
  */
 	function store_hide_children( $query ) {
-	    if ( $query->is_admin && $query->query_vars['post_type'] == 'products' && ! $query->query_vars['post_parent'] ) {
+	    if ( $query->is_admin && $query->query_vars['post_type'] == 'product' && ! $query->query_vars['post_parent'] ) {
 	        $query->set( 'post_parent', 0 );
 	    }
 	}
 	add_action( 'pre_get_posts', 'store_hide_children' );
+
+
+
+
+/*
+ * Cart Meta Boxes
+ */
+ 	function store_add_cart_meta(){
+	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
+	}
+ 	add_action("add_meta_boxes", "store_add_cart_meta");
+
+    // List products in a cart
+    function store_cart_list_products() {
+        global $post;
+
+		$products = get_post_meta($post->ID, '_store_cart_products', true);
+
+		// List out created options as a table
+		if ( $products ) : ?>
+
+			<div id="store-attached-table-wrapper">
+				<table class="wp-list-table widefat fixed pages">
+					<thead>
+						<tr>
+							<th scope="col" id="cb" class="manage-column column-cb check-column">
+							</th>
+							<th scope="col" id="title" class="manage-column column-title" style="">
+								<span>Product</span>
+							</th>
+							<th scope="col" class="manage-column">Options</th>
+							<th scope="col" class="manage-column">
+								<span>Qty.</span>
+							</th>
+							<th scope="col" class="manage-column">
+								<span>Price</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+
+						<?php $count = 0;
+							foreach ( $products as $prod_id => $prod_info ) : 
+							$post = get_post($prod_id); setup_postdata($post); $count++; ?>
+
+							<tr id="post-<?php $post->ID; ?>" class="post-<?php $post->ID; ?> <?php echo $count % 2 == 0 ? 'alternate' : '';?>">
+								<th scope="row" class="check-column">
+									<?php if ( true ) : ?>
+										<div class="dashicons dashicons-yes store-variant-enabled" style="margin-left: 5px;"></div>
+									<?php endif; ?>
+								</th>
+								<td class="post-title page-title column-title">
+									<strong>
+										<?php echo get_the_title($post->post_parent); ?>
+									</strong>
+								</td>
+								<td><?php the_title(); ?></td>
+								<td><?php echo $prod_info['qty']; ?></td>
+								<td>
+									<?php echo $post->_store_price; ?>
+								</td>
+							</tr>
+
+						<?php endforeach; ?>
+
+					</tbody>
+				</table>
+			</div>
+
+		<?php endif;
+
+		//print_r($products);
+
+    }
 
 ?>

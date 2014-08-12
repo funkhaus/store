@@ -124,7 +124,7 @@
 		$post_template = array(
 			'post_content'   => $post->post_content,
 			'post_status'    => 'publish',
-			'post_type'      => 'products',
+			'post_type'      => 'product',
 			'ping_status'    => 'closed',
 			'post_parent'    => $post_id,
 			'post_excerpt'   => $post->post_excerpt,
@@ -136,7 +136,7 @@
 		$existing;
 	    $existing_args = array(
 			'posts_per_page'	=> 1,
-			'post_type'			=> 'products',
+			'post_type'			=> 'product',
 			'post_parent'		=> $post_id,
 			'post_status'		=> 'any',
 			'fields'			=> 'ids'
