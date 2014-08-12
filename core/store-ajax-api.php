@@ -20,7 +20,11 @@
 	add_action( 'wp_ajax_nopriv_add_to_cart', 'store_ajax_add_product_to_cart' );
 	add_action( 'wp_ajax_add_to_cart', 'store_ajax_add_product_to_cart' );
 	function store_ajax_add_product_to_cart() {
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> FETCH_HEAD
 		// Import vars from the AJAX array if set
 		if( isset($_REQUEST['product_id']) ) {
 			$product_id = (int) $_REQUEST['product_id'];
@@ -35,6 +39,7 @@
 		}
 
 		// Pass into PHP function, echo results and die.
+<<<<<<< HEAD
 		echo store_add_product_to_cart($product_id, $quantity, $cart_id);
 		die;
 
@@ -55,6 +60,12 @@
 			echo store_build_mini_cart();
 		} else {
 			// Return JSON object with ID, title, qty, price, variant, image(?)
+=======
+		if( store_add_product_to_cart($product_id, $quantity, $cart_id) ) {
+			echo 1;
+		} else {
+			echo 0;
+>>>>>>> FETCH_HEAD
 		}
 		die;
 	}

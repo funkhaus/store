@@ -225,6 +225,27 @@
 	    }
 	}
 	add_action( 'pre_get_posts', 'store_hide_children' );
+	
+	
+	
+
+/*
+ * Cart Meta Boxes
+ */
+ 	function store_add_cart_meta(){
+	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
+	}
+ 	add_action("add_meta_boxes", "store_add_cart_meta");
+
+    // List products in a cart
+    function store_cart_list_products() {
+        global $post;
+
+		$products = get_post_meta($post->ID, '_store_cart_products', true);        
+		
+		print_r($products);
+
+    }
 
 
 
