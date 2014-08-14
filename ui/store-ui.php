@@ -66,7 +66,7 @@
 	 * Register these options on settings save
 	 */
 		function store_register_settings(){
-			//register_setting('store_settings', 'fgram_api_key');
+			register_setting('store_settings', 'store_sw_settings');
 			//register_setting('store_settings', 'fgram_att_page');
 			//register_setting('store_settings', 'fgram_default_status');
 			//register_setting('store_settings', 'fgram_user_list');

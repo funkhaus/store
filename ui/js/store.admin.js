@@ -48,19 +48,26 @@ var store_admin = {
 
 		if ( ! jQuery('input#store-enable-variant').attr('checked') ) {
 
-			jQuery('#wpbody-content input, #wpbody-content textarea').not('#store-enable-variant').each(function(){
-				jQuery(this).attr('disabled', false);
+			jQuery('#wpbody-content input, #wpbody-content textarea').not('#store-enable-variant, #store-sku').each(function(){
+				jQuery(this).attr('disabled', true);
 				jQuery('.postbox, .postarea, #titlediv').not('#store_enable_meta').css('opacity', 0.5);
 			});
 
 		} else {
 
 			jQuery('#wpbody-content input, #wpbody-content textarea').not('#store-enable-variant').each(function(){
-				jQuery(this).attr('disabled');
+				jQuery(this).attr('disabled', false);
 				jQuery('.postbox, .postarea, #titlediv').not('#store_enable_meta').css('opacity', 1);
 			});
 
 		}
+
+		jQuery('input#store-sku').change(function(){
+			jQuery('#submitdiv').css('opacity', 1).find('input[type=submit]').attr('disabled', false);
+		});
+		jQuery('input#store-sku').keyup(function(){
+			jQuery('#submitdiv').css('opacity', 1).find('input[type=submit]').attr('disabled', false);
+		});
 
 	}
 

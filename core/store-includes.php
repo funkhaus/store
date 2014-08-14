@@ -3,31 +3,25 @@
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 	// Get setup
-	include_once( trailingslashit( pp() ) . 'core/store-setup.php' );
+	include_once( trailingslashit( pp() ) . 'core/setup/store-activate.php' );
 
 	// Get functions
-	include_once( trailingslashit( pp() ) . 'core/store-product-functions.php' );
+	include_once( trailingslashit( pp() ) . 'core/functions/store-core-functions.php' );
 
 	// Setup product post types
-	include_once( trailingslashit( pp() ) . 'core/store-post-types.php' );
+	include_once( trailingslashit( pp() ) . 'core/setup/store-post-types.php' );
 
 	// Setup taxonomies
-	include_once( trailingslashit( pp() ) . 'core/store-taxonomy.php' );
+	include_once( trailingslashit( pp() ) . 'core/setup/store-taxonomy.php' );
 
 	// Hook saving functionality
 	include_once( trailingslashit( pp() ) . 'core/store-save-products.php' );
-
-	// Setup cart functions
-	include_once( trailingslashit( pp() ) . 'core/store-cart-functions.php' );
 
 	// Add cart AJAX functions
 	include_once( trailingslashit( pp() ) . 'core/store-ajax-api.php' );
 
 	// Setup user meta functions
 	include_once( trailingslashit( pp() ) . 'core/store-user-meta.php' );
-
-	// Setup store conditionals functions
-	include_once( trailingslashit( pp() ) . 'core/store-conditionals.php' );
 
 	/*
 	 * Enqueue JavaScript API Scripts

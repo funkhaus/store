@@ -2,33 +2,27 @@
 	<h2>Store Settings</h2>
 	<form action="options.php" method="post" id="store_settings">
 		<?php settings_fields('store_settings'); ?>
+		<?php $set = get_option('store_sw_settings'); ?>
 		<table class="form-table">
 			<tbody>
 				<tr valign="top">
-					<th scope="row"><label>Enable auto-import:</label></th>
+					<th scope="row"><label>Enable Shipwire:</label></th>
 					<td>
-						<input name="fgram_auto" type="checkbox" id="fgram_auto" <?php checked( get_option('fgram_auto') ); ?>  value="1">
+						<input name="store_sw_settings[enabled]" type="checkbox" id="store_sw_enabled" <?php checked( $set['enabled'] ); ?>  value="1">
 					</td>
 				</tr>
 				<tr valign="top">
-					<th scope="row"><label for="fgram_api_key">API Key (Client ID):</label></th>
+					<th scope="row"><label for="store_sw_usnm">Shipwire Username:</label></th>
 					<td>
-						<input name="fgram_api_key" type="text" title="Client ID" id="fgram_api_key" value="<?php echo get_option('fgram_api_key'); ?>">
-						<p class="description">http://instagram.com/developer/register/</p>
+						<input name="store_sw_settings[usnm]" type="text" title="Client ID" id="store_sw_usnm" value="<?php echo $set['usnm']; ?>">
+						<p class="description"></p>
 					</td>
 				</tr>
 				<tr valign="top">
-					<th scope="row"><label for="fgram_user_list">Users to import:</label></th>
+					<th scope="row"><label for="store_sw_pswd">Shipwire Password:</label></th>
 					<td>
-						<input name="fgram_user_list" type="text" id="fgram_user_list" value="<?php echo get_option('fgram_user_list'); ?>">
-						<p class="description">If left empty, all posts for specified tags will be imported</p>
-					</td>
-				</tr>
-				<tr valign="top">
-					<th scope="row"><label for="fgram_tag_list">Filter by tags:</label></th>
-					<td>
-						<input name="fgram_tag_list" type="text" id="fgram_tag_list" value="<?php echo get_option('fgram_tag_list'); ?>">
-						<p class="description">If left empty, all posts for specified users will be imported</p>
+						<input name="store_sw_settings[pswd]" type="password" id="store_sw_pswd" value="<?php echo $set['pswd']; ?>">
+						<p class="description"></p>
 					</td>
 				</tr>
 			</tbody>

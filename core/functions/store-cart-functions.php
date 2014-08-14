@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 		// Check to see that cart still exsits (it may have been deleted)
 		if( store_is_cart_available($active_cart_id) ) {
 			// Retrun ID
-			return $active_cart_id;
+			return intval($active_cart_id);
 		} else {
 			return false;
 		}
@@ -145,7 +145,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  *
  * @Returns: BOOL, true if saved, false if not saved
  */
-	function store_add_product_to_cart($product_id = null, $quantity = 1, $cart_id = null){
+	function store_add_product_to_cart($product_id = null, $cart_id = null, $quantity = 1){
 
 		// If no product ID set, or not an INT, then return false.
 		if( empty($product_id) || !is_int($product_id) ) {
@@ -175,11 +175,16 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 		// Get cart product meta as array
 		$products = get_post_meta($cart_id, '_store_cart_products', true);
 
-		// Add product ID to array
-		$products[$product_id] = array(
-			'qty'		=> $quantity,
-			'price'		=> 'NEED_TO_BUILD_LATER'
-		);
+		if ( isset($products[$product_id]) ) {
+
+			$products[$product_id] = intval($products[$product_id]) + $quantity;
+
+		} else {
+
+			// Add product ID to array
+			$products[$product_id] = $quantity;
+
+		}
 
 		// Save meta array, return result
 		return update_post_meta($cart_id, '_store_cart_products', $products);
@@ -188,30 +193,65 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 
 /*
- * @Description: Remove a given product ID from a cart
+ * @Description: Remove a given product by ID from a cart (by ID)
  *
- * @Param: INT, product ID to add to cart. If not set, returns false.
- * @Param: INT, cart post ID to set as active. If not set, then use active cart
+ * @Param 1: INT, product ID to remove from cart. Required.
+ * @Param 2: INT, cart post ID to set as active. If not set, then use active cart. Optional.
+ * @Param 3: INT, quantity of items to reduce cart qty by. Optional.
  * @Returns: BOOL, true if saved, false if not saved
  */
-	function store_remove_product_from_cart($product_id = null, $cart_id = null){
+	function store_remove_product_from_cart($product_id = null, $cart_id = null, $quantity = -1){
 
-		// If no product ID set, or not an INT, then return false.
+		// If product_id is not integer, abort
+		if ( ! is_int($product_id) ) return false;
 
-		// If cart ID set, then remove to that cart ID
-
-		// If no cart ID set, save to active cart
-		$cart_id = store_get_active_cart_id();
+		// if no proper cart_id, set to be active ID
+		if ( ! is_int($cart_id) ) $cart_id = store_get_active_cart_id();
 
 		// Get cart product meta as array
+		$products = get_post_meta($cart_id, '_store_cart_products', true);
 
-		// Remove product ID from array
+		// If specified product is not in cart, return false
+		if ( ! isset( $products[$product_id] ) ) return false;
 
-		// Update meta array
+		// If qty set to -1, or qty is more than currently in cart...
+		if ( $quantity == -1 || intval($products[$product_id]) <= $quantity ) {
 
-		// Returns result of update_post_meta
+			// Remove item completely
+			unset($products[$product_id]);
+
+		} else {
+
+			// Reduce quantity in cart by quantity parameter
+			$products[$product_id] = intval($products[$product_id]) - $quantity;
+
+		}
+
+		// Update cart, return
+		return update_post_meta($cart_id, '_store_cart_products', $products);
+
 	};
 
+/*
+ * @Description: Remove all items from a cart
+ *
+ * @Param: INT, post ID of cart to empty. Optional.
+ * @Returns: BOOL, true if emptied, false if nothing accomplished
+ */
+	function store_empty_cart($cart_id = null) {
+
+		// If no proper ID provided, get active cart
+		if ( ! is_int($cart_id) ) $cart_id = store_get_active_cart_id();
+
+		// Get products in cart
+		$products = get_post_meta($cart_id, '_store_cart_products', true);
+
+		// If no products, abort
+		if ( ! $products ) return false;
+
+		return update_post_meta($cart_id, '_store_cart_products', false);
+
+	};
 
 
 /*
@@ -222,6 +262,26 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
  	function store_get_cart($cart_id = null) {
 	 	return get_post($cart_id);
+ 	}
+
+/*
+ * @Description: Get all items in cart by ID
+ *
+ * @Param: INT, cart ID. Optional.
+ * @Returns: MIXED, returns an array of cart items (value of _store_cart_products ), or false on failure
+ */
+ 	function store_get_cart_items($cart_id = null) {
+
+ 		// If no proper cart ID provided, use active cart
+ 		if ( ! is_int() ) $cart_id = store_get_active_cart_id();
+
+ 		// Set output
+ 		$output = false;
+ 		if ( $cart_id )
+ 			$output = get_post_meta($cart_id, '_store_cart_products', true);
+
+	 	return $output;
+
  	}
 
 

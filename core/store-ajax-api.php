@@ -35,12 +35,38 @@
 		}
 
 		// Pass into PHP function, echo results and die.
-		echo store_add_product_to_cart($product_id, $quantity, $cart_id);
+		echo store_add_product_to_cart($product_id, $cart_id, $quantity);
 		die;
 
 	}
-	
-	
+
+
+/*
+ * @Description: The AJAX wrapper for store_remove_product_from_cart(). Must POST an array of parameters that store_remove_product_from_cart() requires
+ */
+	add_action( 'wp_ajax_nopriv_remove_from_cart', 'store_ajax_remove_product_from_cart' );
+	add_action( 'wp_ajax_remove_from_cart', 'store_ajax_remove_product_from_cart' );
+	function store_ajax_remove_product_from_cart() {
+
+		// Import vars from the AJAX array if set
+		if( isset($_REQUEST['product_id']) ) {
+			$product_id = (int) $_REQUEST['product_id'];
+		}
+		if( isset($_REQUEST['cart_id']) ) {
+			$cart_id = (int) $_REQUEST['cart_id'];
+		}
+		if( isset($_REQUEST['quantity']) ) {
+			$quantity = (int) $_REQUEST['quantity'];
+		} else {
+			$quantity = -1;
+		}
+
+		// Pass into PHP function, echo results and die.
+		echo store_remove_product_from_cart($product_id, $cart_id, $quantity);
+		die;
+
+	}
+
 
 /*
  * @Description: Run the build cart function as defined by theme author. 

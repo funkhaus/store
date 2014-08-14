@@ -149,15 +149,6 @@
 				<br/>
 
 			</div>
-			<div class="custom-meta">
-				<p>
-					<strong>SKU</strong>
-				</p>
-				<label class="screen-reader-text" for="store-price">SKU</label>
-				<input id="store-price" class="short" title="" size="8" name="_store_sku" type="text" value="<?php echo $post->_store_sku; ?>">
-				<br/>
-
-			</div>
 
 		<?php
 	}
@@ -168,6 +159,15 @@
 		<div class="custom-meta">
 			<label class="screen-reader-text" for="store-enable-variant">Enable Editing</label>
 			<input id="store-enable-variant" class="short" title="" name="_store_enable_variant" type="checkbox" <?php checked($post->_store_enable_variant); ?> value="1"> Override defaults
+			<br/>
+
+		</div>
+		<div class="custom-meta">
+			<p>
+				<strong>SKU</strong>
+			</p>
+			<label class="screen-reader-text" for="store-sku">SKU</label>
+			<input id="store-sku" class="short" title="" size="8" name="_store_sku" type="text" value="<?php echo $post->_store_sku; ?>">
 			<br/>
 
 		</div>
@@ -267,7 +267,7 @@
 					<tbody>
 
 						<?php $count = 0;
-							foreach ( $products as $prod_id => $prod_info ) : 
+							foreach ( $products as $prod_id => $prod_qty ) : 
 							$post = get_post($prod_id); setup_postdata($post); $count++; ?>
 
 							<tr id="post-<?php $post->ID; ?>" class="post-<?php $post->ID; ?> <?php echo $count % 2 == 0 ? 'alternate' : '';?>">
@@ -282,10 +282,8 @@
 									</strong>
 								</td>
 								<td><?php the_title(); ?></td>
-								<td><?php echo $prod_info['qty']; ?></td>
-								<td>
-									<?php echo $post->_store_price; ?>
-								</td>
+								<td><?php echo $prod_qty; ?></td>
+								<td><?php echo $post->_store_price; ?></td>
 							</tr>
 
 						<?php endforeach; ?>
