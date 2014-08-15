@@ -22,33 +22,37 @@
 			  'comment_status' => 'closed'
 			);  
 
-			// If no checkout page, create one
-			$args['name'] = 'checkout';
-			if ( ! get_posts($args) ) {
+			// Create necessary store pages
+			foreach ( array( 'checkout', 'cart', 'api' ) as $store_page ) {
 
-				$post['post_name'] = 'checkout';
-				$post['post_title'] = 'checkout';
-				wp_insert_post( $post );
+				// If page does not exist, create it
+				$args['name'] = $store_page;
+				if ( ! get_posts($args) ) {
 
-			}
+					$post['post_name'] = $store_page;
+					$post['post_title'] = $store_page;
+					wp_insert_post( $post );
 
-			// If no cart page, create one
-			$args['name'] = 'cart';
-			if ( ! get_posts($args) ) {
-
-				$post['post_name'] = 'cart';
-				$post['post_title'] = 'cart';
-				wp_insert_post( $post );
+				}
 
 			}
 
-			// If no api page, create one
-			$args['name'] = 'api';
-			if ( ! get_posts($args) ) {
+			// Make sure taxonomy is registered
+			store_create_taxonomy_status();
 
-				$post['post_name'] = 'api';
-				$post['post_title'] = 'api';
-				wp_insert_post( $post );
+			// Create order statuses
+			foreach ( array('Started', 'Paid', 'Shipped', 'Needs Attention') as $store_status ) {
+
+				// Make slug from name
+				$slug = sanitize_title($store_status);
+
+				// If term does not exist...
+				if ( ! get_term_by( 'slug', $slug, 'store_status') ) {
+
+					// Create term
+					wp_insert_term( $store_status, 'store_status' );
+
+				}
 
 			}
 

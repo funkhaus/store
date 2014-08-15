@@ -41,7 +41,7 @@
 	 * Add categories as sub-menu item
 	 */
 		function store_register_categories_menu() {
-			add_submenu_page( 'store/store-admin.php', 'Categories', 'Categories', 'manage_options', 'edit-tags.php?taxonomy=store-category' ); 
+			add_submenu_page( 'store/store-admin.php', 'Categories', 'Categories', 'manage_options', 'edit-tags.php?taxonomy=store_category' );
 		}
 		add_action('admin_menu', 'store_register_categories_menu');
 

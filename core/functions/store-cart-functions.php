@@ -84,17 +84,75 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 				'post_title' 		=> 'Cart #'.$cart_id,
 				'post_name'			=> 'cart-'.$cart_id
 			);
-			wp_update_post( $updated_cart );			
+			wp_update_post( $updated_cart );
 
 			// Set as active
 			store_set_active_cart_id($user_id, $cart_id);
+
+			// Set status to started
+			store_set_order_status();
 
 		}
 
 		// Return cart post ID number
 		return $cart_id;
-	};	
+	};
 
+/*
+ * @Description: Sets the order status of a given cart.
+ *
+ * @Param 1: INT, ID or object of cart to set status for, if none provided active cart will be used. Optional
+ * @Param 2: MIXED, string of status slug, or tag ID of status to set cart to
+ * @Returns: BOOL, returns true on success, or false on failure
+ */
+	function store_set_order_status( $cart_id = null, $status = 'started' ) {
+
+		// If no proper cart ID or object provided, get current cart ID
+		if ( ! is_int($cart_id) ) $cart_id = store_get_active_cart_id();
+
+		// Still no ID? abort
+		if ( ! $cart_id ) return false;
+
+		// If null or false given for status, set to default
+		if ( ! $status ) $status = 'started';
+
+		$field = false;
+
+		// If status is a string, field is slug
+		if ( is_string($status) ) $field = 'slug';
+
+		// If status is a integer, field is id
+		if ( is_int($status) ) $field = 'id';
+
+		// If field is still false, abort
+		if ( ! $field ) return false;
+
+		// Set cart meta to be that status, return result
+		$output = false;
+		$existing_term = get_term_by( $field, $status, 'store_status' );
+		if ( $existing_term ) $output = wp_set_post_terms( $cart_id, $existing_term->name, 'store_status' );
+
+		return $output;
+
+	}
+
+/*
+ * @Description: Set a custom order status
+ *
+ * @Param: STRING, desired title of your status
+ * @Returns: BOOL, returns true on success, or false on failure
+ */
+	function store_add_custom_order_status( $status = null ) {
+
+		if ( ! is_string( $status ) ) return false;
+
+		$term_exists = get_term_by( 'slug', $status, 'store_status' );
+
+		if ( $term_exists ) return false;
+
+		return wp_insert_term( $store_status, 'store_status' );
+
+	}
 
 /*
  * @Description: Save a given cart ID to a user or to a cookie for not logged in guests. This can only be run before headers are sent.

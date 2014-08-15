@@ -1,7 +1,8 @@
 <?php
+	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 	/*
-	 * Make required store pages
+	 * Make custom 'Store Category' taxonomy
 	 */
 		function store_create_taxonomy_category() {
 			// Add new taxonomy, make it hierarchical (like categories)
@@ -28,7 +29,43 @@
 				'query_var'         => true,
 				'rewrite'           => array( 'slug' => 'store/category' ),
 			);
-			register_taxonomy( 'store-category', array( 'product' ), $args );
+			register_taxonomy( 'store_category', array( 'product' ), $args );
 
 		}
 		add_action( 'init', 'store_create_taxonomy_category', 0 );
+
+
+	/*
+	 * Make status taxonomy for orders post type
+	 */
+		function store_create_taxonomy_status() {
+			// Add new taxonomy, make it hierarchical (like categories)
+			$labels = array(
+				'name'              => _x( 'Status', 'taxonomy general name' ),
+				'singular_name'     => _x( 'Status', 'taxonomy singular name' ),
+				'search_items'      => __( 'Search Order Statuses' ),
+				'all_items'         => __( 'All Order Statuses' ),
+				'parent_item'       => __( 'Parent Order Status' ),
+				'parent_item_colon' => __( 'Parent Order Status:' ),
+				'edit_item'         => __( 'Edit Order Status' ),
+				'update_item'       => __( 'Update Order Status' ),
+				'add_new_item'      => __( 'Add New Order Status' ),
+				'new_item_name'     => __( 'New Order Status' ),
+				'menu_name'         => __( 'Order Statuses' )
+			);
+
+			$args = array(
+				'hierarchical'      => false,
+				'labels'            => $labels,
+				'show_ui'           => false,
+				'show_in_nav_menus'	=> false,
+				'show_admin_column' => true,
+				'query_var'         => true,
+				'rewrite'           => array( 'slug' => 'store/status' ),
+			);
+			register_taxonomy( 'store_status', array( 'orders' ), $args );
+
+		}
+		add_action( 'init', 'store_create_taxonomy_status', 0 );
+
+?>

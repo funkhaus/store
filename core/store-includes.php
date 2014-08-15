@@ -2,9 +2,6 @@
 
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-	// Get setup
-	include_once( trailingslashit( pp() ) . 'core/setup/store-activate.php' );
-
 	// Get functions
 	include_once( trailingslashit( pp() ) . 'core/functions/store-core-functions.php' );
 
@@ -13,6 +10,9 @@
 
 	// Setup taxonomies
 	include_once( trailingslashit( pp() ) . 'core/setup/store-taxonomy.php' );
+
+	// Run activation functions
+	include_once( trailingslashit( pp() ) . 'core/setup/store-activate.php' );
 
 	// Hook saving functionality
 	include_once( trailingslashit( pp() ) . 'core/store-save-products.php' );
