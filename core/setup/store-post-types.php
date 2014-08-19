@@ -1,7 +1,7 @@
 <?php
 
 	/*
-	 * Make required store pages
+	 * Make post type for required store pages
 	 */
 		function create_post_type_store() {
 
@@ -49,9 +49,6 @@
 
 		}
 		add_action( 'init', 'create_post_type_store' );
-
-
-
 
 
 	/*
@@ -151,3 +148,46 @@
 
 		}
 		add_action( 'init', 'create_post_type_orders' );
+
+
+	/*
+	 * Make Adresses post type
+	 */
+		function create_post_type_address() {
+
+			// Labels
+			$labels = array(
+	            'name'					=> __('Address', 'address'),
+	            'singular_name'			=> __('Address', 'address'),
+	            'add_new'				=> __('Add New Address', 'address'),
+	            'add_new_item'			=> __('Add New Address', 'address'),
+	            'edit'					=> __('Edit', 'address'),
+	            'edit_item'				=> __('Edit Address', 'address'),
+	            'new_item'				=> __('New Address', 'address'),
+	            'view'					=> __('View Address', 'address'),
+	            'view_item'				=> __('View Address', 'address'),
+	            'search_items'			=> __('Search Addresses', 'address'),
+	            'not_found'				=> __('No Addresses found', 'address'),
+	            'not_found_in_trash'	=> __('No Addresses found in Trash', 'address')
+			);
+
+			// Create Address post type
+			$args = array(
+				'labels'             => $labels,
+				'public'             => false,
+				'publicly_queryable' => false,
+				'show_in_menu'       => false,
+				'query_var'          => true,
+				'capability_type'    => 'post',
+				'has_archive'        => false,
+				'hierarchical'       => false,
+				'exclude_from_search'=> true,
+			    'supports'			 => array( 'author' ),
+				'rewrite'			 => array(
+					'slug'	=> 'address'
+				)
+			);
+			register_post_type( 'address', $args ); // We could make the post type a setting that could be changed/filtered?
+
+		}
+		add_action( 'init', 'create_post_type_address' );

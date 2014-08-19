@@ -4,7 +4,7 @@
 
 	/*
 	 * General function to run on activation,
-	 * sets up necessary options, pages, etc.
+	 * sets up necessary options, pages, roles, etc.
 	 */
 		function store_activation() {
 
@@ -55,6 +55,17 @@
 				}
 
 			}
+
+			// Add custom user role for customers
+			add_role(
+				'store_customer',
+				__( 'Customer' ),
+				array(
+					'read'         => true,
+					'edit_posts'   => false,
+					'delete_posts' => false
+				)
+			);
 
 			// Flush permalinks
 		    flush_rewrite_rules();

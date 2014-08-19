@@ -5,6 +5,56 @@
 	// Get functions
 	include_once( trailingslashit( pp() ) . 'core/functions/store-core-functions.php' );
 
+
+
+	function jrr_create_customer(){
+
+		//store_create_customer('john@funkhaus.us', 'funky-house');
+		$post = array(
+		  'post_content'   => '',
+		  'post_name'      => 'test',
+		  'post_title'     => 'test',
+		  'post_status'    => 'publish',
+		);
+
+		wp_insert_post($post);
+	}
+	//add_action('init', 'jrr_create_customer');
+
+	function jrr_get_userdata(){
+		$user = get_user_by('email', 'john@funkhaus.us');
+		var_dump( $user ); exit;
+	}
+	//add_action('init', 'jrr_get_userdata');
+
+
+
+	function jrr_create_address(){
+
+		$post = array(
+			'post_name'      => 'address',
+			'post_title'     => 'address',
+			'post_status'    => 'publish',
+			'post_type'      => 'address'
+		);
+
+		$created_id = wp_insert_post( $post );
+
+		if ( $created_id ) {
+
+			$post['ID'] = $created_id;
+			$post['post_name'] = 'Address #' . $created_id;
+			$post['post_title'] = 'Address #' . $created_id;
+
+			wp_update_post( $post );
+
+		}
+
+	}
+	//add_action('init', 'jrr_create_address');
+
+
+
 	// Setup product post types
 	include_once( trailingslashit( pp() ) . 'core/setup/store-post-types.php' );
 

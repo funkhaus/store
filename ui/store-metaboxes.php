@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  * Add custom metabox to the new/edit page
  */
  	function store_add_variations(){
- 		global $post;
+	 	global $post;
 	 	add_meta_box("store_price_meta", "Stock/Price", "store_price_meta", "product", "side", "default");
 	 	if ( $post->post_parent != 0 ) {
 		 	add_meta_box("store_enable_meta", "Enable Editing", "store_enable_meta", "product", "side", "high");
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 	}
  	add_action("add_meta_boxes", "store_add_variations");
 
-    function store_options_meta(){
+ 	function store_options_meta(){
 		global $post;
 
 		wp_reset_query();
@@ -215,6 +215,17 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		}
 		update_post_meta($post->ID, "_store_enable_variant", $_POST["_store_enable_variant"]);
 
+		// Save address meta fields
+		$address_fields = store_get_address_fields();
+		foreach ( $address_fields as $address_field ) {
+
+			if( isset($_POST["_store_address_" . $address_field]) ) {
+				update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
+			}
+			update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
+
+		}
+
 	}
  	add_action('save_post', 'store_save_meta');
 
@@ -297,8 +308,38 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 		<?php endif;
 
-		//print_r($products);
-
     }
+
+
+/*
+ * Cart Meta Boxes
+ */
+ 	function store_add_address_meta(){
+	 	add_meta_box("store_address_meta_fields", "Address", "store_address_meta_fields", "address", "normal", "low");
+	}
+ 	add_action("add_meta_boxes", "store_add_address_meta");
+
+ 	// List products in a cart
+ 	function store_address_meta_fields() {
+	 	global $post;
+
+		$fields = store_get_address_fields(); ?>
+
+		<table class="form-table"><tbody>
+
+		<?php foreach ( $fields as $field ) :
+			$meta = get_post_meta($post->ID, '_store_address_' . $field, true); ?>
+
+			<tr>
+				<th scope="row"><label for="store-address-<?php echo $field; ?>"><?php echo $field; ?></label></th>
+				<td><input name="_store_address_<?php echo $field; ?>" type="text" id="store-address-<?php echo $field; ?>" value="<?php echo $meta; ?>" class="regular-text"></td>
+			</tr>
+
+		<?php endforeach; ?>
+
+		</tbody></table>
+
+		<?php
+	}
 
 ?>
