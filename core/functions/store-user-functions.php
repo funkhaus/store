@@ -294,8 +294,10 @@
 			);
 			$addresses = get_posts( $args );
 
+			// Set output
 			$output = false;
 
+			// if any addresses returned...
 			if ( $addresses ) {
 
 				// Loop through addresses
@@ -304,9 +306,10 @@
 					// Set this ID as output key
 					$output[$address->ID] = array();
 
-					// Add each address field to this output key
+					// Loop through address fields
 					foreach ( store_get_address_fields() as $field ) {
 
+						// Add this address field value to output
 						$output[$address->ID][$field] = get_post_meta( $address->ID, '_store_address_' . $field, true );
 
 					}
