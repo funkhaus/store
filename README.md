@@ -1,5 +1,5 @@
 ```
-STORE: An e-commerce toolkit for Wordpress
+STORE: An e-commerce toolkit for Wordpress.
       ___ _   _ _  _ _  __
      | __| | | | \| | |/ /
      | _|| |_| | .` | ' <
