@@ -11,7 +11,7 @@
 	// Testing function to run things. Delete Me.
 	function jrr_run_thing(){
 
-		//var_dump( store_get_user_shipping_addresses() ); exit;
+		//var_dump( store_is_billing_address(65) ); exit;
 
 	}
 	add_action('init', 'jrr_run_thing');

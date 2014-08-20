@@ -5,7 +5,7 @@
 /*
  * @Description: Helper function used to get array of fields needed for a full address
  *
- * @Returns: ARRAY, key-based array of unique slugs for each field
+ * @Return: ARRAY, key-based array of unique slugs for each field
  */
 	function store_get_address_fields(){
 
@@ -18,7 +18,6 @@
 
 		return $fields;
 	}
-
 
 	// Get store conditionals
 	include_once( trailingslashit( pp() ) . 'core/functions/store-conditionals.php' );

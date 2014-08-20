@@ -19,9 +19,39 @@
 					<input type="text" name="active_cart_id" id="active-cart-id" value="<?php echo get_user_meta( $user->ID, '_store_active_cart_id', true ); ?>" class="regular-text" ><br />
 					<span class="description">The ID of the last active cart this user had.</span>
 				</td>
-			</tr>		
+			</tr>
 
 		</table>
+
+		<?php $addresses = store_get_user_shipping_addresses( $user->ID ); ?>
+
+		<?php if ( $addresses ) : $count = 0; ?>
+			<?php foreach ( $addresses as $id => $address ) : $count++; ?>
+
+				<table class="form-table">
+					<tbody>
+						<tr>
+							<th>Address <?php echo $count; ?></th>
+							<td>
+								<table class="widefat">
+									<tbody>
+										<?php $i = 0; ?>
+										<?php foreach ( $address as $address_field => $value ) : $i++; ?>
+											<tr class="<?php echo $i % 2 == 0 ? 'alternate': ''; ?>">
+												<td class="row-title"><?php echo $address_field; ?></td>
+												<td class="desc"><?php echo $value; ?></td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+								<a href="<?php echo get_edit_post_link( $id ); ?>" style="float: right; margin-top: 10px;"><span class="edit">edit</span></a>
+								<a href="<?php echo get_delete_post_link( $id, null, true ); ?>" style="float: right; margin-top: 10px; margin-right: 15px;"><span class="edit">delete</span></a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			<?php endforeach; ?>
+		<?php endif; ?>
 
 	<?php }
 
