@@ -225,6 +225,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 			update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
 
 		}
+		update_post_meta($post->ID, "_store_address_shipping", $_POST["_store_address_shipping"]);
+		update_post_meta($post->ID, "_store_address_billing", $_POST["_store_address_billing"]);
 
 	}
  	add_action('save_post', 'store_save_meta');
@@ -247,7 +249,12 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  * Cart Meta Boxes
  */
  	function store_add_cart_meta(){
+ 		global $post;
+
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
+	 	if ( store_get_cart_shipping_address($post->ID) ) {
+		 	add_meta_box("store_cart_list_shipping", "Shipping Address", "store_cart_list_shipping", "orders", "normal", "low");
+		}
 	}
  	add_action("add_meta_boxes", "store_add_cart_meta");
 
@@ -310,6 +317,32 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
     }
 
+	function store_cart_list_shipping() {
+		global $post;
+
+		$shipping = store_get_cart_shipping_address( $post->ID ); ?>
+
+			<table class="widefat">
+				<tbody>
+
+					<?php $count = 0; ?>
+					<?php foreach ( $shipping as $i => $field ) : $count++; ?>
+						<tr class="<?php echo $count % 2 === 0 ? 'alternate' : ''; ?>">
+							<td class="row-title">
+								<?php echo $i; ?>
+							</td>
+							<td class="desc">
+								<?php echo $field; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+
+				</tbody>
+			</table>
+
+		<?php
+	}
+
 
 /*
  * Cart Meta Boxes
@@ -327,15 +360,26 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 		<table class="form-table"><tbody>
 
-		<?php foreach ( $fields as $field ) :
-			$meta = get_post_meta($post->ID, '_store_address_' . $field, true); ?>
+			<?php foreach ( $fields as $field ) :
+				$meta = get_post_meta($post->ID, '_store_address_' . $field, true); ?>
 
-			<tr>
-				<th scope="row"><label for="store-address-<?php echo $field; ?>"><?php echo $field; ?></label></th>
-				<td><input name="_store_address_<?php echo $field; ?>" type="text" id="store-address-<?php echo $field; ?>" value="<?php echo $meta; ?>" class="regular-text"></td>
-			</tr>
+				<tr>
+					<th scope="row"><label for="store-address-<?php echo $field; ?>"><?php echo $field; ?></label></th>
+					<td><input name="_store_address_<?php echo $field; ?>" type="text" id="store-address-<?php echo $field; ?>" value="<?php echo $meta; ?>" class="regular-text"></td>
+				</tr>
 
-		<?php endforeach; ?>
+			<?php endforeach; ?>
+
+	        <tr>
+	            <th scope="row">Address Type</th>
+	            <td>
+	                <fieldset>
+	                    <legend class="screen-reader-text"><span>Address Type</span></legend>
+	                    <label for="store_address_shipping"><input name="_store_address_shipping" type="checkbox" id="store_address_shipping" value="1" <?php checked($post->_store_address_shipping); ?>>Shipping Address</label><br>
+	                    <label for="store_address_billing"><input name="_store_address_billing" type="checkbox" id="store_address_billing" value="1" <?php checked($post->_store_address_billing); ?>>Billing Address</label>
+	                </fieldset>
+	            </td>
+	        </tr>
 
 		</tbody></table>
 

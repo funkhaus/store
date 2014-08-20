@@ -78,41 +78,241 @@
  *
  * @Return: MIXED | address ID on success, or false on failure
  */
-	function store_save_address( $address = null, $customer = null, $order = null ) {
+	function store_save_address( $address = null, $customer = null, $order = null, $shipping = true, $billing = true ) {
 
 		// No address info? abort
 		if ( ! $address ) return false;
 
-		// No customer or order to attach address to? abort
-		if ( ! $customer && ! $order ) return false;
+		// customer and order are both false? abort.
+		if ( $customer === false && $order === false ) return false;
+
+		// If customer is not false, attempt to get intended customer ID
+		if ( $customer !== false ) {
+
+			// Set customer default to be current user
+			if ( ! $customer ) $customer = get_current_user_id();
+
+			$field = false;
+
+			// If customer is email address, search by email
+			if ( strstr($customer, '@') ) $field = 'email';
+
+			// If customer is ID, search by ID
+			if ( is_int(intval($customer)) ) $field = 'id';
+
+			// Get specified customer
+			$customer = get_user_by( $field, $customer );
+
+			if ( $customer ) {
+				$customer = $customer->ID;
+			} else {
+				$customer = false;
+			}
+
+		}
+
+		// Create address post (setting author accordingly)
+		$args = array(
+			'post_status'    => 'publish',
+			'post_type'      => 'address',
+			'ping_status'    => 'closed',
+			'comment_status' => 'closed',
+			'post_author'	 => $customer,
+			'post_title'	 => 'Address #?',
+			'post_content'	 => '',
+			'post_parent'	 =>	38
+		);
+		$address_id = wp_insert_post($args, true);
+
+		// If address created...
+		if ( $address_id ) {
+
+			$args['ID'] = $address_id;
+			$args['post_title'] = 'Address #' . $address_id;
+			$args['post_name'] = 'Address #' . $address_id;
+
+			// update post name and title
+			wp_update_post( $args );
+
+		} else {
+
+			// No address created? abort.
+			return false;
+
+		}
+
+		// Set order default to be currently active cart
+		if ( ! $order ) $order = store_get_active_cart_id();
+
+		$address_parent = false;
+
+		// Check if order ID is set and is valid
+		if ( intval($order) ) $address_parent = get_post( intval($order) );
+
+		// if post is not an address, set to false
+		if ( $address_parent->post_type !== 'orders' ) $address_parent = false;
+
+		// If valid address was found, set as address parent
+		if ( $address_parent ) {
+			update_post_meta( $address_id, '_store_address_parent', intval($address_parent->ID) );
+		}
 
 		// Load address fields
 		$fields = store_get_address_fields();
-
-
-		// Check if customer is set and is a valid customer ID or email
-
-		// Create address post (setting author accordingly)
-
-		// Check if order ID is set and is valid
-
-		// If so, add meta to address post ( _store_address_parent or something )
 
 		// Loop through fields and set accordingly
 		$field_match = false;
 		foreach ( $fields as $field ) {
 
+			// if field is set, update meta
 			if ( isset($address[$field]) ) {
-
 				$field_match = true;
 				update_post_meta($address_id, "_store_address_" . $field, $address[$field]);
-
 			}
 
 		}
 
+		// Set shipping and billing
+		if ( $shipping ) update_post_meta( $address_id, "_store_address_shipping", 1);
+		if ( $billing ) update_post_meta( $address_id, "_store_address_billing", 1);
+
 		// If field match is still false, delete the address that was created
+		if ( ! $field_match ) {
+			$address_id = false;
+			wp_delete_post( $address_id, true );
+		}
+
+		return $address_id;
 
 	}
+
+	/*
+	 * @Description: Get billing address for this User/Customer
+	 *
+	 * @Param: INT, user ID. If none provided, the currently logged in user ID will be used. Optional.
+	 * @Returns: MIXED, returns an array of address properties on success, or false on failure
+	 */
+	 	function store_get_user_billing_address( $user_id = null ){
+
+		 	// Set default user to be current user
+		 	if ( ! $user_id ) $user_id = get_current_user_id();
+
+		 	// Still no user ID? abort.
+		 	if ( ! $user_id ) return false;
+
+		 	// set output and args
+		 	$output = false;
+		    $args = array(
+				'posts_per_page'	=> 1,
+				'meta_key'			=> '_store_address_billing',
+				'meta_value'		=> '1',
+				'post_type'			=> 'address',
+				'post_author'		=> $user_id
+			);
+
+			// Query for address
+			$result = get_posts($args);
+
+			// if anything came back, set output
+			if ( ! empty($result) ) {
+				$address = reset($result);
+			}
+
+			// Loop through all address fields
+			foreach ( store_get_address_fields() as $field ) {
+
+				// Set each field into output array
+				$output[$field] = get_post_meta( $address->ID, '_store_address_' . $field, true );
+
+			}
+
+			return $output;
+
+	 	}
+
+	/*
+	 * @Description: Get shipping address for this User/Customer
+	 *
+	 * @Param: INT, user ID. If none provided, the currently logged in user ID will be used. Optional.
+	 * @Returns: MIXED, returns an array of address properties on success, or false on failure
+	 */
+	 	function store_get_user_shipping_address( $user_id = null ){
+
+		 	// Set default user to be current user
+		 	if ( ! $user_id ) $user_id = get_current_user_id();
+
+		 	// Still no user ID? abort.
+		 	if ( ! $user_id ) return false;
+
+		 	// set output and args
+		 	$output = false;
+		    $args = array(
+				'posts_per_page'	=> 1,
+				'meta_key'			=> '_store_address_shipping',
+				'meta_value'		=> '1',
+				'post_type'			=> 'address',
+				'post_author'		=> $user_id
+			);
+
+			// Query for address
+			$result = get_posts($args);
+
+			// if anything came back, set output
+			if ( ! empty($result) ) {
+				$address = reset($result);
+			}
+
+			// Loop through all address fields
+			foreach ( store_get_address_fields() as $field ) {
+
+				// Set each field into output array
+				$output[$field] = get_post_meta( $address->ID, '_store_address_' . $field, true );
+
+			}
+
+			return $output;
+
+	 	}
+
+	/*
+	 * @Description: Get all addresses for a user
+	 *
+	 * @Param: INT, user ID or email. If none provided, the currently logged in user will be used. Optional.
+	 * @Returns: MIXED, array of address arrays on success, or false on failure
+	 */
+	 	function store_get_user_shipping_addresses( $customer = null ){
+
+		 	$customer = store_get_customer( $customer );
+
+		 	// get all address post types authored by customer
+
+		 	// format array to be [ID] => array( line_1 => '', line_2 => '' )
+
+		 	// return
+
+	 	}
+
+	/*
+	 * @Description: Get user object of a given cutomer by ID, email, or currently logged in
+	 *
+	 * @Param: MIXED, user ID or email. If none provided, the currently logged in user will be used. Optional.
+	 * @Returns: MIXED, user object on success, false on failure
+	 */
+	 	function store_get_customer( $customer = null ){
+
+			if ( ! $customer ) $customer = get_current_user_id();
+
+			$field = false;
+
+			// If customer is email address, search by email
+			if ( strstr($customer, '@') ) $field = 'email';
+
+			// If customer is ID, search by ID
+			if ( is_int(intval($customer)) ) $field = 'id';
+
+			// Get specified customer
+			return get_user_by( $field, $customer );
+
+	 	}
 
 ?>

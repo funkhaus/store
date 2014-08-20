@@ -41,7 +41,7 @@
 			store_create_taxonomy_status();
 
 			// Create order statuses
-			foreach ( array('Started', 'Paid', 'Shipped', 'Needs Attention') as $store_status ) {
+			foreach ( array('Active', 'Inactive', 'Submitted', 'Paid', 'Shipped', 'Refunded', 'Void') as $store_status ) {
 
 				// Make slug from name
 				$slug = sanitize_title($store_status);
@@ -61,9 +61,9 @@
 				'store_customer',
 				__( 'Customer' ),
 				array(
-					'read'         => true,
-					'edit_posts'   => false,
-					'delete_posts' => false
+					'read'         		=> true,
+					'edit_posts'   		=> false,
+					'delete_posts' 		=> false
 				)
 			);
 

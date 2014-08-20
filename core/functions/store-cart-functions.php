@@ -105,7 +105,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @Param 2: MIXED, string of status slug, or tag ID of status to set cart to
  * @Returns: BOOL, returns true on success, or false on failure
  */
-	function store_set_order_status( $cart_id = null, $status = 'started' ) {
+	function store_set_order_status( $cart_id = null, $status = 'active' ) {
 
 		// If no proper cart ID or object provided, get current cart ID
 		if ( ! is_int($cart_id) ) $cart_id = store_get_active_cart_id();
@@ -114,7 +114,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 		if ( ! $cart_id ) return false;
 
 		// If null or false given for status, set to default
-		if ( ! $status ) $status = 'started';
+		if ( ! $status ) $status = 'active';
 
 		$field = false;
 
@@ -342,6 +342,163 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
  	}
 
+/*
+ * @Description: Get shipping address for this cart/order
+ *
+ * @Param: INT, cart ID. If none provided, the active cart will be used. Optional.
+ * @Returns: MIXED, returns an array of address properties on success, or false on failure
+ */
+ 	function store_get_cart_shipping_address( $cart_id = null ){
+
+	 	// Set default cart to be current cart
+	 	if ( ! $cart_id ) $cart_id = store_get_active_cart_id();
+
+	 	// set output and args
+	 	$output = false;
+	    $args = array(
+			'posts_per_page'	=> 1,
+			'meta_query'		=> array(
+				'_store_address_parent'		=> $cart_id,
+				'_store_address_shipping'	=> '1'
+			),
+			'post_type'			=> 'address'
+		);
+
+		// Query for address
+		$result = get_posts($args);
+
+		// if anything came back, set output
+		if ( ! empty($result) ) {
+			$address = reset($result);
+		}
+
+		// Loop through all address fields
+		foreach ( store_get_address_fields() as $field ) {
+
+			// Set each field into output array
+			$output[$field] = get_post_meta( $address->ID, '_store_address_' . $field, true );
+
+		}
+
+		return $output;
+
+ 	}
+
+/*
+ * @Description: Get billing address for this cart/order
+ *
+ * @Param: INT, cart ID. If none provided, the active cart will be used. Optional.
+ * @Returns: MIXED, returns an array of address properties on success, or false on failure
+ */
+ 	function store_get_cart_billing_address( $cart_id = null ){
+
+	 	// Set default cart to be current cart
+	 	if ( ! $cart_id ) $cart_id = store_get_active_cart_id();
+
+	 	// Still no cart? abort.
+	 	if ( ! $cart_id ) return false;
+
+	 	// set output and args
+	 	$output = false;
+	    $args = array(
+			'posts_per_page'	=> 1,
+			'meta_key'			=> '_store_address_billing',
+			'meta_value'		=> '1',
+			'post_parent'		=> $cart_id,
+			'post_type'			=> 'address'
+		);
+
+		// Query for address
+		$result = get_posts($args);
+
+		// if anything came back, set output
+		if ( ! empty($result) ) {
+			$address = reset($result);
+		}
+
+		// Loop through all address fields
+		foreach ( store_get_address_fields() as $field ) {
+
+			// Set each field into output array
+			$output[$field] = get_post_meta( $address->ID, '_store_address_' . $field, true );
+
+		}
+
+		return $output;
+
+ 	}
+
+/*
+ * @Description: Detach an address from its cart
+ *
+ * @Param: INT, address ID. Required.
+ * @Return: Bool, true on success or false on failure
+ */
+ 	function store_remove_address_from_cart( $address_id = null ) {
+
+	 	if ( ! $address_id ) return false;
+
+	 	$address = get_post( $address_id, ARRAY_A );
+
+	 	$address['post_parent'] = 0;
+
+	 	return wp_update_post( $address );
+
+ 	}
+
+/*
+ * @Description: Check if a given address is a shipping address
+ *
+ * @Param: INT, address ID. Required.
+ * @Return: Bool, true if address is a shipping address, false if not
+ */
+ 	function store_is_shipping_address( $address_id = null ) {
+
+	 	if ( ! $address_id ) return false;
+
+	 	$shipping = get_post_meta( $address_id, '_store_address_shipping', true );
+	 	$shipping = intval($shipping);
+
+	 	$output = false;
+	 	if ( $shipping ) $output = true;
+
+	 	return $output;
+
+ 	}
+
+/*
+ * @Description: Check if a given address is a billing address
+ *
+ * @Param: INT, address ID. Required.
+ * @Return: Bool, true if address is a billing address, false if not
+ */
+ 	function store_is_billing_address( $address_id = null ) {
+
+	 	if ( ! $address_id ) return false;
+
+	 	$shipping = get_post_meta( $address_id, '_store_address_billing', true );
+	 	$shipping = intval($shipping);
+
+	 	$output = false;
+	 	if ( $shipping ) $output = true;
+
+	 	return $output;
+
+ 	}
+
+/*
+ * @Description: Delete an address from the database
+ *
+ * @Param: INT, address ID. Required.
+ * @Return: Bool, true on success or false on failure
+ */
+ 	function store_delete_address( $address_id = null ) {
+
+	 	if ( ! $address_id ) return false;
+
+	 	return wp_delete_post($address_id, true);
+
+ 	}
 
 /*
  * @Description: Helper function used to set the cookie directory URL.

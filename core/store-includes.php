@@ -7,52 +7,25 @@
 
 
 
-	function jrr_create_customer(){
 
-		//store_create_customer('john@funkhaus.us', 'funky-house');
-		$post = array(
-		  'post_content'   => '',
-		  'post_name'      => 'test',
-		  'post_title'     => 'test',
-		  'post_status'    => 'publish',
+	// Testing function to run things. Delete Me.
+	function jrr_run_thing(){
+
+/*
+		$address = array(
+			'line_1'	=> '210 N Belmont St.',
+			'line_2'	=> 'Apt 101',
+			'city'		=> 'Glendale',
+			'state'		=> 'Ca',
+			'zip'		=> '91206'
 		);
+		store_save_address( $address, 3, false );
+*/
 
-		wp_insert_post($post);
-	}
-	//add_action('init', 'jrr_create_customer');
-
-	function jrr_get_userdata(){
-		$user = get_user_by('email', 'john@funkhaus.us');
-		var_dump( $user ); exit;
-	}
-	//add_action('init', 'jrr_get_userdata');
-
-
-
-	function jrr_create_address(){
-
-		$post = array(
-			'post_name'      => 'address',
-			'post_title'     => 'address',
-			'post_status'    => 'publish',
-			'post_type'      => 'address'
-		);
-
-		$created_id = wp_insert_post( $post );
-
-		if ( $created_id ) {
-
-			$post['ID'] = $created_id;
-			$post['post_name'] = 'Address #' . $created_id;
-			$post['post_title'] = 'Address #' . $created_id;
-
-			wp_update_post( $post );
-
-		}
+		//var_dump( store_get_user_billing_address() ); exit;
 
 	}
-	//add_action('init', 'jrr_create_address');
-
+	add_action('init', 'jrr_run_thing');
 
 
 	// Setup product post types
@@ -81,7 +54,7 @@
 			wp_enqueue_script( 'store_api_js');
 
 			// Setup JS variables in scripts
-			wp_localize_script('store_api_js', 'store_api_vars', 
+			wp_localize_script('store_api_js', 'store_api_vars',
 				array(
 					'homeURL'	=> home_url(),
 					'ajaxURL'	=> admin_url( 'admin-ajax.php' )
@@ -89,6 +62,6 @@
 			);
 
 		}
-		add_action( 'wp_enqueue_scripts', 'store_api_scripts' );	
+		add_action( 'wp_enqueue_scripts', 'store_api_scripts' );
 
 ?>
