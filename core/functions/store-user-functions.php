@@ -207,7 +207,7 @@
 				'meta_key'			=> '_store_address_billing',
 				'meta_value'		=> '1',
 				'post_type'			=> 'address',
-				'post_author'		=> $user_id
+				'author'			=> $user_id
 			);
 
 			// Query for address
@@ -251,7 +251,7 @@
 				'meta_key'			=> '_store_address_shipping',
 				'meta_value'		=> '1',
 				'post_type'			=> 'address',
-				'post_author'		=> $user_id
+				'author'			=> $user_id
 			);
 
 			// Query for address
@@ -285,10 +285,37 @@
 		 	$customer = store_get_customer( $customer );
 
 		 	// get all address post types authored by customer
+		    $args = array(
+				'posts_per_page'	=> -1,
+				'orderby'			=> 'post_date',
+				'order'				=> 'DESC',
+				'author'			=> $customer->ID,
+				'post_type'			=> 'address'
+			);
+			$addresses = get_posts( $args );
 
-		 	// format array to be [ID] => array( line_1 => '', line_2 => '' )
+			$output = false;
 
-		 	// return
+			if ( $addresses ) {
+
+				// Loop through addresses
+				foreach ( $addresses as $address ) {
+
+					// Set this ID as output key
+					$output[$address->ID] = array();
+
+					// Add each address field to this output key
+					foreach ( store_get_address_fields() as $field ) {
+
+						$output[$address->ID][$field] = get_post_meta( $address->ID, '_store_address_' . $field, true );
+
+					}
+
+				}
+
+			}
+
+			return $output;
 
 	 	}
 
