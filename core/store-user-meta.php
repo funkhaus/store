@@ -23,15 +23,19 @@
 
 		</table>
 
-		<?php $addresses = store_get_user_shipping_addresses( $user->ID ); ?>
+		<?php $addresses = store_get_user_addresses( $user->ID ); ?>
 
 		<?php if ( $addresses ) : $count = 0; ?>
-			<?php foreach ( $addresses as $id => $address ) : $count++; ?>
+			<?php foreach ( $addresses as $id => $address ) : $count++;
+					$title = 'Address ' . $count;
+					if ( store_is_shipping_address($id) ) $title = 'Shipping Address';
+					if ( store_is_billing_address($id) ) $title = 'Billing Address';
+					if ( store_is_billing_address($id) && store_is_shipping_address($id) ) $title = 'Shipping/Billing Address'; ?>
 
 				<table class="form-table">
 					<tbody>
 						<tr>
-							<th>Address <?php echo $count; ?></th>
+							<th><?php echo $title; ?></th>
 							<td>
 								<table class="widefat">
 									<tbody>

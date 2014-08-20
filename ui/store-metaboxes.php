@@ -1,6 +1,6 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /*
  * Add custom metabox to the new/edit page
@@ -183,55 +183,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		<?php
 	}
 
-
-/*
- * Save the metabox vaule
- */
- 	function store_save_meta(){
-	 	global $post;
-
-	 	// check autosave
-	 	if( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
-		 	return $post->ID;
-		}
-
-		// Meta for variation data
-		$options = store_sort_options($_POST);
-		foreach( $options as $key => $value ) {
-			update_post_meta($post->ID, $key, $value);			
-		}
-
-		// Meta for stock/price
-		if( isset($_POST["_store_qty"]) ) {
-			update_post_meta($post->ID, "_store_qty", $_POST["_store_qty"]);
-
-			// Update a parent (if it has one)
-		}
-		if( isset($_POST["_store_price"]) ) {
-			update_post_meta($post->ID, "_store_price", $_POST["_store_price"]);
-		}
-		if( isset($_POST["_store_sku"]) ) {
-			update_post_meta($post->ID, "_store_sku", $_POST["_store_sku"]);
-		}
-		update_post_meta($post->ID, "_store_enable_variant", $_POST["_store_enable_variant"]);
-
-		// Save address meta fields
-		$address_fields = store_get_address_fields();
-		foreach ( $address_fields as $address_field ) {
-
-			if( isset($_POST["_store_address_" . $address_field]) ) {
-				update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
-			}
-			update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
-
-		}
-		update_post_meta($post->ID, "_store_address_shipping", $_POST["_store_address_shipping"]);
-		update_post_meta($post->ID, "_store_address_billing", $_POST["_store_address_billing"]);
-
-	}
- 	add_action('save_post', 'store_save_meta');
-
-
 /*
  * Hide children of products in admin
  */
@@ -252,7 +203,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  		global $post;
 
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
-	 	if ( store_get_cart_shipping_address($post->ID) ) {
+	 	if ( store_get_order_shipping_address($post->ID) ) {
 		 	add_meta_box("store_cart_list_shipping", "Shipping Address", "store_cart_list_shipping", "orders", "normal", "low");
 		}
 	}
@@ -320,7 +271,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 	function store_cart_list_shipping() {
 		global $post;
 
-		$shipping = store_get_cart_shipping_address( $post->ID ); ?>
+		//$shipping = store_get_cart_shipping_address( $post->ID ); ?>
 
 			<table class="widefat">
 				<tbody>
@@ -385,5 +336,52 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 		<?php
 	}
+
+/*
+ * Save the metabox vaule
+ */
+ 	function store_save_meta(){
+	 	global $post;
+
+	 	// check autosave
+	 	if( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
+		 	return $post->ID;
+		}
+
+		// Meta for variation data
+		$options = store_sort_options($_POST);
+		foreach( $options as $key => $value ) {
+			update_post_meta($post->ID, $key, $value);			
+		}
+
+		// Meta for stock/price
+		if( isset($_POST["_store_qty"]) ) {
+			update_post_meta($post->ID, "_store_qty", $_POST["_store_qty"]);
+
+			// Update a parent (if it has one)
+		}
+		if( isset($_POST["_store_price"]) ) {
+			update_post_meta($post->ID, "_store_price", $_POST["_store_price"]);
+		}
+		if( isset($_POST["_store_sku"]) ) {
+			update_post_meta($post->ID, "_store_sku", $_POST["_store_sku"]);
+		}
+		update_post_meta($post->ID, "_store_enable_variant", $_POST["_store_enable_variant"]);
+
+		// Save address meta fields
+		$address_fields = store_get_address_fields();
+		foreach ( $address_fields as $address_field ) {
+
+			if( isset($_POST["_store_address_" . $address_field]) ) {
+				update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
+			}
+			update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
+
+		}
+		update_post_meta($post->ID, "_store_address_shipping", $_POST["_store_address_shipping"]);
+		update_post_meta($post->ID, "_store_address_billing", $_POST["_store_address_billing"]);
+
+	}
+ 	add_action('save_post', 'store_save_meta');
 
 ?>

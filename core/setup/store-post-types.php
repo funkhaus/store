@@ -1,5 +1,7 @@
 <?php
 
+	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 	/*
 	 * Make post type for required store pages
 	 */
@@ -102,7 +104,7 @@
 
 
 	/*
-	 * Make orders/carts post type
+	 * Make orders post type
 	 */
 		function create_post_type_orders() {
 
@@ -144,10 +146,60 @@
 					'slug'	=> 'orders',
 				)
 			);
-			register_post_type( 'orders', $args ); // We could make the post type a setting that could be changed/filtered?
+			register_post_type( 'orders', $args );
 
 		}
 		add_action( 'init', 'create_post_type_orders' );
+
+
+
+	/*
+	 * Make cart post type
+	 */
+		function create_post_type_cart() {
+
+			// Labels
+			$labels = array(
+	            'name'					=> __('Carts', 'cart'),
+	            'singular_name'			=> __('Cart', 'cart'),
+	            'add_new'				=> __('Add New Cart', 'cart'),
+	            'add_new_item'			=> __('Add New Cart', 'cart'),
+	            'edit'					=> __('Edit', 'cart'),
+	            'edit_item'				=> __('Edit Cart', 'cart'),
+	            'new_item'				=> __('New Cart', 'cart'),
+	            'view'					=> __('View Carts', 'cart'),
+	            'view_item'				=> __('View Cart', 'cart'),
+	            'search_items'			=> __('Search Carts', 'cart'),
+	            'not_found'				=> __('No Carts found', 'cart'),
+	            'not_found_in_trash'	=> __('No Carts found in Trash', 'cart')
+			);
+
+			// Create orders post type
+			$args = array(
+				'labels'             => $labels,
+				'public'             => true,
+				'publicly_queryable' => true,
+				'show_in_menu'       => 'store/store-admin.php',
+				'query_var'          => true,
+				'capability_type'    => 'post',
+				'has_archive'        => false,
+				'menu_icon'			 => 'dashicons-cart',
+				'hierarchical'       => true,
+				'exclude_from_search'=> true,				
+				'menu_position'      => 20,
+			    'supports'			=> array(
+			        'title',
+			        'editor',
+			        'author'
+			    ),
+				'rewrite'			 => array(
+					'slug'	=> 'carts',
+				)
+			);
+			register_post_type( 'cart', $args );
+
+		}
+		add_action( 'init', 'create_post_type_cart' );
 
 
 	/*
@@ -191,3 +243,6 @@
 
 		}
 		add_action( 'init', 'create_post_type_address' );
+
+
+?>

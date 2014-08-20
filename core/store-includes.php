@@ -11,6 +11,14 @@
 	// Testing function to run things. Delete Me.
 	function jrr_run_thing(){
 
+		$address = array(
+			'line_1'		=> '134 Example way',
+			'line_2'		=> '',
+			'city'			=> 'Los angeles',
+			'state'			=> 'Ca',
+			'zip'			=> '11102'
+		);
+		//store_save_address( $address );
 		//var_dump( store_is_billing_address(65) ); exit;
 
 	}

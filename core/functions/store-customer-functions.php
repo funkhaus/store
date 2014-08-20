@@ -74,42 +74,21 @@
  *
  * @Param: ARRAY | associative array of address fields, must match fields returned by store_get_address_fields(). Required.
  * @Param: MIXED | ID or email address of customer to associate address to. Optional.
- * @Param: INT | ID of order/cart to associate this address with. Optional.
+ * @Param: BOOL | whether or not to set as the shipping address
+ * @Param: BOOL | whether or not to set as the billing address
  *
  * @Return: MIXED | address ID on success, or false on failure
  */
-	function store_save_address( $address = null, $customer = null, $order = null, $shipping = true, $billing = true ) {
+	function store_save_customer_address( $address = null, $customer = null, $shipping = true, $billing = true ) {
 
 		// No address info? abort
 		if ( ! $address ) return false;
 
-		// customer and order are both false? abort.
-		if ( $customer === false && $order === false ) return false;
+		// Get valid customer object
+		$customer = store_get_customer( $customer );
 
-		// If customer is not false, attempt to get intended customer ID
-		if ( $customer !== false ) {
-
-			// Set customer default to be current user
-			if ( ! $customer ) $customer = get_current_user_id();
-
-			$field = false;
-
-			// If customer is email address, search by email
-			if ( strstr($customer, '@') ) $field = 'email';
-
-			// If customer is ID, search by ID
-			if ( is_int(intval($customer)) ) $field = 'id';
-
-			// Get specified customer
-			$customer = get_user_by( $field, $customer );
-
-			if ( $customer ) {
-				$customer = $customer->ID;
-			} else {
-				$customer = false;
-			}
-
-		}
+		// Still no customer? abort.
+		if ( ! $customer ) return false;
 
 		// Create address post (setting author accordingly)
 		$args = array(
@@ -117,10 +96,9 @@
 			'post_type'      => 'address',
 			'ping_status'    => 'closed',
 			'comment_status' => 'closed',
-			'post_author'	 => $customer,
+			'post_author'	 => $customer->ID,
 			'post_title'	 => 'Address #?',
-			'post_content'	 => '',
-			'post_parent'	 =>	38
+			'post_content'	 => ''
 		);
 		$address_id = wp_insert_post($args, true);
 
@@ -139,22 +117,6 @@
 			// No address created? abort.
 			return false;
 
-		}
-
-		// Set order default to be currently active cart
-		if ( ! $order ) $order = store_get_active_cart_id();
-
-		$address_parent = false;
-
-		// Check if order ID is set and is valid
-		if ( intval($order) ) $address_parent = get_post( intval($order) );
-
-		// if post is not an address, set to false
-		if ( $address_parent->post_type !== 'orders' ) $address_parent = false;
-
-		// If valid address was found, set as address parent
-		if ( $address_parent ) {
-			update_post_meta( $address_id, '_store_address_parent', intval($address_parent->ID) );
 		}
 
 		// Load address fields
@@ -192,13 +154,12 @@
 	 * @Param: INT, user ID. If none provided, the currently logged in user ID will be used. Optional.
 	 * @Returns: MIXED, returns an array of address properties on success, or false on failure
 	 */
-	 	function store_get_user_billing_address( $user_id = null ){
+	 	function store_get_customer_billing_address( $customer = null ){
 
-		 	// Set default user to be current user
-		 	if ( ! $user_id ) $user_id = get_current_user_id();
+		 	$customer = store_get_customer( $customer );
 
-		 	// Still no user ID? abort.
-		 	if ( ! $user_id ) return false;
+		 	// Still no customer? abort.
+		 	if ( ! $customer ) return false;
 
 		 	// set output and args
 		 	$output = false;
@@ -207,7 +168,7 @@
 				'meta_key'			=> '_store_address_billing',
 				'meta_value'		=> '1',
 				'post_type'			=> 'address',
-				'author'			=> $user_id
+				'author'			=> $customer->ID
 			);
 
 			// Query for address
@@ -236,13 +197,10 @@
 	 * @Param: INT, user ID. If none provided, the currently logged in user ID will be used. Optional.
 	 * @Returns: MIXED, returns an array of address properties on success, or false on failure
 	 */
-	 	function store_get_user_shipping_address( $user_id = null ){
+	 	function store_get_customer_shipping_address( $customer = null ){
 
-		 	// Set default user to be current user
-		 	if ( ! $user_id ) $user_id = get_current_user_id();
-
-		 	// Still no user ID? abort.
-		 	if ( ! $user_id ) return false;
+		 	// Still no customer? abort.
+		 	if ( ! $customer ) return false;
 
 		 	// set output and args
 		 	$output = false;
@@ -251,7 +209,7 @@
 				'meta_key'			=> '_store_address_shipping',
 				'meta_value'		=> '1',
 				'post_type'			=> 'address',
-				'author'			=> $user_id
+				'author'			=> $customer->ID
 			);
 
 			// Query for address
@@ -280,7 +238,7 @@
 	 * @Param: INT, user ID or email. If none provided, the currently logged in user will be used. Optional.
 	 * @Returns: MIXED, array of address arrays on success, or false on failure
 	 */
-	 	function store_get_user_shipping_addresses( $customer = null ){
+	 	function store_get_customer_addresses( $customer = null ){
 
 		 	$customer = store_get_customer( $customer );
 
@@ -341,7 +299,7 @@
 			if ( is_int(intval($customer)) ) $field = 'id';
 
 			// Get specified customer
-			return get_user_by( $field, $customer );
+			return get_user_by( $field, intval($customer) );
 
 	 	}
 
