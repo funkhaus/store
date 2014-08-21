@@ -45,7 +45,7 @@
 	include_once( trailingslashit( pp() ) . 'core/store-ajax-api.php' );
 
 	// Setup user meta functions
-	include_once( trailingslashit( pp() ) . 'core/store-user-meta.php' );
+	include_once( trailingslashit( pp() ) . 'core/store-customer-meta.php' );
 
 	/*
 	 * Enqueue JavaScript API Scripts

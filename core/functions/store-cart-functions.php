@@ -136,6 +136,38 @@
 	 	}
  	}
 
+/*
+ * @Description: Reset currently active cart for a given user
+ *
+ * @Param: INT, user ID to reset, if not set uses current logged in user. Optional.
+ * @Return: MIXED, returns update_user_meta() value if logged in, else setcookie() value
+ */
+ 	function store_unset_active_cart( $customer = null ) {
+
+	 	// if user is logged in...
+	 	if ( is_user_logged_in() ) {
+
+		 	// verify customer
+		 	$customer = store_get_customer( $customer );
+
+		 	// No customer? abort.
+		 	if ( ! $customer ) return false;
+
+		 	// Remove cookie just in case
+			setcookie('_store_active_cart_id', '', time()-3600, '/', store_get_cookie_url(), false);
+
+			// Save cart id to user
+			return update_user_meta( $customer->ID, '_store_active_cart_id', '');
+
+		// User not logged in...
+	 	} else {
+
+		 	// Set empty cookie that expires yesterday
+			return setcookie('_store_active_cart_id', '', time()-3600, '/', store_get_cookie_url(), false);
+
+	 	}
+ 	}
+
 
 /*
  * @Description: Save a given product ID to a cart

@@ -37,24 +37,42 @@
 		// Make order out of cart
 		$order_id = wp_insert_post( $cart );
 
+		// If order was created...
 		if ( $order_id ) {
+
+			// Set product meta
 			$meta_id = update_post_meta( $order_id, '_store_cart_products', $products );
+
+			// Set ID, title, and name
 			$cart['ID'] = $order_id;
 			$cart['post_title'] = 'Order #' . $order_id;
 			$cart['post_name'] = 'Order #' . $order_id;
-			wp_update_post( $cart );
-		}
-		if ( ! $meta_id ) return false;
 
+			// Update name and title
+			wp_update_post( $cart );
+
+			// Set default order status
+			$status = store_set_order_status( $order_id );
+
+			// reset active cart
+			$set_cart = store_unset_active_cart();
+
+		}
+
+		// If something went wrong, abort.
+		if ( ! $meta_id || ! $status ) return false;
+
+		// return
 		return $order_id;
 
 	}
 
+
 /*
  * @Description: Sets the order status of a given cart.
  *
- * @Param 1: INT, ID or object of cart to set status for, if none provided active cart will be used. Optional
- * @Param 2: MIXED, string of status slug, or tag ID of status to set cart to
+ * @Param 1: INT, ID or object of cart to set status for, if none provided active cart will be used. Optional.
+ * @Param 2: MIXED, string of status slug, or tag ID of status to set cart to. Optional.
  * @Returns: BOOL, returns true on success, or false on failure
  */
 	function store_set_order_status( $order_id = null, $status = 'active' ) {
@@ -84,6 +102,7 @@
 		return $output;
 
 	}
+
 
 /*
  * @Description: Set a custom order status
