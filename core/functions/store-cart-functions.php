@@ -67,7 +67,7 @@
 		// Create a cart post
 		$args = array(
 			'post_status'    => 'publish',
-			'post_type'      => 'orders',
+			'post_type'      => 'cart',
 			'ping_status'    => 'closed', // This will need to be a custom status
 			'comment_status' => 'closed',
 			'post_author'	 => $user_id,

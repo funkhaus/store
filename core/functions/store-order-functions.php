@@ -3,6 +3,45 @@
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /*
+ * @Description: Create an order based on a given cart. If no cart provided, the currently active cart will be used.
+ *
+ * @Param: MIXED, cart object or ID to create order from. Optional.
+ * @Return: MIXED, order ID on success, or false on failure
+ */
+	function store_create_order( $cart = null ) {
+
+		// Set default to be active cart
+		if ( ! $cart ) $cart = store_get_active_cart_id();
+
+		// if cart is an ID, get whole post
+		if ( is_int($cart) ) $cart = get_post($cart);
+
+		// If cart is not a cart post, abort.
+		if ( $cart->post_type != 'cart' ) return false;
+
+		// Set products, abort if none.
+		$products = $cart->_store_cart_products;
+		if ( empty($products) ) return false;
+
+		// Convert to associative array
+		$cart = (array) $cart;
+
+		// Remove ID and date
+		unset($cart['ID']);
+		unset($cart['post_date']);
+		unset($cart['post_date_gmt']);
+
+		// Make order out of cart
+		$order_id = wp_insert_post( $cart );
+
+		if ( $order_id ) $meta_id = update_post_meta( $order_id, '_store_cart_products', $products );
+		if ( ! $meta_id ) return false;
+
+		return $order_id;
+
+	}
+
+/*
  * @Description: Sets the order status of a given cart.
  *
  * @Param 1: INT, ID or object of cart to set status for, if none provided active cart will be used. Optional
