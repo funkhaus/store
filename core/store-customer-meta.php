@@ -16,7 +16,7 @@
 				<th><label for="active-cart-id">Active Cart ID</label></th>
 
 				<td>
-					<input type="text" name="active_cart_id" id="active-cart-id" value="<?php echo get_user_meta( $user->ID, '_store_active_cart_id', true ); ?>" class="regular-text" ><br />
+					<input type="text" name="_store_active_cart_id" id="active-cart-id" value="<?php echo get_user_meta( $user->ID, '_store_active_cart_id', true ); ?>" class="regular-text" ><br />
 					<span class="description">The ID of the last active cart this user had.</span>
 				</td>
 			</tr>
@@ -73,7 +73,7 @@
 		}
 
 		//Update active cart ID
-		if( isset($_POST['store_active_cart_id']) ) {
+		if( isset($_POST['_store_active_cart_id']) ) {
 			update_user_meta( $user_id, '_store_active_cart_id', $_POST['_store_active_cart_id']);								
 		}
 

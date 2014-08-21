@@ -221,7 +221,6 @@
 
 		// Save meta array, return result
 		return update_post_meta($cart_id, '_store_cart_products', $products);
-		die;
 	};
 
 
@@ -264,6 +263,39 @@
 		return update_post_meta($cart_id, '_store_cart_products', $products);
 
 	};
+
+
+/*
+ * @Description: Check if cart (by ID) has been converted into an order
+ *
+ * @Param: INT, cart ID. If none provided, the default is the current cart.
+ * @Returns: MIXED, corresponding order ID if found, false on failure.
+ */
+	function store_cart_is_order($cart_id = null) {
+
+		// Set default id to be currently active cart
+		if ( ! $cart_id ) $cart_id = store_get_active_cart_id();
+
+		// Still no cart ID? abort.
+		if ( ! $cart_id ) return false;
+
+		// Set query args
+	    $args = array(
+			'posts_per_page'	=> 1,
+			'meta_key'			=> '_store_source_cart',
+			'meta_value'		=> $cart_id,
+			'post_type'			=> 'orders',
+			'fields'			=> 'id'
+		);
+		$found_order = get_posts( $args );
+
+		// If post was found, set to be ID
+		if ( ! empty($found_order) ) $found_order = reset($found_order);
+
+		return $found_order;
+
+	};
+
 
 /*
  * @Description: Remove all items from a cart

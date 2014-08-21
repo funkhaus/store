@@ -19,12 +19,18 @@
 		// If cart is not a cart post, abort.
 		if ( $cart->post_type != 'cart' ) return false;
 
+		// If cart has already been made into an order, abort.
+		if ( store_cart_is_order($cart->ID) ) return false;
+
 		// Set products, abort if none.
 		$products = $cart->_store_cart_products;
 		if ( empty($products) ) return false;
 
 		// Convert to associative array
 		$cart = (array) $cart;
+
+		// Cache ID
+		$prev_id = $cart['ID'];
 
 		// Remove ID and date
 		unset($cart['ID']);
@@ -41,7 +47,10 @@
 		if ( $order_id ) {
 
 			// Set product meta
-			$meta_id = update_post_meta( $order_id, '_store_cart_products', $products );
+			$meta_id = update_post_meta( $order_id, '_store_cart_products', $prev_id );
+
+			// Set source cart meta
+			$meta_id = update_post_meta( $order_id, '_store_source_cart', $products );
 
 			// Set ID, title, and name
 			$cart['ID'] = $order_id;
