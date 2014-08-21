@@ -203,8 +203,12 @@
  		global $post;
 
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
+	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "cart", "normal", "low");
 	 	if ( store_get_order_shipping_address($post->ID) ) {
 		 	add_meta_box("store_cart_list_shipping", "Shipping Address", "store_cart_list_shipping", "orders", "normal", "low");
+		}
+	 	if ( store_get_order_billing_address($post->ID) ) {
+		 	add_meta_box("store_cart_list_billing", "Billing Address", "store_cart_list_billing", "orders", "normal", "low");
 		}
 	}
  	add_action("add_meta_boxes", "store_add_cart_meta");
@@ -216,7 +220,7 @@
 		$products = get_post_meta($post->ID, '_store_cart_products', true);
 
 		// List out created options as a table
-		if ( $products ) : ?>
+		if ( is_array($products) ) : ?>
 
 			<div id="store-attached-table-wrapper">
 				<table class="wp-list-table widefat fixed pages">
@@ -239,10 +243,10 @@
 					<tbody>
 
 						<?php $count = 0;
-							foreach ( $products as $prod_id => $prod_qty ) : 
-							$post = get_post($prod_id); setup_postdata($post); $count++; ?>
+							foreach ( $products as $prod_id => $prod_qty ) :
+							$product = get_post($prod_id); $count++; ?>
 
-							<tr id="post-<?php $post->ID; ?>" class="post-<?php $post->ID; ?> <?php echo $count % 2 == 0 ? 'alternate' : '';?>">
+							<tr id="post-<?php $product->ID; ?>" class="post-<?php $product->ID; ?> <?php echo $count % 2 == 0 ? 'alternate' : '';?>">
 								<th scope="row" class="check-column">
 									<?php if ( true ) : ?>
 										<div class="dashicons dashicons-yes store-variant-enabled" style="margin-left: 5px;"></div>
@@ -250,12 +254,12 @@
 								</th>
 								<td class="post-title page-title column-title">
 									<strong>
-										<?php echo get_the_title($post->post_parent); ?>
+										<?php echo get_the_title($product->post_parent); ?>
 									</strong>
 								</td>
-								<td><?php the_title(); ?></td>
+								<td><?php echo get_the_title($product->ID); ?></td>
 								<td><?php echo $prod_qty; ?></td>
-								<td><?php echo $post->_store_price; ?></td>
+								<td><?php echo $product->_store_price; ?></td>
 							</tr>
 
 						<?php endforeach; ?>
@@ -271,7 +275,33 @@
 	function store_cart_list_shipping() {
 		global $post;
 
-		//$shipping = store_get_cart_shipping_address( $post->ID ); ?>
+		$shipping = store_get_order_shipping_address( $post->ID ); ?>
+
+			<table class="widefat">
+				<tbody>
+
+					<?php $count = 0; ?>
+					<?php foreach ( $shipping as $i => $field ) : $count++; ?>
+						<tr class="<?php echo $count % 2 === 0 ? 'alternate' : ''; ?>">
+							<td class="row-title">
+								<?php echo $i; ?>
+							</td>
+							<td class="desc">
+								<?php echo $field; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+
+				</tbody>
+			</table>
+
+		<?php
+	}
+
+	function store_cart_list_billing() {
+		global $post;
+
+		$shipping = store_get_order_shipping_address( $post->ID ); ?>
 
 			<table class="widefat">
 				<tbody>

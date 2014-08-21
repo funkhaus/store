@@ -11,17 +11,24 @@
 	// Testing function to run things. Delete Me.
 	function jrr_run_thing(){
 
+		global $post;
+
 		$address = array(
-			'line_1'		=> '134 Example way',
+			'line_1'		=> '1923 Noship Ave',
 			'line_2'		=> '',
 			'city'			=> 'Los angeles',
 			'state'			=> 'Ca',
 			'zip'			=> '11102'
 		);
-		//store_save_address( $address );
+		//var_dump( store_save_customer_address( $address, null, false, false ) ); exit;
+
+		//var_dump( store_set_order_billing_address(83) ); exit;
+
 		//var_dump( store_is_billing_address(65) ); exit;
 
 		//var_dump( store_create_order() ); exit;
+
+		//var_dump( get_post_meta($post->ID, '_store_cart_products', true) );
 
 	}
 	add_action('init', 'jrr_run_thing');

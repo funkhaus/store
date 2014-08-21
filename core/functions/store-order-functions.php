@@ -13,8 +13,8 @@
 		// Set default to be active cart
 		if ( ! $cart ) $cart = store_get_active_cart_id();
 
-		// if cart is an ID, get whole post
-		if ( is_int($cart) ) $cart = get_post($cart);
+		// Get whole post
+		$cart = get_post( $cart );
 
 		// If cart is not a cart post, abort.
 		if ( $cart->post_type != 'cart' ) return false;
@@ -23,7 +23,7 @@
 		if ( store_cart_is_order($cart->ID) ) return false;
 
 		// Set products, abort if none.
-		$products = $cart->_store_cart_products;
+		$products = get_post_meta($cart->ID, '_store_cart_products', true);
 		if ( empty($products) ) return false;
 
 		// Convert to associative array
@@ -47,10 +47,10 @@
 		if ( $order_id ) {
 
 			// Set product meta
-			$meta_id = update_post_meta( $order_id, '_store_cart_products', $prev_id );
+			$meta_id = update_post_meta( $order_id, '_store_source_cart', $prev_id );
 
 			// Set source cart meta
-			$meta_id = update_post_meta( $order_id, '_store_source_cart', $products );
+			$meta_id = update_post_meta( $order_id, '_store_cart_products', $products );
 
 			// Set ID, title, and name
 			$cart['ID'] = $order_id;
@@ -82,7 +82,7 @@
  *
  * @Param 1: INT, ID or object of cart to set status for, if none provided active cart will be used. Optional.
  * @Param 2: MIXED, string of status slug, or tag ID of status to set cart to. Optional.
- * @Returns: BOOL, returns true on success, or false on failure
+ * @Return: BOOL, returns true on success, or false on failure
  */
 	function store_set_order_status( $order_id = null, $status = 'active' ) {
 
@@ -117,7 +117,7 @@
  * @Description: Set a custom order status
  *
  * @Param: STRING, desired title of your status
- * @Returns: BOOL, returns true on success, or false on failure
+ * @Return: BOOL, returns true on success, or false on failure
  */
 	function store_add_custom_order_status( $status = null ) {
 
@@ -135,42 +135,48 @@
 /*
  * @Description: Get shipping address for an order
  *
- * @Param: INT, order ID. Required.
+ * @Param: MIXED, order ID or object. Required.
  * @Return: MIXED, address array on success, false on failure
  */
  	function store_get_order_shipping_address( $order = null ) {
 
-	 	// no order var? abort.
+	 	// Get order object
+	 	$order = get_post( $order );
+
+	 	// Still no order? abort.
 	 	if ( ! $order ) return false;
 
-	 	// If is ID, get by ID
-	 	if ( is_int( $order ) ) $order = get_post( $order );
-
-	 	return get_post_meta( $order->ID, '_store_shipping_address' );
+	 	return get_post_meta( $order->ID, '_store_shipping_address', true );
 
  	}
 
 
 /*
- * @Description: Set the shipping address for a given order
+ * @Description: Sets a shipping address for an order
  *
- * @Param: ARRAY, address array, must match format of store_get_address_fields(). Required.
- * @Param: INT, ID of order to set address to. Required.
- * @Return: MIXED, meta ID on success, false on failure
+ * @Param 1: INT, ID or object of order to set status for. Required.
+ * @Param 2: ARRAY, array of address fields to use for address. Must match format of store_get_address_fields(). If none provided the shipping address of the current customer will be used.
+ * @Return: BOOL, true on success, or false on failure
  */
- 	function store_set_order_shipping_address( $address = null, $order_id = null ) {
+	function store_set_order_shipping_address( $order = null, $address = null ) {
 
-	 	// Abort if either parameter is not set
-	 	if ( empty($address) || ! is_array($address) || ! $order_id ) return false;
+		// Make sure order if a post object
+		$order = get_post( $order );		
 
-	 	// Get address template
-	 	$address_template = store_get_address_fields();
+		// set default address to be current customer's shipping address
+		if ( empty($address) || ! is_array($address) ) $address = store_get_customer_shipping_address( store_get_customer() );
+
+		// No address || order? abort.
+		if ( ! $address || $order->post_type !== 'orders' ) return false;
+
+		// Get field template
+		$field_template = store_get_address_fields();
 
 	 	// Set output
 	 	$output = false;
 
 	 	// Loop through address fields
-	 	foreach ( $address_template as $field ) {
+	 	foreach ( $field_template as $field ) {
 
 		 	// if field is set, add to output
 		 	if ( isset($address[$field]) ) $output[$field] = $address[$field];
@@ -181,9 +187,9 @@
 	 	if ( ! $output ) return false;
 
 	 	// return output of update post meta
-	 	return update_post_meta( $order_id, '_store_shipping_address', $output );
+	 	return update_post_meta( $order->ID, '_store_shipping_address', $output );
 
- 	}
+	}
 
 
 /*
@@ -194,13 +200,13 @@
  */
  	function store_get_order_billing_address( $order = null ) {
 
-	 	// no order var? abort.
+	 	// Get order objeict
+	 	$order = get_post( $order );
+
+	 	// Still no order? abort.
 	 	if ( ! $order ) return false;
 
-	 	// If is ID, get by ID
-	 	if ( is_int( $order ) ) $order = get_post( $order );
-
-	 	return get_post_meta( $order->ID, '_store_billing_address' );
+	 	return get_post_meta( $order->ID, '_store_billing_address', true );
 
  	}
 
@@ -212,19 +218,25 @@
  * @Param: INT, ID of order to set address to. Required.
  * @Return: MIXED, meta ID on success, false on failure
  */
- 	function store_set_order_billing_address( $address = null, $order_id = null ) {
+ 	function store_set_order_billing_address( $order = null, $address = null ) {
 
-	 	// Abort if either parameter is not set
-	 	if ( empty($address) || ! is_array($address) || ! $order_id ) return false;
+		// Make sure order if a post object
+		$order = get_post( $order );
 
-	 	// Get address template
-	 	$address_template = store_get_address_fields();
+		// set default address to be current customer's shipping address
+		if ( empty($address) || ! is_array($address) ) $address = store_get_customer_billing_address( store_get_customer() );
+
+		// No address || order? abort.
+		if ( ! $address || $order->post_type !== 'orders' ) return false;
+
+		// Get field template
+		$field_template = store_get_address_fields();
 
 	 	// Set output
 	 	$output = false;
 
 	 	// Loop through address fields
-	 	foreach ( $address_template as $field ) {
+	 	foreach ( $field_template as $field ) {
 
 		 	// if field is set, add to output
 		 	if ( isset($address[$field]) ) $output[$field] = $address[$field];
@@ -235,7 +247,7 @@
 	 	if ( ! $output ) return false;
 
 	 	// return output of update post meta
-	 	return update_post_meta( $order_id, '_store_billing_address', $output );
+	 	return update_post_meta( $order->ID, '_store_billing_address', $output );
 
  	}
 

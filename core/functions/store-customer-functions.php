@@ -156,6 +156,7 @@
 	 */
 	 	function store_get_customer_billing_address( $customer = null ){
 
+		 	// Get valid customer
 		 	$customer = store_get_customer( $customer );
 
 		 	// Still no customer? abort.
@@ -198,6 +199,9 @@
 	 * @Returns: MIXED, returns an array of address properties on success, or false on failure
 	 */
 	 	function store_get_customer_shipping_address( $customer = null ){
+
+		 	// Get valid customer
+		 	$customer = store_get_customer( $customer );
 
 		 	// Still no customer? abort.
 		 	if ( ! $customer ) return false;
@@ -293,7 +297,8 @@
 			$field = false;
 
 			// If customer is email address, search by email
-			if ( strstr($customer, '@') ) $field = 'email';
+			if ( is_string($customer) )
+				if ( strstr($customer, '@') ) $field = 'email';
 
 			// If customer is ID, search by ID
 			if ( is_int(intval($customer)) ) $field = 'id';
