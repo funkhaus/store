@@ -21,7 +21,7 @@
 		//store_save_address( $address );
 		//var_dump( store_is_billing_address(65) ); exit;
 
-		var_dump( store_create_order() ); exit;
+		//var_dump( store_create_order() ); exit;
 
 	}
 	add_action('init', 'jrr_run_thing');

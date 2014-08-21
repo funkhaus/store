@@ -31,10 +31,19 @@
 		unset($cart['post_date']);
 		unset($cart['post_date_gmt']);
 
+		// Change to order post type
+		$cart['post_type'] = 'orders';
+
 		// Make order out of cart
 		$order_id = wp_insert_post( $cart );
 
-		if ( $order_id ) $meta_id = update_post_meta( $order_id, '_store_cart_products', $products );
+		if ( $order_id ) {
+			$meta_id = update_post_meta( $order_id, '_store_cart_products', $products );
+			$cart['ID'] = $order_id;
+			$cart['post_title'] = 'Order #' . $order_id;
+			$cart['post_name'] = 'Order #' . $order_id;
+			wp_update_post( $cart );
+		}
 		if ( ! $meta_id ) return false;
 
 		return $order_id;
