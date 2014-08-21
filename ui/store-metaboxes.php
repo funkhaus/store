@@ -39,7 +39,7 @@
 		 	<?php for ( $i = 0; $i < 1; $i++ ) : ?>
 
 				<div class="store-options-meta store-create-option">
-					<label for="option-<?php echo $i +1; ?>-key">Option <?php echo $i +1; ?>:</label>
+					<label for="option-<?php echo $i +1; ?>-key">Option <?php echo $i + 1; ?>:</label>
 					<input id="option-<?php echo $i +1; ?>-key" class="short store-option" title="" placeholder="size" type="text" value="">
 					<input id="option-<?php echo $i +1; ?>-value" class="short store-option-variant" title="" name="" placeholder="small, medium, large" type="text" value="">
 					<br/>

@@ -60,11 +60,106 @@
  * @Description: Get shipping address for an order
  *
  * @Param: INT, order ID. Required.
+ * @Return: MIXED, address array on success, false on failure
+ */
+ 	function store_get_order_shipping_address( $order = null ) {
+
+	 	// no order var? abort.
+	 	if ( ! $order ) return false;
+
+	 	// If is ID, get by ID
+	 	if ( is_int( $order ) ) $order = get_post( $order );
+
+	 	return get_post_meta( $order->ID, '_store_shipping_address' );
+
+ 	}
+
+
+/*
+ * @Description: Set the shipping address for a given order
+ *
+ * @Param: ARRAY, address array, must match format of store_get_address_fields(). Required.
+ * @Param: INT, ID of order to set address to. Required.
+ * @Return: MIXED, meta ID on success, false on failure
+ */
+ 	function store_set_order_shipping_address( $address = null, $order_id = null ) {
+
+	 	// Abort if either parameter is not set
+	 	if ( empty($address) || ! is_array($address) || ! $order_id ) return false;
+
+	 	// Get address template
+	 	$address_template = store_get_address_fields();
+
+	 	// Set output
+	 	$output = false;
+
+	 	// Loop through address fields
+	 	foreach ( $address_template as $field ) {
+
+		 	// if field is set, add to output
+		 	if ( isset($address[$field]) ) $output[$field] = $address[$field];
+
+	 	}
+
+	 	// no output? abort.
+	 	if ( ! $output ) return false;
+
+	 	// return output of update post meta
+	 	return update_post_meta( $order_id, '_store_shipping_address', $output );
+
+ 	}
+
+
+/*
+ * @Description: Get billing address for an order
+ *
+ * @Param: INT, order ID. Required.
  * @Return: MIXED, address object on success, false on failure
  */
- 	function store_get_order_shipping_address( $order_id ) {
+ 	function store_get_order_billing_address( $order = null ) {
 
-	 	
+	 	// no order var? abort.
+	 	if ( ! $order ) return false;
+
+	 	// If is ID, get by ID
+	 	if ( is_int( $order ) ) $order = get_post( $order );
+
+	 	return get_post_meta( $order->ID, '_store_billing_address' );
+
+ 	}
+
+
+/*
+ * @Description: Set the billing address for a given order
+ *
+ * @Param: ARRAY, address array, must match format of store_get_address_fields(). Required.
+ * @Param: INT, ID of order to set address to. Required.
+ * @Return: MIXED, meta ID on success, false on failure
+ */
+ 	function store_set_order_billing_address( $address = null, $order_id = null ) {
+
+	 	// Abort if either parameter is not set
+	 	if ( empty($address) || ! is_array($address) || ! $order_id ) return false;
+
+	 	// Get address template
+	 	$address_template = store_get_address_fields();
+
+	 	// Set output
+	 	$output = false;
+
+	 	// Loop through address fields
+	 	foreach ( $address_template as $field ) {
+
+		 	// if field is set, add to output
+		 	if ( isset($address[$field]) ) $output[$field] = $address[$field];
+
+	 	}
+
+	 	// no output? abort.
+	 	if ( ! $output ) return false;
+
+	 	// return output of update post meta
+	 	return update_post_meta( $order_id, '_store_billing_address', $output );
 
  	}
 
