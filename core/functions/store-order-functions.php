@@ -114,6 +114,30 @@
 
 
 /*
+ * @Description: Sets the order status of a given cart.
+ *
+ * @Param 1: INT, ID or object of order to get status for. Will default to post->ID. Optional.
+ * @Return: MIXED, returns term object of current order status on success, or false on failure.
+ */
+	function store_get_order_status( $order = null ) {
+		global $post;
+
+		// Set order object
+		$order = get_post( $order );
+
+		// No order? get post
+		if ( ! $order ) $order = $post;
+
+		// Get current term(s)
+		$current = wp_get_post_terms( $order->ID, 'store_status' );
+
+		// Return first
+		return reset($current);
+
+	}
+
+
+/*
  * @Description: Set a custom order status
  *
  * @Param: STRING, desired title of your status
@@ -121,13 +145,38 @@
  */
 	function store_add_custom_order_status( $status = null ) {
 
+		// if status is not a string, abort.
 		if ( ! is_string( $status ) ) return false;
 
+		// query to see if this term exists already
 		$term_exists = get_term_by( 'slug', $status, 'store_status' );
 
+		// if so, abort
 		if ( $term_exists ) return false;
 
+		// Create status and return result
 		return wp_insert_term( $store_status, 'store_status' );
+
+	}
+
+
+/*
+ * @Description: Get all available order statuses
+ *
+ * @Return: ARRAY, all available terms within the store_status taxonomy, returned as objects
+ */
+	function store_get_registered_statuses() {
+
+		// query for all statuses, in order of creation
+		$args = array(
+		    'orderby'           => 'id', 
+		    'order'             => 'ASC',
+		    'hide_empty'        => false
+		);
+		$terms = get_terms( 'store_status', $args );
+
+		// Return array of objects
+		return $terms;
 
 	}
 

@@ -203,6 +203,7 @@
  		global $post;
 
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
+	 	add_meta_box("store_order_show_status", "Order Status", "store_order_show_status", "orders", "side", "low");
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "cart", "normal", "low");
 	 	if ( store_get_order_shipping_address($post->ID) ) {
 		 	add_meta_box("store_cart_list_shipping", "Shipping Address", "store_cart_list_shipping", "orders", "normal", "low");
@@ -324,6 +325,26 @@
 		<?php
 	}
 
+	function store_order_show_status() {
+
+		$current_status = store_get_order_status();
+		$statuses = store_get_registered_statuses(); ?>
+
+		<?php if ( is_array($statuses) ) : ?>
+
+				<label class="screen-reader-text" for="store_order_status_select">Order Status</label>
+				<select name="store_order_status_select" id="store_order_status_select" class="">
+
+					<?php foreach ( $statuses as $status ) : ?>
+						<option value="<?php echo $status->name; ?>" <?php selected( $status->term_id, $current_status->term_id ); ?>><?php echo $status->name; ?></option>
+					<?php endforeach; ?>
+
+				</select>
+
+		<?php endif;
+
+	}
+
 
 /*
  * Cart Meta Boxes
@@ -410,6 +431,10 @@
 		}
 		update_post_meta($post->ID, "_store_address_shipping", $_POST["_store_address_shipping"]);
 		update_post_meta($post->ID, "_store_address_billing", $_POST["_store_address_billing"]);
+
+		if( isset($_POST["store_order_status_select"]) ) {
+			wp_set_post_terms( $post->ID, $_POST["store_order_status_select"], 'store_status' );
+		}
 
 	}
  	add_action('save_post', 'store_save_meta');
