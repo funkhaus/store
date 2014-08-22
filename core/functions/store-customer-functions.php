@@ -135,8 +135,8 @@
 		}
 
 		// Set shipping and billing
-		if ( $shipping ) update_post_meta( $address_id, "_store_address_shipping", 1);
-		if ( $billing ) update_post_meta( $address_id, "_store_address_billing", 1);
+		if ( $shipping ) update_post_meta( $address_id, "_store_address_is_shipping", 1);
+		if ( $billing ) update_post_meta( $address_id, "_store_address_is_billing", 1);
 
 		// If field match is still false, delete the address that was created
 		if ( ! $field_match ) {

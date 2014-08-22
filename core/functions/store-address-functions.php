@@ -12,7 +12,7 @@
 
 	 	if ( ! $address_id ) return false;
 
-	 	$shipping = get_post_meta( $address_id, '_store_address_shipping', true );
+	 	$shipping = get_post_meta( $address_id, '_store_address_is_shipping', true );
 	 	$shipping = intval($shipping);
 
 	 	$output = false;
@@ -33,7 +33,7 @@
 
 	 	if ( ! $address_id ) return false;
 
-	 	$shipping = get_post_meta( $address_id, '_store_address_billing', true );
+	 	$shipping = get_post_meta( $address_id, '_store_address_is_billing', true );
 	 	$shipping = intval($shipping);
 
 	 	$output = false;

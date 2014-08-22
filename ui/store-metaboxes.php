@@ -377,8 +377,8 @@
 	            <td>
 	                <fieldset>
 	                    <legend class="screen-reader-text"><span>Address Type</span></legend>
-	                    <label for="store_address_shipping"><input name="_store_address_shipping" type="checkbox" id="store_address_shipping" value="1" <?php checked($post->_store_address_shipping); ?>>Shipping Address</label><br>
-	                    <label for="store_address_billing"><input name="_store_address_billing" type="checkbox" id="store_address_billing" value="1" <?php checked($post->_store_address_billing); ?>>Billing Address</label>
+	                    <label for="store_address_is_shipping"><input name="_store_address_is_shipping" type="checkbox" id="store_address_is_shipping" value="1" <?php checked($post->_store_address_is_shipping); ?>>Shipping Address</label><br>
+	                    <label for="store_address_is_billing"><input name="_store_address_is_billing" type="checkbox" id="store_address_is_billing" value="1" <?php checked($post->_store_address_is_billing); ?>>Billing Address</label>
 	                </fieldset>
 	            </td>
 	        </tr>
@@ -393,6 +393,7 @@
  */
  	function store_save_meta(){
 	 	global $post;
+
 
 	 	// check autosave
 	 	if( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
@@ -429,8 +430,31 @@
 			update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
 
 		}
-		update_post_meta($post->ID, "_store_address_shipping", $_POST["_store_address_shipping"]);
-		update_post_meta($post->ID, "_store_address_billing", $_POST["_store_address_billing"]);
+		update_post_meta($post->ID, "_store_address_is_shipping", $_POST["_store_address_is_shipping"]);
+		update_post_meta($post->ID, "_store_address_is_billing", $_POST["_store_address_is_billing"]);
+
+
+
+		if ( $_POST["_store_address_is_shipping"] ) {
+			$addresses = store_get_customer_addresses( $post->post_author );
+			if ( $addresses ) {
+				foreach ( $addresses as $id => $address ) {
+					if ( $id == $post->ID ) continue;
+					update_post_meta($id, '_store_address_is_shipping', 0);
+				}
+			}
+		}
+		if ( $_POST["_store_address_is_billing"] ) {
+			$addresses = store_get_customer_addresses( $post->post_author );
+			if ( $addresses ) {
+				foreach ( $addresses as $id => $address ) {
+					if ( $id == $post->ID ) continue;
+					update_post_meta($id, '_store_address_is_billing', 0);
+				}
+			}			
+		}
+
+
 
 		if( isset($_POST["store_order_status_select"]) ) {
 			wp_set_post_terms( $post->ID, $_POST["store_order_status_select"], 'store_status' );
