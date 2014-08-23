@@ -20,6 +20,9 @@
 			'state'			=> 'Ca',
 			'zip'			=> '11102'
 		);
+
+		//store_get_shipwire_quantity();
+
 		//var_dump( store_save_customer_address( $address, null, false, false ) ); exit;
 
 		//var_dump( store_set_order_billing_address(83) ); exit;
@@ -50,6 +53,9 @@
 
 	// Add cart AJAX functions
 	include_once( trailingslashit( pp() ) . 'core/store-ajax-api.php' );
+
+	// Add shipwire AJAX functions
+	include_once( trailingslashit( pp() ) . 'core/store-shipwire-api.php' );
 
 	// Setup user meta functions
 	include_once( trailingslashit( pp() ) . 'core/store-customer-meta.php' );

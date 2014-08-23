@@ -108,7 +108,7 @@
 										<?php the_title(); ?>
 									</strong>
 								</td>
-								<td>-</td>
+								<td><?php echo store_get_sku() ? store_get_sku() : '-'; ?></td>
 								<td><?php echo $post->_store_qty ? $post->_store_qty : '-'; ?></td>
 								<td>
 									<?php echo $post->_store_price; ?>
@@ -170,7 +170,7 @@
 				<strong>SKU</strong>
 			</p>
 			<label class="screen-reader-text" for="store-sku">SKU</label>
-			<input id="store-sku" class="short" title="" size="8" name="_store_sku" type="text" value="<?php echo $post->_store_sku; ?>">
+			<input id="store-sku" class="short" title="" size="8" name="_store_sku" type="text" value="<?php echo store_get_sku(); ?>">
 			<br/>
 
 		</div>

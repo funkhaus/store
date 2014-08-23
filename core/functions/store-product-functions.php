@@ -11,21 +11,9 @@
  * @Returns: MIXED, integer value of quantity on success, bool false on failure
  */
 	function store_get_quantity( $product = false ){
-		global $post;
 
-		// Set default to be current product
-		if ( $product === false ) {
-
-			// if $post is not a product, abort
-			if ( $post->post_type !== 'product' ) return false;
-			$product = $post;
-
-		}
-
-		// If ID was passed, get full object
-		if ( is_int( intval($product) ) ) {
-			$product = get_post($product);
-		}
+		// Get product object
+		$product = store_get_product( $product );
 
 		// If this is a variation, return qty
 		if ( $product->post_parent ) return $product->_store_qty;
@@ -59,37 +47,34 @@
 
 
 /*
+ * @Description: get the SKU of any given product
+ *
+ * @Param: MIXED, ID or object of product to get SKU of. If no product, $post will be used.
+ * @Returns: MIXED, integer value of quantity on success, bool false on failure
+ */
+	function store_get_sku( $product = null ){
+
+		$product = store_get_product( $product );
+
+		return get_post_meta( $product->ID, '_store_sku', true );
+
+	};
+
+
+/*
  * @Description: Get all variants of a product
  *
  * @Param: MIXED, can be an ID or post object of product to retrieve variants of. If not set, attempts to get current ID from global $post.
  * @Returns: MIXED, can be an array of post objects for each variant or false for no varients. Uses get_posts().
  */
 	function store_get_product_variants( $product = false ){
-		
-		// Declaring vars
-		$product_id;
 
-		// If no $product_id, then attempt to get from loop
-		if( empty($product) ) {
-			global $post;
-			$product = $post;
-			$product_id = $post->ID;
+		// Get valid product object
+		$product = store_get_product( $product );
 
-		} elseif( is_int($product) ) {
-			// ID was passed, get full object
-			$product = get_post($product);
-			$product_id = $product->ID;
-			
-		} elseif( is_object($product) ) {
-			// Object passed
-			$product_id = $product->ID;
-		}
-		
-		// Some error handling if above failed
-		if( !is_int($product_id) || !is_object($product) ) {
-			return false;
-		}
-		
+		// No product? abort
+		if ( ! $product ) return false;
+
 		// Get the proper parent ID value
 		if( $product->post_parent !== 0 ) {
 			// Product not top level, so this must be a vareint, get siblings
@@ -117,5 +102,31 @@
 		return $products;
 
 	};
+
+
+/*
+ * @Description: Get product object, use $post as default
+ *
+ * @Param: MIXED, product ID or object. If none provided, $post will be used. Optional.
+ * @Returns: MIXED, user object on success, false on failure
+ */
+ 	function store_get_product( $product = null ){
+	 	global $post;
+
+	 	// Set default to $post
+		if ( ! $product ) $product = $post;
+
+		// get full post object
+		$product = get_post( $product );
+
+		// Make sure this is a product
+		if ( is_object($product) ) {
+			if ( $product->post_type !== 'product' ) $product = false;
+		}
+
+		// Return result
+		return $product;
+
+ 	}
 
 ?>
