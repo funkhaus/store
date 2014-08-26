@@ -8,7 +8,7 @@
 
 
 
-	// Testing function to run things. Delete Me.
+	// Testing function to run things. Delete Me eventually.
 	function jrr_run_thing(){
 
 		global $post;
@@ -21,7 +21,7 @@
 			'zip'			=> '11102'
 		);
 
-		//store_get_shipwire_quantity();
+		//var_dump( store_shipwire_request_order(83) ); exit;
 
 		//var_dump( store_save_customer_address( $address, null, false, false ) ); exit;
 

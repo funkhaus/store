@@ -301,4 +301,25 @@
  	}
 
 
+/*
+ * @Description: Get all items in order by ID or obj
+ *
+ * @Param: MIXED, order ID or object. Required.
+ * @Returns: MIXED, returns an array of cart items (value of _store_cart_products ), or false on failure
+ */
+ 	function store_get_order_items($order = null) {
+
+	 	// Get order object
+	 	$order = get_post($order);
+
+ 		// Set output
+ 		$output = false;
+ 		if ( $order )
+ 			$output = get_post_meta($order->ID, '_store_cart_products', true);
+
+	 	return $output;
+
+ 	}
+
+
 ?>
