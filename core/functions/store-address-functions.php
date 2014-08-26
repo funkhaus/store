@@ -3,6 +3,24 @@
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /*
+ * @Description: Helper function used to get array of fields needed for a full address
+ *
+ * @Return: ARRAY, key-based array of unique slugs for each field
+ */
+	function store_get_address_fields(){
+
+		$fields = array();
+		$fields[] = 'line_1';
+		$fields[] = 'line_2';
+		$fields[] = 'city';
+		$fields[] = 'state';
+		$fields[] = 'country';
+		$fields[] = 'zip';
+
+		return $fields;
+	}
+
+/*
  * @Description: Check if a given address is a shipping address
  *
  * @Param: INT, address ID. Required.

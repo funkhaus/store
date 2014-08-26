@@ -331,22 +331,18 @@
 
 
 /*
- * @Description: Get all items in cart by ID
+ * @Description: Get all items in cart by ID or object. Wrapper for store_get_order_items(), but with active cart as default.
  *
- * @Param: INT, cart ID. Optional.
+ * @Param: MIXED, cart ID or object. Optional.
  * @Returns: MIXED, returns an array of cart items (value of _store_cart_products ), or false on failure
  */
- 	function store_get_cart_items($cart_id = null) {
+ 	function store_get_cart_items($cart = null) {
 
- 		// If no proper cart ID provided, use active cart
- 		if ( ! is_int() ) $cart_id = store_get_active_cart_id();
+	 	// Get default cart
+	 	if ( ! $cart ) $cart = store_get_active_cart_id();
 
- 		// Set output
- 		$output = false;
- 		if ( $cart_id )
- 			$output = get_post_meta($cart_id, '_store_cart_products', true);
-
-	 	return $output;
+	 	// return
+	 	return store_get_order_items();
 
  	}
 
