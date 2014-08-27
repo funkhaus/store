@@ -107,4 +107,25 @@
 	}
 
 
+/*
+ * @Description: Sync inventory with shipwire
+ *
+ * @Returns: MIXED, result of store_update_shipwire_inventory
+ */
+	add_action( 'wp_ajax_nopriv_stripe_charge', 'store_ajax_stripe_charge' );
+	add_action( 'wp_ajax_stripe_charge', 'store_ajax_stripe_charge' );
+	function store_ajax_stripe_charge() {
+
+		// Import vars from the AJAX array if set
+		$token = false;
+		if( isset($_REQUEST['token']) ) {
+			$token = (string) $_REQUEST['token'];
+		}
+
+		// Attempt to update and return output
+		echo store_stripe_run_charge($token, 1000);
+		die;
+	}
+
+
 ?>

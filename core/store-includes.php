@@ -50,6 +50,9 @@
 	// Add shipwire AJAX functions
 	include_once( trailingslashit( pp() ) . 'core/store-shipwire-api.php' );
 
+	// Add stripe setup AJAX functions
+	include_once( trailingslashit( pp() ) . 'core/store-stripe-api.php' );
+
 	// Setup user meta functions
 	include_once( trailingslashit( pp() ) . 'core/store-customer-meta.php' );
 
