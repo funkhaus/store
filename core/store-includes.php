@@ -23,18 +23,6 @@
 
 		//var_dump( store_update_shipwire_inventory() ); exit;
 
-		//var_dump( store_shipwire_request_order(83) ); exit;
-
-		//var_dump( store_save_customer_address( $address, null, false, false ) ); exit;
-
-		//var_dump( store_set_order_billing_address(83) ); exit;
-
-		//var_dump( store_is_billing_address(65) ); exit;
-
-		//var_dump( store_create_order() ); exit;
-
-		//var_dump( get_post_meta($post->ID, '_store_cart_products', true) );
-
 	}
 	add_action('init', 'jrr_run_thing');
 
@@ -49,6 +37,9 @@
 
 	// Run activation functions
 	include_once( trailingslashit( pp() ) . 'core/setup/store-activate.php' );
+
+	// Load stripe classes
+	include_once( trailingslashit( pp() ) . 'core/stripe-php/Stripe.php' );
 
 	// Hook saving functionality
 	include_once( trailingslashit( pp() ) . 'core/store-save-products.php' );

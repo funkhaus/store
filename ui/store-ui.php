@@ -67,11 +67,7 @@
 	 */
 		function store_register_settings(){
 			register_setting('store_settings', 'store_sw_settings');
-			//register_setting('store_settings', 'fgram_att_page');
-			//register_setting('store_settings', 'fgram_default_status');
-			//register_setting('store_settings', 'fgram_user_list');
-			//register_setting('store_settings', 'fgram_tag_list');
-			//register_setting('store_settings', 'fgram_auto');
+			register_setting('store_settings', 'store_st_settings');
 		}
 		add_action('admin_init', 'store_register_settings');
 
