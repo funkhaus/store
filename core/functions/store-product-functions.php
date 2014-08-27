@@ -83,7 +83,7 @@
 			// Must be a top level product, attempt to get children
 			$parent_id = $product->ID;
 		}
-		
+
 		// Get any variants and return results
 		$args = array(
 			'posts_per_page'   => -1,

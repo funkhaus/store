@@ -21,6 +21,8 @@
 			'zip'			=> '11102'
 		);
 
+		//var_dump( store_update_shipwire_inventory() ); exit;
+
 		//var_dump( store_shipwire_request_order(83) ); exit;
 
 		//var_dump( store_save_customer_address( $address, null, false, false ) ); exit;

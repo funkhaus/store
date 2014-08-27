@@ -85,4 +85,26 @@
 		die;
 	}
 
+
+/*
+ * @Description: Sync inventory with shipwire
+ *
+ * @Returns: MIXED, result of store_update_shipwire_inventory
+ */
+	add_action( 'wp_ajax_nopriv_update_inventory', 'store_ajax_update_inventory' );
+	add_action( 'wp_ajax_update_inventory', 'store_ajax_update_inventory' );
+	function store_ajax_update_inventory() {
+
+		// Import vars from the AJAX array if set
+		$product_id = false;
+		if( isset($_REQUEST['product_id']) ) {
+			$product_id = (int) $_REQUEST['product_id'];
+		}
+
+		// Attempt to update and return output
+		echo store_update_shipwire_inventory($product_id);
+		die;
+	}
+
+
 ?>

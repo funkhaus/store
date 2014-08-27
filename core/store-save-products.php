@@ -208,4 +208,15 @@
 	}
 	add_action('save_post', 'store_variation_children');
 
+
+/*
+ * Attempt to sync shipwire inventory on save
+ */
+	function store_shipwire_inv_save( $post_id ){
+
+		store_update_shipwire_inventory_single( $post_id );
+
+	}
+	add_action('save_post', 'store_shipwire_inv_save');
+
 ?>

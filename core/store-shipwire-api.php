@@ -111,14 +111,114 @@
 /*
  * @Description: Update all inventory of all products
  *
- * @Param: MIXED, ID of product to retrieve quantity for, or $post object
+ * @Param: MIXED, ID or object of product to retrieve quantity for, or $post object
  * @Returns: MIXED, integer value of quantity on success, bool false on failure
  */
 	function store_update_shipwire_inventory( $product = null ){
 
-		
+		$output = 0;
+
+		// Set product to default, unless product was left empty
+		if ( $product ) {
+
+			$output = store_update_shipwire_inventory_single($product);
+
+		// If product was left empty, update all products
+		} else {
+
+		    $args = array(
+				'posts_per_page'   => -1,
+				'post_type'        => 'product',
+				'post_parent'      => 0
+			);
+			$products = get_posts($args);
+
+			// Get all products, loop through them
+			if ( $products ) {
+				foreach ( $products as $target_product ) {
+
+					// update inventory for this product
+					$inv = store_update_shipwire_inventory_single($target_product);
+
+					// on success, add count to output
+					if ( $inv ) $output += $inv;
+
+				}
+
+				// If output is 0, set to false
+				if ( ! $output ) $output = false;
+
+			}
+
+		}
+
+		return $output;
 
 	};
+
+
+/*
+ * @Description: Update inventory of a single product (from shipwire)
+ *
+ * @Param: MIXED, ID or object of product to retrieve quantity for, or $post object
+ * @Returns: MIXED, integer value of quantity on success, bool false on failure
+ */
+	function store_update_shipwire_inventory_single( $product = null ){
+
+		// get full post object
+		$product = get_post( $product );
+
+		// Make sure this is a product
+		if ( is_object($product) ) {
+			if ( $product->post_type !== 'product' ) return false;
+		}
+
+		// get variants of this product
+		$variants = store_get_product_variants($product);
+
+		$count = 0;
+
+		// No variants? move along
+		if ( $variants ) {
+
+			// loop through variants
+			foreach ( $variants as $variant ) {
+
+				// get quantity from shipwire for this variant
+				$qty = store_get_shipwire_qty($variant);
+
+				if ( $qty ) {
+					$count++;
+					update_post_meta($variant->ID, '_store_qty', $qty);
+					update_post_meta($variant->ID, '_store_shipwire_synced', true);
+				} else {
+					update_post_meta($variant->ID, '_store_shipwire_synced', false);
+				}
+
+			}
+
+		} else {
+
+			$qty = store_get_shipwire_qty($product);
+
+			if ( $qty ) {
+				$count++;
+				update_post_meta($product->ID, '_store_qty', $qty);
+				update_post_meta($product->ID, '_store_shipwire_synced', true);
+
+			} else {
+				update_post_meta($product->ID, '_store_shipwire_synced', false);
+
+			}
+
+		}
+
+		// if count is 0, set to false
+		if ( ! $count ) $count = false;
+
+		return $count;
+
+	}
 
 
 /*

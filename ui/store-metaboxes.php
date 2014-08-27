@@ -100,7 +100,8 @@
 							<tr id="post-<?php $post->ID; ?>" class="post-<?php $post->ID; ?> <?php echo $i % 2 == 0 ? 'alternate' : '';?>">
 								<th scope="row" class="check-column">
 									<?php if ( $post->_store_enable_variant ) : ?>
-										<div class="dashicons dashicons-yes store-variant-enabled" style="margin-left: 5px;"></div>
+										<?php $color = $post->_store_shipwire_synced ? 'green' : ''; ?>
+										<div class="dashicons dashicons-yes store-variant-enabled" style="margin-left: 5px; color: <?php echo $color; ?>;"></div>
 									<?php endif; ?>
 								</th>
 								<td class="post-title page-title column-title">
