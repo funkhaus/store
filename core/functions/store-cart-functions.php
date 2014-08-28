@@ -232,16 +232,16 @@
  * @Param 3: INT, quantity of items to reduce cart qty by. Optional.
  * @Returns: BOOL, true if saved, false if not saved
  */
-	function store_remove_product_from_cart($product_id = null, $cart_id = null, $quantity = -1){
+	function store_remove_product_from_cart($product_id = null, $cart = null, $quantity = -1){
 
 		// If product_id is not integer, abort
 		if ( ! is_int($product_id) ) return false;
 
-		// if no proper cart_id, set to be active ID
-		if ( ! is_int($cart_id) ) $cart_id = store_get_active_cart_id();
+		// Get full cart object
+		$cart = store_get_cart($cart);
 
 		// Get cart product meta as array
-		$products = get_post_meta($cart_id, '_store_cart_products', true);
+		$products = get_post_meta($cart->ID, '_store_cart_products', true);
 
 		// If specified product is not in cart, return false
 		if ( ! isset( $products[$product_id] ) ) return false;
@@ -260,8 +260,7 @@
 		}
 
 		// Update cart, return
-		return update_post_meta($cart_id, '_store_cart_products', $products);
-
+		return update_post_meta($cart->ID, '_store_cart_products', $products);
 	};
 
 
@@ -271,23 +270,23 @@
  * @Param: INT, cart ID. If none provided, the default is the current cart.
  * @Returns: MIXED, corresponding order ID if found, false on failure.
  */
-	function store_cart_is_order($cart_id = null) {
+	function store_cart_is_order($cart = null) {
 
-		// Set default id to be currently active cart
-		if ( ! $cart_id ) $cart_id = store_get_active_cart_id();
-
-		// Still no cart ID? abort.
-		if ( ! $cart_id ) return false;
+		// Get cart object
+		$cart = store_get_cart($cart);
 
 		// Set query args
 	    $args = array(
 			'posts_per_page'	=> 1,
 			'meta_key'			=> '_store_source_cart',
-			'meta_value'		=> $cart_id,
+			'meta_value'		=> $cart->ID,
 			'post_type'			=> 'orders',
 			'fields'			=> 'id'
 		);
 		$found_order = get_posts( $args );
+
+		// no found orders? abort
+		if ( ! $found_order ) return false;
 
 		// If post was found, set to be ID
 		if ( ! empty($found_order) ) $found_order = reset($found_order);
@@ -303,30 +302,73 @@
  * @Param: INT, post ID of cart to empty. Optional.
  * @Returns: BOOL, true if emptied, false if nothing accomplished
  */
-	function store_empty_cart($cart_id = null) {
+	function store_empty_cart($cart = null) {
 
-		// If no proper ID provided, get active cart
-		if ( ! is_int($cart_id) ) $cart_id = store_get_active_cart_id();
+		// get cart object
+		$cart = store_get_cart($cart);
 
 		// Get products in cart
-		$products = get_post_meta($cart_id, '_store_cart_products', true);
+		$products = get_post_meta($cart->ID, '_store_cart_products', true);
 
 		// If no products, abort
 		if ( ! $products ) return false;
 
-		return update_post_meta($cart_id, '_store_cart_products', false);
+		return update_post_meta($cart->ID, '_store_cart_products', false);
 
 	};
 
 
 /*
- * @Description: Get the cart post object (uses get_post).
+ * @Description: get shipping options for a cart
  *
- * @Param: INT, cart ID.
- * @Returns: MIXED, returns a WP_Post object, or null. Just like get_post().
+ * @Param: MIXED, post ID or object of cart to get shipping quote for. Defaults to active cart. Optional.
+ * @Returns: MIXED, shipping array on success, false on failure
  */
- 	function store_get_cart($cart_id = null) {
-	 	return get_post($cart_id);
+	function store_get_cart_shipping( $cart = null ){
+
+		// Get full cart object
+		$cart = store_get_cart($cart);
+
+		// Get shippng options from shipwire
+		return store_shipwire_request_shipping($cart);
+
+	}
+
+
+/*
+ * @Description: Calculate the total of a given cart. If none provided, the active cart will be used.
+ *
+ * @Param: MIXED, cart ID or object. Defaults to currently active cart. Optional.
+ * @Returns: MIXED, integer of total in cents, false on failure
+ */
+ 	function store_calculate_cart_total( $cart = null ) {
+
+	 	// Get cart object
+	 	$cart = store_get_cart($cart);
+
+	 	// Get cart items
+	 	$items = store_get_cart_items($cart);
+
+	 	// set output
+	 	$total = false;
+
+	 	// if items found in cart, loop through them
+	 	if ( $items ) {
+	 		$total = 0;
+		 	foreach ( $items as $id => $qty ) {
+
+			 	// if price comes back, add into total
+			 	if ( $price = store_get_product_price($id) ) $total += $price;
+
+		 	}
+
+		 	// if cart shipping is available, add it to the total
+		 	if ( $shipping = store_get_cart_shipping($cart) ) $total += (int) $shipping[0]['cost'];
+
+	 	}
+
+	 	return $total;
+
  	}
 
 
@@ -338,11 +380,11 @@
  */
  	function store_get_cart_items($cart = null) {
 
-	 	// Get default cart
-	 	if ( ! $cart ) $cart = store_get_active_cart_id();
+	 	// Get cart object
+	 	$cart = store_get_cart($cart);
 
 	 	// return
-	 	return store_get_order_items();
+	 	return store_get_order_items($cart);
 
  	}
 
@@ -355,6 +397,30 @@
  	function store_get_cookie_url() {
 	 	$url = parse_url( home_url() );
 	 	return $url['host'];
+ 	}
+
+
+/*
+ * @Description: Get the cart post object (uses get_post).
+ *
+ * @Param: INT, cart ID, if not valid the current active cart will be used. Optional.
+ * @Returns: MIXED, returns a WP_Post object, or null. Just like get_post().
+ */
+ 	function store_get_cart($cart = null) {
+
+	 	// Default to active cart
+		if ( ! $cart ) $cart = store_get_active_cart_id();
+
+		// get full post object
+		$cart = get_post($cart);
+
+		// Not an object? abort
+		if ( ! is_object($cart) ) return false;
+
+		// not a cart? set to false
+		if ( $cart->post_type !== 'cart' ) $cart = false;
+
+		return $cart;
  	}
 
 ?>

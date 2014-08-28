@@ -62,6 +62,31 @@
 
 
 /*
+ * @Description: get the price of a single product
+ *
+ * @Param: MIXED, ID or object of product to get price of. If no product, $post will be used.
+ * @Returns: MIXED, integer value of price in cents on success, bool false on failure
+ */
+	function store_get_product_price( $product = null ){
+
+		// get full product object
+		$product = store_get_product( $product );
+
+		// get price from meta
+		$price = get_post_meta( $product->ID, '_store_price', true );
+
+		// format number into cents
+		$price = intval( (int) $price * 100);
+
+		// If price is falsey, set to false
+		if ( ! $price ) $price = false;
+
+		return $price;
+
+	};
+
+
+/*
  * @Description: Get all variants of a product
  *
  * @Param: MIXED, can be an ID or post object of product to retrieve variants of. If not set, attempts to get current ID from global $post.

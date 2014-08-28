@@ -48,27 +48,35 @@
 /*
  * @Description: use stripe to run a credit card charge
  *
- * @Param: STRING, card token provided by the stripe api
- * @Param: INT, amount to be charged to the cart in cents i.e. 1500 = $15.00
- * @Returns: MIXED, true on a successful charge, or the stripe error object on failure
+ * @Param: STRING, card token provided by the stripe api. Required
+ * @Param: INT, amount to be charged to the cart, defaults to calculated total of current cart. measured in cents i.e. 1500 = $15.00. Optional.
+ * @Returns: MIXED, true on a successful charge, or the stripe error object on failure. Optional.
  */
 	function store_stripe_run_charge( $token = null, $amount = null, $description = '' ){
 
-		// Enforce required properties
-		if ( ! intval($amount) || $token ) return false;
+		// set default amount
+		if ( ! is_int($amount) ) $amount = store_calculate_cart_total();
 
+		if ( is_object($token) ) $token = (string) $token->id;
+
+		$output = 0;
 		// careful, this will actually charge the card
 		try {
-			$charge = Stripe_Charge::create(array(
-				"amount" => $amount,
-				"currency" => "usd",
-				"card" => $token,
-				"description" => $description)
+			$args = array(
+				"amount"		=> $amount,
+				"currency"		=> "usd",
+				"card"			=> $token,
+				"description"	=> $description
 			);
+			$output = Stripe_Charge::create($args);
+
 		} catch(Stripe_CardError $e) {
 			// The card has been declined
+			$output = $e;
 
 		}
+
+		return $output;
 
 	};
 

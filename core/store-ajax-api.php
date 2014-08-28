@@ -122,8 +122,14 @@
 			$token = (string) $_REQUEST['token'];
 		}
 
-		// Attempt to update and return output
-		echo store_stripe_run_charge($token, 1000);
+		// run stripe charge and get response
+		$charge = (array) store_stripe_run_charge($token);
+
+		// Set proper header
+		header('Content-Type: application/json');
+
+		// output json data
+		echo json_encode( $charge );
 		die;
 	}
 

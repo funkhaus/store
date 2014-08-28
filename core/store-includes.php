@@ -21,6 +21,7 @@
 			'zip'			=> '11102'
 		);
 
+		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
 		//var_dump( store_update_shipwire_inventory() ); exit;
 
 	}

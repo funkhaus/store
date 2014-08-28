@@ -38,7 +38,7 @@ var storeAPI = {
 		// Submit to PHP
 		var jqxhr = jQuery.post( storeAPI.ajaxURL, data);
 		return jqxhr;
-	}
+	},
 
 /*
  * @Description: submit a payment to the store ajax api
@@ -46,19 +46,21 @@ var storeAPI = {
  * @Param: MIXED, can be a string of the card token or the entire response object returned by stripe.js (createToken)
  * @Returns: 
  */
- 	submitPayment: function( tokenData ){
+ 	submitPayment: function( tokenData, callback ){
 
 	 	var jqxhr = false;
+
 	 	if ( typeof tokenData === 'object' ) tokenData = tokenData.id;
 	 	if ( typeof tokenData === 'string' ) {
 
 		 	data = {
-			 	'token' : tokenData
+		 		'action'	: 'stripe_charge',
+			 	'token'		: tokenData
 		 	};
 
 			// Submit to PHP
 			jqxhr = jQuery.post( storeAPI.ajaxURL, data, function(results) {
-				console.log(results);
+				if ( typeof callback === 'function' ) callback(results);
 			});
 
 	 	}
