@@ -3,7 +3,7 @@
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /*
- * Setup stripe PHP class
+ * Setup stripe PHP class on init
  */
 	function store_stripe_server_setup(){
 
@@ -14,7 +14,7 @@
 		Stripe::setApiKey($stripe_options['scrt']);
 
 	}
-	add_action('init', 'store_stripe_server_setup');
+	add_action('init', 'store_stripe_server_setup', 5);
 
 
 /*
@@ -29,7 +29,7 @@
 /*
  * Inject publishable key into head tag on front end
  */
-	function store_stripe_add_publishable(){
+	function store_stripe_add_publishable_key(){
 
 		// Get API keys from settings
 		$stripe_options = get_option('store_st_settings');
@@ -42,7 +42,7 @@
 			</script>
 		<?php echo ob_get_clean();
 	}
-	add_action('wp_head', 'store_stripe_add_publishable');
+	add_action('wp_head', 'store_stripe_add_publishable_key');
 
 
 /*
@@ -54,25 +54,51 @@
  */
 	function store_stripe_run_charge( $token = null, $amount = null, $description = '' ){
 
-		// set default amount
+		// set default amount to be calculated cart total
 		if ( ! is_int($amount) ) $amount = store_calculate_cart_total();
 
+		// If object was given, attempt to get token from object
 		if ( is_object($token) ) $token = (string) $token->id;
 
-		$output = 0;
-		// careful, this will actually charge the card
+		$args = array(
+			"amount"		=> $amount,
+			"currency"		=> "usd",
+			"card"			=> $token,
+			"description"	=> $description
+		);
+
+		$output = false;
+
 		try {
-			$args = array(
-				"amount"		=> $amount,
-				"currency"		=> "usd",
-				"card"			=> $token,
-				"description"	=> $description
-			);
+			// attempt to run charge, set into output
 			$output = Stripe_Charge::create($args);
+			$output = $output->__toArray(true);
 
 		} catch(Stripe_CardError $e) {
-			// The card has been declined
-			$output = $e;
+			// Since it's a decline, Stripe_CardError will be caught
+			$output = $e->getJsonBody();
+
+		} catch (Stripe_InvalidRequestError $e) {
+			// Invalid parameters were supplied to Stripe's API
+			$output = $e->getJsonBody();
+
+		} catch (Stripe_AuthenticationError $e) {
+			// Authentication with Stripe's API failed
+			// (maybe you changed API keys recently)
+			$output = $e->getJsonBody();
+
+		} catch (Stripe_ApiConnectionError $e) {
+			// Network communication with Stripe failed
+			$output = $e->getJsonBody();
+
+		} catch (Stripe_Error $e) {
+			// Display a very generic error to the user, and maybe send
+			// yourself an email
+			$output = $e->getJsonBody();
+
+		} catch (Exception $e) {
+			// Something else happened, completely unrelated to Stripe
+			$output = $e->getJsonBody();
 
 		}
 

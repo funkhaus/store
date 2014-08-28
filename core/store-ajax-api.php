@@ -13,7 +13,30 @@
 	The one trick to this is that if you want to handle BOTH cases (i.e. the user is logged in as well as not), you need to implement both action hooks.
  */
 
- 
+
+/*
+ * @Description: Get a standardized template to build json responses on. Defaults to a general error.
+ * @Returns: ARRAY, response template in the form of an associative array 
+ */
+	function store_get_json_template($data = null){
+
+		$template = array();
+
+		$template['success'] = false;
+		$template['code'] = 'ERROR';
+		$template['vendor_response'] = false;
+		$template['message'] = 'An error occurred, please try again.';
+
+		if ( is_array($data) ) {
+			foreach ( $data as $prop => $val ) {
+				if ( array_key_exists($prop, $template) ) $template[$prop] = $val;
+			}
+		}
+
+		return $template;
+
+	}
+
 /*
  * @Description: The AJAX wrapper for store_add_product_to_cart(). Must POST an array of parameters that store_add_product_to_cart() requires 
  */
@@ -123,13 +146,24 @@
 		}
 
 		// run stripe charge and get response
-		$charge = (array) store_stripe_run_charge($token);
+		$charge = store_stripe_run_charge($token);
+
+		$response = array();
+		if ( $charge['id'] ) {
+			$response['success'] = true;
+			$response['code'] = 'OK';
+			$response['vendor_response'] = $charge;
+			$response['message'] = 'Card xxxxxxxxxxxx' . $charge['card']['last4'] . ' successfully charged for $' . number_format($charge['amount'] / 100, 2, '.', '');
+		}
+
+
+
+		$output = store_get_json_template($response);
 
 		// Set proper header
 		header('Content-Type: application/json');
 
-		// output json data
-		echo json_encode( $charge );
+		echo json_encode($output);
 		die;
 	}
 

@@ -22,10 +22,11 @@
 		);
 
 		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
+		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
 		//var_dump( store_update_shipwire_inventory() ); exit;
 
 	}
-	add_action('init', 'jrr_run_thing');
+	add_action('init', 'jrr_run_thing', 60);
 
 
 
