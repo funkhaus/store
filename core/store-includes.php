@@ -21,7 +21,7 @@
 			'zip'			=> '11102'
 		);
 
-		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
+		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
 		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
 		//var_dump( store_update_shipwire_inventory() ); exit;
 
@@ -68,8 +68,8 @@
 			// Setup JS variables in scripts
 			wp_localize_script('store_api_js', 'store_api_vars',
 				array(
-					'homeURL'	=> home_url(),
-					'ajaxURL'	=> admin_url( 'admin-ajax.php' )
+					'homeURL'		=> home_url(),
+					'ajaxURL'		=> admin_url( 'admin-ajax.php' )
 				)
 			);
 

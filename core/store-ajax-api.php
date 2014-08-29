@@ -34,7 +34,6 @@
 		}
 
 		return $template;
-
 	}
 
 /*
@@ -58,9 +57,20 @@
 		}
 
 		// Pass into PHP function, echo results and die.
-		echo store_add_product_to_cart($product_id, $cart_id, $quantity);
-		die;
+		$added = store_add_product_to_cart($product_id, $cart_id, $quantity);
 
+		// Set api logging
+		$output = array();
+		if ( $removed ) {
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			$output['message'] = 'Product successfully added to cart.';
+		}
+
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode($output);
+		die;
 	}
 
 
@@ -85,9 +95,20 @@
 		}
 
 		// Pass into PHP function, echo results and die.
-		echo store_remove_product_from_cart($product_id, $cart_id, $quantity);
-		die;
+		$removed = store_remove_product_from_cart($product_id, $cart_id, $quantity);
 
+		// Set api logging
+		$output = array();
+		if ( $removed ) {
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			$output['message'] = 'Product successfully removed from cart.';
+		}
+
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode($output);
+		die;
 	}
 
 
@@ -95,6 +116,7 @@
  * @Description: Run the build cart function as defined by theme author. 
  *
  * @Returns: MIXED, either result of defined function, or JSON object
+ * @Todo: make a default json response
  */
 	add_action( 'wp_ajax_nopriv_get_cart_contents', 'store_ajax_get_cart_contents' );
 	add_action( 'wp_ajax_get_cart_contents', 'store_ajax_get_cart_contents' );
@@ -105,6 +127,7 @@
 		} else {
 			// Return JSON object with ID, title, qty, price, variant, image(?)
 		}
+
 		die;
 	}
 
@@ -124,8 +147,20 @@
 			$product_id = (int) $_REQUEST['product_id'];
 		}
 
-		// Attempt to update and return output
-		echo store_update_shipwire_inventory($product_id);
+		// attempt to update inventory
+		$updated = store_update_shipwire_inventory($product_id);
+
+		// Set api logging
+		$output = array();
+		if ( $updated ) {
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			$output['message'] = 'All inventory updated.';
+		}
+
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode($output);
 		die;
 	}
 
@@ -148,21 +183,32 @@
 		// run stripe charge and get response
 		$charge = store_stripe_run_charge($token);
 
+		// Set response var
 		$response = array();
+
+		// charge was successful, set response
 		if ( $charge['id'] ) {
 			$response['success'] = true;
 			$response['code'] = 'OK';
-			$response['vendor_response'] = $charge;
 			$response['message'] = 'Card xxxxxxxxxxxx' . $charge['card']['last4'] . ' successfully charged for $' . number_format($charge['amount'] / 100, 2, '.', '');
 		}
 
+		// Charge was unsuccessful, set response
+		if ( $charge['error'] ) {
+			$response['success'] = false;
+			$response['code'] = strtoupper($charge['error']['code']);
+			$response['message'] = $charge['error']['message'];
+		}
 
+		// forward raw response into output
+		$response['vendor_response'] = $charge;
+		$response['vendor_response']['vendor'] = 'stripe';
 
+		// make sure response is properly formatted
 		$output = store_get_json_template($response);
 
-		// Set proper header
+		// Set proper header, output
 		header('Content-Type: application/json');
-
 		echo json_encode($output);
 		die;
 	}

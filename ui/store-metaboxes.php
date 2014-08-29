@@ -206,12 +206,10 @@
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
 	 	add_meta_box("store_order_show_status", "Order Status", "store_order_show_status", "orders", "side", "low");
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "cart", "normal", "low");
-	 	if ( store_get_order_shipping_address($post->ID) ) {
-		 	add_meta_box("store_cart_list_shipping", "Shipping Address", "store_cart_list_shipping", "orders", "normal", "low");
+	 	if ( store_get_order_shipping_address($post->ID) && store_get_order_billing_address($post->ID) ) {
+		 	add_meta_box("store_cart_list_addresses", "Addresses", "store_cart_list_addresses", "orders", "normal", "low");
 		}
-	 	if ( store_get_order_billing_address($post->ID) ) {
-		 	add_meta_box("store_cart_list_billing", "Billing Address", "store_cart_list_billing", "orders", "normal", "low");
-		}
+		add_meta_box("store_list_order_history", "History", "store_list_order_history", "orders", "side", "low");
 	}
  	add_action("add_meta_boxes", "store_add_cart_meta");
 
@@ -274,14 +272,24 @@
 
     }
 
-	function store_cart_list_shipping() {
+	function store_cart_list_addresses() {
 		global $post;
 
-		$shipping = store_get_order_shipping_address( $post->ID ); ?>
+		$shipping = store_get_order_shipping_address( $post->ID );
+		$billing = store_get_order_billing_address( $post->ID ); ?>
 
 			<table class="widefat">
+				<thead>
+					<tr>
+						<th scope="col" colspan="2" id="title" class="manage-column column-title" style="">
+							<span>Shipping Address</span>
+						</th>
+						<th scope="col" colspan="2" id="title" class="manage-column column-title" style="">
+							<span>Billing Address</span>
+						</th>
+					</tr>
+				</thead>
 				<tbody>
-
 					<?php $count = 0; ?>
 					<?php foreach ( $shipping as $i => $field ) : $count++; ?>
 						<tr class="<?php echo $count % 2 === 0 ? 'alternate' : ''; ?>">
@@ -290,6 +298,12 @@
 							</td>
 							<td class="desc">
 								<?php echo $field; ?>
+							</td>
+							<td class="row-title">
+								<?php echo $i; ?>
+							</td>
+							<td class="desc">
+								<?php echo $billing[$i]; ?>
 							</td>
 						</tr>
 					<?php endforeach; ?>
@@ -300,30 +314,31 @@
 		<?php
 	}
 
-	function store_cart_list_billing() {
+	function store_list_order_history(){
 		global $post;
 
-		$shipping = store_get_order_shipping_address( $post->ID ); ?>
+		$order_history = get_post_meta($post->ID, '_store_order_history', true); ?>
 
-			<table class="widefat">
-				<tbody>
+			<?php if ($order_history) : ?>
 
-					<?php $count = 0; ?>
-					<?php foreach ( $shipping as $i => $field ) : $count++; ?>
-						<tr class="<?php echo $count % 2 === 0 ? 'alternate' : ''; ?>">
-							<td class="row-title">
-								<?php echo $i; ?>
-							</td>
-							<td class="desc">
-								<?php echo $field; ?>
-							</td>
-						</tr>
-					<?php endforeach; ?>
+				<table class="widefat">
 
-				</tbody>
-			</table>
+				<?php foreach ( $order_history as $i => $event ) : ?>
 
-		<?php
+					<tr class="<?php echo $i % 2 === 0 ? 'alternate' : ''; ?>">
+						<th scope="row" style="text-align: center;">
+							<span><?php echo ( $i + 1 ) . '.'; ?></span>
+						</th>
+						<td class="desc">
+							<?php echo $event; ?>
+						</td>
+					</tr>
+
+				<?php endforeach; ?>
+
+				</table>
+
+			<?php endif;
 	}
 
 	function store_order_show_status() {

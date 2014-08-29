@@ -41,14 +41,53 @@ var storeAPI = {
 	},
 
 /*
- * @Description: submit a payment to the store ajax api
+ * @Description: generate a token using stripe.js, this is a just a wrapper for consistency
+ *
+ * @Param: MIXED, can be a jquery element of the whole <form> or an object of input values (i.e. { number: $('.card-number').val(), cvc: $('.card-cvc').val() } )
+ * @Param: FUNCTION, callback of asynchronous call. receives two parameters, store-formatted json response and a string of the stripe token on success
+ * @Returns: nothing, response information goes through callback
+ */
+ 	encryptCard: function( cardData, callback ){
+
+	 	// Asynchronous stripe call
+	 	Stripe.card.createToken( cardData, function(status, response){
+
+	 		// run callback if provided
+		 	if ( typeof callback === 'function' ) {
+			 	var json = {};
+			 	var token = false;
+
+			 	// set standardized response message
+			 	json.success = false;
+			 	if ( status === 200 ) {
+			 		json.success = true;
+			 		json.code = 'OK';
+			 		json.message = 'Card successfuly tokenized.';
+			 		token = response.id;
+			 	} else {
+				 	json.code = response.error.code;
+				 	json.message = response.error.message;
+			 	}
+
+			 	json.vendor_response = response;
+			 	json.vendor_response.vendor = 'stripe';
+
+			 	callback(json, token);
+		 	}
+	 	});
+
+	 	return;
+
+ 	},
+
+/*
+ * @Description: submit a payment to the store ajax api (server side)
  *
  * @Param: MIXED, can be a string of the card token or the entire response object returned by stripe.js (createToken)
- * @Returns: 
+ * @Param: FUNCTION, callback of asychronous call, returns store-formatted json response of store_ajax_stripe_charge()
+ * @Returns: nothing, response information goes through callback
  */
  	submitPayment: function( tokenData, callback ){
-
-	 	var jqxhr = false;
 
 	 	if ( typeof tokenData === 'object' ) tokenData = tokenData.id;
 	 	if ( typeof tokenData === 'string' ) {
@@ -59,13 +98,34 @@ var storeAPI = {
 		 	};
 
 			// Submit to PHP
-			jqxhr = jQuery.post( storeAPI.ajaxURL, data, function(results) {
+			jQuery.post( storeAPI.ajaxURL, data, function(results) {
 				if ( typeof callback === 'function' ) callback(results);
 			});
 
 	 	}
-		return jqxhr;
+		return;
 
+ 	},
+
+/*
+ * @Description: high level pay function, get token through stripe.js and then run payment through the php sdk
+ *
+ * @Param: MIXED, can be a jquery element of the whole <form> or an object of input values (i.e. { number: $('.card-number').val(), cvc: $('.card-cvc').val() } )
+ * @Param: FUNCTION, callback of asychronous call, returns store-formatted json response
+ * @Returns: nothing, response information goes through callback
+ */
+ 	pay: function(cardData, callback){
+
+		storeAPI.encryptCard($cardData, function(response, token){
+			if ( ! response.success ) return response;
+
+			storeAPI.submitPayment(token, function(results){
+				if ( typeof callback === 'function' ) callback(results);
+			});
+
+		});
+
+		return;
  	}
 
 };

@@ -114,6 +114,36 @@
 
 
 /*
+ * @Description: Add an event to an order's history
+ *
+ * @Param 1: MIXED, ID or object of order to add event to. Required.
+ * @Param 2: STRING, event to add to history. Required
+ * @Return: MIXED, meta ID on success, false on failure
+ */
+	function store_add_order_history( $order = null, $event = null ) {
+
+		// Get full object
+		$order = get_post($order);
+
+		// Check requirements, abort if not set
+		if ( ! $order || ! is_string($event) ) return false;
+
+		// Get current history
+		$history = get_post_meta($order->ID, '_store_order_history', true);
+
+		// if no history, set empty array
+		if ( ! $history ) $history = array();
+
+		// add event to history
+		$history[] = $event;
+
+		// Set meta and return result
+		return update_post_meta($order->ID, '_store_order_history', $history);
+
+	}
+
+
+/*
  * @Description: Sets the order status of a given cart.
  *
  * @Param 1: INT, ID or object of order to get status for. Will default to post->ID. Optional.
