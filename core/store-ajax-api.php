@@ -69,7 +69,7 @@
 
 		// Set proper header, output
 		header('Content-Type: application/json');
-		echo json_encode($output);
+		echo json_encode(store_get_json_template($output));
 		die;
 	}
 
@@ -107,7 +107,7 @@
 
 		// Set proper header, output
 		header('Content-Type: application/json');
-		echo json_encode($output);
+		echo json_encode(store_get_json_template($output));
 		die;
 	}
 
@@ -124,8 +124,23 @@
 
 		if( function_exists('store_build_mini_cart') ) {
 			echo store_build_mini_cart();
+
 		} else {
-			// Return JSON object with ID, title, qty, price, variant, image(?)
+
+			// Set output
+			$output = array();
+
+			// Add total to cart
+			$output['total'] = store_calculate_cart_total();
+
+			// Add quantity to cart
+			$output['quantity'] = count($items);
+
+			// Get current cart
+			$items = store_get_cart_items();
+
+			return $items;
+
 		}
 
 		die;

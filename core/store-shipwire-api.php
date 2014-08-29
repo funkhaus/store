@@ -3,10 +3,21 @@
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /*
+ * @Description: Simple check if shipwire is enabled
+ *
+ * @Returns: BOOL, if shipping is enabled, false on failure
+ */
+	function store_is_shipping_enabled(){
+		$sw_settings = get_option('store_sw_settings');
+		return $sw_settings['enabled'];
+	}
+
+
+/*
  * @Description: Send a full inventory request to shipwire
  *
  * @Param: MIXED, ID of product to retrieve quantity for, or $post object
- * @Returns: MIXED, integer value of quantity on success, bool false on failure
+ * @Returns: MIXED, shipwire xml response on success, bool false on failure
  */
 	function store_shipwire_request_inventory(){
 
@@ -73,18 +84,29 @@
 
 
 /*
- * @Description: Get current shipwire inventory for a specific product
+ * @Description: Get current shipwire inventory for a specific product. 
+ * This function is optimized, feel free to run it within a loop
  *
- * @Param: MIXED, ID of product to retrieve quantity for, or $post object
+ * @Param: MIXED, ID or obj of product to retrieve quantity for, or $post object. If string provided, function will assume it is the SKU
  * @Returns: MIXED, integer value of quantity on success, bool false on failure
  */
 	function store_get_shipwire_qty( $product = null ){
 
-		// get product object
-		$product = store_get_product( $product );
+		$sku = false;
+
+		// If prod is string, assume it's the SKU
+		if ( is_string($product) ) {
+			$sku = $product;
+
+		// Otherwise get full post object
+		} else {
+			// get product object
+			$product = store_get_product( $product );
+			$sku = $product->_store_sku;
+		}
 
 		// still no product? abort.
-		if ( ! $product ) return false;
+		if ( ! $sku ) return false;
 
 		// Get full inventory
 		$inventory = store_shipwire_request_inventory();
@@ -94,7 +116,7 @@
 		foreach ( $inventory as $item ) {
 
 			foreach ( $item->attributes() as $atts ) {
-				if ( $atts == $product->_store_sku ) {
+				if ( $atts == $sku ) {
 					// Set output to be integer value of quantity
 					$output = intval( $item->attributes()->quantity );
 					break;
@@ -109,10 +131,10 @@
 
 
 /*
- * @Description: Update all inventory of all products
+ * @Description: Update inventory for one or all products
  *
- * @Param: MIXED, ID or object of product to retrieve quantity for, or $post object
- * @Returns: MIXED, integer value of quantity on success, bool false on failure
+ * @Param: MIXED, ID or object of product to retrieve quantity for. If none, all will be updated. Optional.
+ * @Returns: MIXED, integer value of quantity changed on success, bool false on failure
  */
 	function store_update_shipwire_inventory( $product = null ){
 
@@ -133,7 +155,7 @@
 			);
 			$products = get_posts($args);
 
-			// Get all products, loop through them
+			// Get all top-level products, loop through them
 			if ( $products ) {
 				foreach ( $products as $target_product ) {
 
@@ -160,7 +182,7 @@
 /*
  * @Description: Update inventory of a single product (from shipwire)
  *
- * @Param: MIXED, ID or object of product to retrieve quantity for, or $post object
+ * @Param: MIXED, ID or object or SKU of product to retrieve quantity for. Required.
  * @Returns: MIXED, integer value of quantity on success, bool false on failure
  */
 	function store_update_shipwire_inventory_single( $product = null ){
@@ -168,18 +190,18 @@
 		// get full post object
 		$product = get_post( $product );
 
-		// Make sure this is a product
-		if ( is_object($product) ) {
+		// Guarantee that this is a product post object
+		if ( ! is_object($product) ) {
+			return false;
+		} else {
 			if ( $product->post_type !== 'product' ) return false;
 		}
 
-		// get variants of this product
-		$variants = store_get_product_variants($product);
-
+		// Start counter
 		$count = 0;
 
-		// No variants? move along
-		if ( $variants ) {
+		// If there are variants for this product...
+		if ( $variants = store_get_product_variants($product) ) {
 
 			// loop through variants
 			foreach ( $variants as $variant ) {
@@ -197,15 +219,19 @@
 
 			}
 
+		// No variants? attempt to update qty for just this product
 		} else {
 
+			// Get qty from shipwire
 			$qty = store_get_shipwire_qty($product);
 
+			// if there is inventory, update and mark as synced
 			if ( $qty ) {
 				$count++;
 				update_post_meta($product->ID, '_store_qty', $qty);
 				update_post_meta($product->ID, '_store_shipwire_synced', true);
 
+			// No inventory? mark as unsynced
 			} else {
 				update_post_meta($product->ID, '_store_shipwire_synced', false);
 
@@ -213,7 +239,7 @@
 
 		}
 
-		// if count is 0, set to false
+		// if count is 0, set to output false
 		if ( ! $count ) $count = false;
 
 		return $count;

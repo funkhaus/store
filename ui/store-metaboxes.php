@@ -470,8 +470,6 @@
 			}			
 		}
 
-
-
 		if( isset($_POST["store_order_status_select"]) ) {
 			wp_set_post_terms( $post->ID, $_POST["store_order_status_select"], 'store_status' );
 		}

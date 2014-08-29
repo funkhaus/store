@@ -214,7 +214,23 @@
  */
 	function store_shipwire_inv_save( $post_id ){
 
-		store_update_shipwire_inventory_single( $post_id );
+		// Update all inventory for variants of this product
+		store_update_shipwire_inventory_single($post_id);
+
+		// If shipping is not enabled, don't continue
+		if ( ! store_is_shipping_enabled() ) return false;
+
+		// If sku is set, cross-check with shipwire
+		if ( isset($_POST['_store_sku']) ){
+
+			if ( $qty = store_get_shipwire_qty($_POST['_store_sku']) ) {
+				update_post_meta($post_id, '_store_qty', $qty);
+				update_post_meta($post_id, '_store_shipwire_synced', true);
+			} else {
+				update_post_meta($post_id, '_store_shipwire_synced', false);
+			}
+
+		}
 
 	}
 	add_action('save_post', 'store_shipwire_inv_save');
