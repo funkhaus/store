@@ -21,6 +21,7 @@
 			'zip'			=> '11102'
 		);
 
+		//var_dump( store_ajax_get_cart_contents() ); exit;
 		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
 		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
 		//var_dump( store_update_shipwire_inventory() ); exit;

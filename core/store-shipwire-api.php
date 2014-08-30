@@ -382,9 +382,9 @@
  * @Description: get shipping quote from shipwire based on order
  *
  * @Param: MIXED, ID or object of order to quote.
- * @Returns: MIXED, XML object of shipwire response on success, false on failure
+ * @Returns: MIXED, array of shipping options on success, false on failure
  */
-	function store_shipwire_request_shipping( $order = null ){
+	function store_shipwire_request_order_shipping( $order = null ){
 
 		// Get user options
 		$options = get_option('store_sw_settings');
@@ -416,7 +416,6 @@
 			$_[] = '<Order id="order-' . $order->ID . '">';
 				$_[] = '<Warehouse>00</Warehouse>'; // leave this as 0, shipwire will decide
 				$_[] = '<AddressInfo type="ship">';
-					// NAME STUFF GOES HERE
 					$_[] = '<Address1>' . $ship_address['line_1'] . '</Address1>';
 					$_[] = '<Address2>' . $ship_address['line_2'] . '</Address2>';
 					$_[] = '<City>' . $ship_address['city'] . '</City>';
@@ -438,7 +437,6 @@
 					$_[] = '</Item>';
 
 					$count++;
-
 				};
 
 			$_[] = '</Order>';
@@ -470,7 +468,97 @@
 
 		// Return useful output of shipping info.
 		return store_shipwire_retrieve_shipping( $output );
+	};
 
+
+/*
+ * @Description: get shipping quote from shipwire based on address and cart
+ *
+ * @Param: MIXED, address object to quote shipping for. Required.
+ * @Param: MIXED, ID or object of cart to quote for. Defaults to active cart. Optional.
+ * @Returns: MIXED, array of shipping options on success, false on failure
+ */
+	function store_shipwire_request_cart_shipping( $address = null, $cart = null ){
+
+		// Get user options
+		$options = get_option('store_sw_settings');
+
+		// Not enabled in settings? abort
+		if ( ! $options['enabled'] ) return false;
+
+		// get full cart object
+		$cart = store_get_cart($cart);
+
+		// Get order items, return false if none exist.
+		$items = store_get_cart_items($cart);
+
+		// If all not all data is available, abort
+		if ( ! $order || ! $items || ! $address ) return false;
+
+		// Set URL to send request to
+		$url = 'https://api.shipwire.com/exec/RateServices.php';
+
+		// Set XML request
+		$_ = array('<?xml version="1.0" encoding="UTF-8"?>');
+		$_[] = '<!DOCTYPE RateRequest SYSTEM "http://www.shipwire.com/exec/download/RateRequest.dtd">';
+		$_[] = '<RateRequest>';
+			$_[] = '<Username>' . $options['usnm'] . '</Username>';
+			$_[] = '<Password>' . $options['pswd'] . '</Password>';
+			$_[] = '<Order id="order-' . $order->ID . '">';
+				$_[] = '<Warehouse>00</Warehouse>'; // leave this as 0, shipwire will decide
+				$_[] = '<AddressInfo type="ship">';
+					$_[] = '<Address1>' . $address['line_1'] . '</Address1>';
+					$_[] = '<Address2>' . $address['line_2'] . '</Address2>';
+					$_[] = '<City>' . $address['city'] . '</City>';
+					$_[] = '<State>' . $address['state'] . '</State>';
+					$_[] = '<Country>us</Country>';
+					$_[] = '<Zip>' . $address['zip'] . '</Zip>';
+				$_[] = '</AddressInfo>';
+
+				$count = 0;
+				// Loop through order products and add to xml
+				foreach ( $items as $id => $qty ) {
+
+					$product = store_get_product($id);
+					if ( ! $product || ! $product->_store_sku ) continue;
+
+					$_[] = '<Item num="' . $count . '">';
+						$_[] = '<Code>' . $product->_store_sku . '</Code>';
+						$_[] = '<Quantity>' . $qty . '</Quantity>';
+					$_[] = '</Item>';
+
+					$count++;
+				};
+
+			$_[] = '</Order>';
+		$_[] = '</RateRequest>';
+		$request = join( "\n", $_ );
+
+		// Set output
+		$output = false;
+
+		// Send request
+		$response = wp_remote_post(
+		    $url,
+		    array(
+		        'method' => 'POST',
+		        'timeout' => 45,
+		        'redirection' => 5,
+		        'httpversion' => '1.0',
+		        'headers' => array(
+					'Content-Type' => 'application/xml',
+		        ),
+		        'body' => trim( $request ),
+		        'sslverify' => false
+		    )
+		);
+		$body = wp_remote_retrieve_body( $response );
+
+		// Parse XML into usable object
+		$output = simplexml_load_string( $body );
+
+		// Return useful output of shipping info.
+		return store_shipwire_retrieve_shipping( $output );
 	};
 
 

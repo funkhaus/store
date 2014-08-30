@@ -118,29 +118,51 @@
  * @Returns: MIXED, either result of defined function, or JSON object
  * @Todo: make a default json response
  */
-	add_action( 'wp_ajax_nopriv_get_cart_contents', 'store_ajax_get_cart_contents' );
-	add_action( 'wp_ajax_get_cart_contents', 'store_ajax_get_cart_contents' );
-	function store_ajax_get_cart_contents() {
+	add_action( 'wp_ajax_nopriv_get_mini_cart', 'store_ajax_get_mini_cart' );
+	add_action( 'wp_ajax_get_mini_cart', 'store_ajax_get_mini_cart' );
+	function store_ajax_get_mini_cart() {
 
-		if( function_exists('store_build_mini_cart') ) {
-			echo store_build_mini_cart();
+		// if theme author has defined a cart, return it
+		if( locate_template('store-mini-cart.php') ) {
+			get_template_part('store-mini-cart');
 
+		// Otherwise return json data
 		} else {
 
 			// Set output
 			$output = array();
 
-			// Add total to cart
-			$output['total'] = store_calculate_cart_total();
-
-			// Add quantity to cart
-			$output['quantity'] = count($items);
-
 			// Get current cart
 			$items = store_get_cart_items();
 
-			return $items;
+			// No items? abort
+			if ( empty($items) ) return false;
 
+			// Add total to cart
+			$output['total'] = store_calculate_cart_total();
+
+			// Add quantity of unique items in cart
+			$output['count'] = count($items);
+
+			// Add non-unique quantity
+			$output['quantity'] = array_sum($items);
+
+			// loop through items
+			foreach ( $items as $id => $qty ) {
+
+				$product = store_get_product($id);
+
+				// add each product post object
+				$output['items'][$id]['name'] = get_the_title($product);
+				$output['items'][$id]['sku'] = store_get_sku($product);
+				$output['items'][$id]['qty'] = $qty;
+				$output['items'][$id]['price'] = store_get_product_price($product);
+
+			}
+
+			// Set header and output JSON
+			header('Content-Type: application/json');
+			echo json_encode( $output );
 		}
 
 		die;
@@ -177,6 +199,25 @@
 		header('Content-Type: application/json');
 		echo json_encode($output);
 		die;
+	}
+
+
+/*
+ * @Description: Sync inventory with shipwire
+ *
+ * @Returns: MIXED, result of store_update_shipwire_inventory
+ */
+	add_action( 'wp_ajax_nopriv_shipwire_quote', 'store_ajax_shipwire_quote' );
+	add_action( 'wp_ajax_shipwire_quote', 'store_ajax_shipwire_quote' );
+	function store_ajax_shipwire_quote() {
+
+		$address = array();
+		if( isset($_REQUEST['address']) ){
+			var_dump( $_REQUEST['address'] ); exit;
+		}
+
+		$options = store_shipwire_request_cart_shipping( $address, $cart );
+
 	}
 
 

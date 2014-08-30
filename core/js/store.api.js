@@ -28,16 +28,19 @@ var storeAPI = {
  *
  * @Returns: OBJ, the jQuery XMLHTTPRequest object from $.post()
  */
-	getCartContents: function(){
+	getMiniCart: function(callback){
 
 		// The PHP AJAX action hook to call
     	data = {
-	    	'action' : 'get_cart_contents'
+	    	'action' : 'get_mini_cart'
     	};
 
 		// Submit to PHP
-		var jqxhr = jQuery.post( storeAPI.ajaxURL, data);
-		return jqxhr;
+		jQuery.post( storeAPI.ajaxURL, data, function(response){
+			if ( typeof callback === 'function' ) callback(response);
+		});
+
+		return;
 	},
 
 /*
@@ -103,6 +106,7 @@ var storeAPI = {
 			});
 
 	 	}
+
 		return;
 
  	},
@@ -116,13 +120,37 @@ var storeAPI = {
  */
  	pay: function(cardData, callback){
 
-		storeAPI.encryptCard($cardData, function(response, token){
+		storeAPI.encryptCard(cardData, function(response, token){
 			if ( ! response.success ) return response;
 
 			storeAPI.submitPayment(token, function(results){
 				if ( typeof callback === 'function' ) callback(results);
 			});
 
+		});
+
+		return;
+ 	},
+
+
+ 	shippingQuote: function(address, callback){
+
+	 	addressFields = {};
+	 	if ( ! addressFields.line_1		= address.line_1 ) addressFields.line_1 = address.find('*[data-ship="line_1"]');
+	 	if ( ! addressFields.line_2		= address.line_2 ) addressFields.line_2 = address.find('*[data-ship="line_2"]');
+	 	if ( ! addressFields.city		= address.city ) addressFields.city = address.find('*[data-ship="city"]');
+	 	if ( ! addressFields.state		= address.state ) addressFields.state = address.find('*[data-ship="state"]');
+	 	if ( ! addressFields.country	= address.country ) addressFields.country = address.find('*[data-ship="country"]');
+	 	if ( ! addressFields.zip		= address.zip ) addressFields.zip = address.find('*[data-ship="zip"]');
+
+	 	data = {
+		 	'action'	:	'shipwire_quote',
+		 	'address'	:	addressFields
+	 	};
+
+		// Submit to PHP
+		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+			if ( typeof callback === 'function' ) callback(results);
 		});
 
 		return;

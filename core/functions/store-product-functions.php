@@ -4,8 +4,7 @@
 
 
 /*
- * @Description: Helper function used to return the calculated 
- * inventory quantity of a post based on its' variations
+ * @Description: Helper function used to return the calculated inventory quantity of a post based on its' variations
  *
  * @Param: MIXED, ID of product to retrieve quantity for, or $post object
  * @Returns: MIXED, integer value of quantity on success, bool false on failure
@@ -42,7 +41,34 @@
 		}
 
 		return $quantity;
+	};
 
+
+/*
+ * @Description: Get qty 
+ *
+ * @Param: MIXED, ID or object of cart to get qty for, defaults to current. Optional
+ * @Param: MIXED, ID or object of product to get qty for, Defaults to $post. Optional
+ * @Returns: MIXED, integer value of quantity on success, bool false on failure
+ */
+	function store_get_cart_quantity( $cart = null, $product = null ){
+
+		// Get cart and product objects
+		$cart = store_get_cart( $cart );
+		$product = store_get_product( $product );
+
+		// if either are empty, abort
+		if ( ! $product || ! $cart ) return false;
+
+		// Set qty
+		$qty = false;
+
+		// If product is in cart, set qty to cart value
+		if ( $items = store_get_cart_items($cart) ) {
+			if ( isset($items[$product->ID]) ) $qty = $items[$product->ID];
+		}
+
+		return $qty;
 	};
 
 
@@ -153,5 +179,31 @@
 		return $product;
 
  	}
+
+
+/* ------------ Higher level functions below ------------ */
+
+
+/*
+ * @Description: Echo the current $post price
+ *
+ * @Param: STRING, something to append before the quantity
+ * @Param: STRING, something to append after the quantity
+ * @Param: BOOL, true to echo the value, false to return
+ * @Returns: MIXED, quantity value of product
+ */
+ 	if ( ! function_exists('the_price') ) {
+	 	function the_price($before = '', $after = '', $echo = true) {
+		 	$price = store_get_product_price();
+		 	$price = number_format(($price / 100), 2, '.', ',');
+
+	        $price = $before . $price . $after;
+
+	        if ( $echo )
+	            echo $price;
+	        else
+		        return $price;
+		}
+	}
 
 ?>
