@@ -49,11 +49,18 @@
 		}
 		if( isset($_REQUEST['quantity']) ) {
 			$quantity = (int) $_REQUEST['quantity'];
-		} else {
-			$quantity = 1;
 		}
 		if( isset($_REQUEST['cart_id']) ) {
 			$cart_id = (int) $_REQUEST['cart_id'];
+		}
+		if( isset($_REQUEST['options']) ) {
+			$options = (array) $_REQUEST['options'];
+		}
+
+		// Find variant based on options and parent
+		if ( $options ) {
+			$product_id = store_get_variant_id($options, $product_id);
+			$product_id = $product_id->ID;
 		}
 
 		// Pass into PHP function, echo results and die.
@@ -61,10 +68,10 @@
 
 		// Set api logging
 		$output = array();
-		if ( $removed ) {
-			$output['success'] = true;
-			$output['code'] = 'OK';
-			$output['message'] = 'Product successfully added to cart.';
+		if ( $added ) {
+			$output['success']			= true;
+			$output['code']				= 'OK';
+			$output['message']			= 'Product successfully added to cart.';
 		}
 
 		// Set proper header, output
@@ -103,6 +110,31 @@
 			$output['success'] = true;
 			$output['code'] = 'OK';
 			$output['message'] = 'Product successfully removed from cart.';
+		}
+
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode(store_get_json_template($output));
+		die;
+	}
+
+
+/*
+ * @Description: Ajax wrapper for store_ajax_empty_cart(). defaults to currently active cart.
+ */
+	add_action( 'wp_ajax_nopriv_empty_cart', 'store_ajax_empty_cart' );
+	add_action( 'wp_ajax_empty_cart', 'store_ajax_empty_cart' );
+	function store_ajax_empty_cart() {
+
+		// attempt to empty cart
+		$result = store_empty_cart();
+
+		// Set api logging
+		$output = array();
+		if ( $result ) {
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			$output['message'] = 'Cart successfully emptied.';
 		}
 
 		// Set proper header, output

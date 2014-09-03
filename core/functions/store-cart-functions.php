@@ -185,7 +185,7 @@
 			return false;
 		}
 
-		// Check product is avaible to add to cart
+		// Check product is available to add to cart
 		if( !store_is_product_available($product_id) ) {
 			return false;			
 		}
@@ -358,7 +358,7 @@
 		 	foreach ( $items as $id => $qty ) {
 
 			 	// if price comes back, add into total
-			 	if ( $price = store_get_product_price($id) ) $total += $price;
+			 	if ( $price = store_get_product_price($id) ) $total += ($price * $qty);
 
 		 	}
 

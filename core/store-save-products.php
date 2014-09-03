@@ -81,11 +81,12 @@
 	}
 
 /*
- * Format an option key to be human readable
+ * Format an option key to be human readable, i.e. "_store_meta_size" becomes "size"
  */
  	function store_format_option_key($option_key) {
 	 	return str_replace('_store_meta_', '', $option_key);
 	}
+
 
 /*
  * Make variation children on save of product

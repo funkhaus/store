@@ -8,19 +8,89 @@ var storeAPI = {
  * @Description: Add a product to a cart
  *
  * @Param: ARRAY, array of parameters that maps to the store_add_product_to_cart() PHP function.
- * @Returns: OBJ, the jQuery XMLHTTPRequest object from $.post()
+ * @Param: FUNCTION, callback of asynchronous call. Returns store-formatted json response
+ * @Returns: nothing, get output from callback
  */
-	addToCart: function(data){
+	addToCart: function(args, callback){
+
+		// init data
+		var data = {};
+
+		// if jQuery object was passed, attempt to parse options via data-atts
+		if ( args.jquery ) {
+
+			// Set ID and qty
+			data.product_id = args.data('productId') || args.find('*[data-product-id]').first().data('productId');
+			data.quantity = args.find('*[data-product-quantity]').first().data('productQuantity') || args.find('*[data-product="quantity"]').val() || 1;
+
+			// Init options
+			data.options = {};
+
+			// find DOM elements being used to identify options (usually <select>s)
+			var $selects = args.find('*[data-product-option]') || args.find('*[data-product="option"]');
+
+			// add each option
+			$selects.each(function(){
+				var key = jQuery(this).data('productOption') || jQuery(this).data('product').attr('name');
+				data.options[key] = jQuery(this).val();
+			});
+
+		}
 
 		// The PHP AJAX action hook to call
 		data.action = 'add_to_cart';
 
+		console.log(data);
+
 		// Submit to PHP
-		var jqxhr = jQuery.post( storeAPI.ajaxURL, data, function(results) {
-			console.log(results);
+		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+			if ( typeof callback === 'function' ) callback(results);
 		});
 
-		return jqxhr;
+		return;
+	},
+
+/*
+ * @Description: Add a product to a cart
+ *
+ * @Param: ARRAY, array of parameters that maps to the store_add_product_to_cart() PHP function.
+ * @Param: FUNCTION, callback of asynchronous call. Returns store-formatted json response
+ * @Returns: nothing, get output from callback
+ */
+	removeFromCart: function(data, callback){
+
+		// The PHP AJAX action hook to call
+		data.action = 'remove_from_cart';
+
+		// Submit to PHP
+		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+			if ( typeof callback === 'function' ) callback(results);
+		});
+
+		return;
+	},
+	
+/*
+ * @Description: 
+ *
+ * @Param: ARRAY, array of parameters that maps to the store_add_product_to_cart() PHP function.
+ * @Param: FUNCTION, callback of asynchronous call. Returns store-formatted json response
+ * @Returns: nothing, get output from callback
+ */
+	emptyCart: function(callback){
+
+		// init
+		var data = {};
+
+		// The PHP AJAX action hook to call
+		data.action = 'empty_cart';
+
+		// Submit to PHP
+		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+			if ( typeof callback === 'function' ) callback(results);
+		});
+
+		return;
 	},
 
 /*
@@ -37,7 +107,13 @@ var storeAPI = {
 
 		// Submit to PHP
 		jQuery.post( storeAPI.ajaxURL, data, function(response){
+
+			// if function was passed in, use as callback
 			if ( typeof callback === 'function' ) callback(response);
+
+			// If string was passed in, try and match it to a DOM element and replace it with the new cart
+			if ( typeof callback === 'string' ) jQuery(callback).replaceWith(jQuery(response));
+
 		});
 
 		return;

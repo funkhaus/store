@@ -156,6 +156,105 @@
 
 
 /*
+ * @Description: Get an array of custom options that have been set for this product
+ *
+ * @Param: MIXED, ID or object of product (or variant) to get keys for. Defaults to $post. Optional
+ * @Returns: MIXED, Array of keys on success, or false on failure
+ */
+ 	function store_get_product_option_keys( $product = null ){
+
+	 	// Get full post object
+	 	$product = store_get_product( $product );
+
+	 	// Make sure this is a top-level product
+	 	if ( $product->post_parent !== 0 ) $product = get_post($product->post_parent);
+
+	 	// Get all meta for this product
+	 	$meta = get_post_meta($product->ID);
+
+	 	// Extract valid option keys from meta
+	 	$keys = store_sort_options($meta);
+
+	 	return $keys;
+ 	}
+
+
+/*
+ * @Description: Get array of options for a given product
+ *
+ * @Param: MIXED, ID or object of product (or variant) to get options for. Defaults to $post. Optional
+ * @Returns: MIXED, Array of options on success, false on failure
+ */
+ 	function store_get_options( $product = null ){
+
+	 	// Set output
+	 	$output = array();
+
+	 	// Get all option key => value pairs
+	 	$keys = store_get_product_option_keys($product);
+
+	 	// Loop through keys
+	 	foreach ( $keys as $key => $value ) {
+
+		 	// format key to be readable
+		 	$key = store_format_option_key($key);
+
+		 	// Set key to be array of options
+		 	$output[$key] = explode(', ', $value);
+
+	 	}
+
+	 	return $output;
+ 	}
+
+
+/*
+ * @Description: get the full post object of a variant based on options provided
+ *
+ * @Param: ARRAY, associative array of options for the target variant. Required.
+ * @Param: MIXED, ID or object of the parent product. If none provided $post will be used.
+ * @Returns: MIXED, full post object of matching variant on success, or false on failure
+ */
+ 	function store_get_variant_id( $options = null, $product = null ){
+
+	 	// Get full product object
+	 	$product = store_get_product($product);
+
+	 	// enforce requirements
+	 	if ( ! is_array($options) || ! $product ) return false;
+
+	 	// Set meta query
+	 	$meta_query = array('relation' => 'AND');
+	 	foreach ( $options as $key => $val ) {
+		 	$meta_query[] = array(
+		 		'key'		=>	'_store_meta_' . $key,
+		 		'value'		=> $val,
+		 		'compare'	=> '='
+		 	);
+		}
+
+	 	// set args
+ 	    $args = array(
+ 			'posts_per_page'	=> 1,
+ 			'meta_query'		=> $meta_query,
+ 			'post_type'			=> 'product',
+ 			'post_parent'		=> $product->ID,
+ 			'feilds'			=> 'id'
+ 		);
+
+ 		// query for variant
+ 		$results = get_posts($args);
+
+ 		// if nothing came back, return false
+ 		if ( empty($results) )
+ 			return false;
+
+ 		// return first (and only) result
+ 		return reset($results);
+ 	}
+
+
+/*
  * @Description: Get product object, use $post as default
  *
  * @Param: MIXED, product ID or object. If none provided, $post will be used. Optional.
