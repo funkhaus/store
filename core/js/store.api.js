@@ -92,7 +92,10 @@ var storeAPI = {
  */
  	submitPayment: function( tokenData, callback ){
 
+	 	// If full token response was given, set token to be ID
 	 	if ( typeof tokenData === 'object' ) tokenData = tokenData.id;
+
+	 	// If token is string, run charge via ajax
 	 	if ( typeof tokenData === 'string' ) {
 
 		 	data = {
@@ -108,8 +111,8 @@ var storeAPI = {
 	 	}
 
 		return;
-
  	},
+
 
 /*
  * @Description: high level pay function, get token through stripe.js and then run payment through the php sdk
@@ -120,9 +123,16 @@ var storeAPI = {
  */
  	pay: function(cardData, callback){
 
+	 	// get token from stripe.js
 		storeAPI.encryptCard(cardData, function(response, token){
-			if ( ! response.success ) return response;
 
+			// if response failed, return full error message
+			if ( ! response.success ){
+				if ( typeof callback === 'function' ) callback(response);
+				return;
+			}
+
+			// take response and submit it for payment, then run callback
 			storeAPI.submitPayment(token, function(results){
 				if ( typeof callback === 'function' ) callback(results);
 			});
@@ -133,20 +143,31 @@ var storeAPI = {
  	},
 
 
+/*
+ * @Description: Get quote from shipwire based on a user-inputted address
+ *
+ * @Param: MIXED, can be a jquery element of the whole <form> (with proper data-ship atts) or an object of input values (i.e. { number: $('.address-line-1').val(), cvc: $('.address-zip').val() } )
+ * @Param: FUNCTION, callback of asychronous call, returns store-formatted json response
+ * @Returns: nothing, response information goes through callback
+ */
  	shippingQuote: function(address, callback){
 
-	 	addressFields = {};
-	 	if ( ! addressFields.line_1		= address.line_1 ) addressFields.line_1 = address.find('*[data-ship="line_1"]');
-	 	if ( ! addressFields.line_2		= address.line_2 ) addressFields.line_2 = address.find('*[data-ship="line_2"]');
-	 	if ( ! addressFields.city		= address.city ) addressFields.city = address.find('*[data-ship="city"]');
-	 	if ( ! addressFields.state		= address.state ) addressFields.state = address.find('*[data-ship="state"]');
-	 	if ( ! addressFields.country	= address.country ) addressFields.country = address.find('*[data-ship="country"]');
-	 	if ( ! addressFields.zip		= address.zip ) addressFields.zip = address.find('*[data-ship="zip"]');
+	 	// set output variable
+	 	var addressFields = {};
 
+	 	// Set each address field, default to an input with the proper data-ship value set
+	 	addressFields.line_1	= address.line_1 	|| address.find('input[data-ship="line_1"]').val();
+	 	addressFields.line_2	= address.line_2 	|| address.find('input[data-ship="line_2"]').val();
+	 	addressFields.city		= address.city 		|| address.find('input[data-ship="city"]').val();
+	 	addressFields.state		= address.state 	|| address.find('input[data-ship="state"]').val();
+	 	addressFields.country	= address.country 	|| address.find('input[data-ship="country"]').val();
+	 	addressFields.zip		= address.zip 		|| address.find('input[data-ship="zip"]').val();
+
+	 	// set data
 	 	data = {
 		 	'action'	:	'shipwire_quote',
 		 	'address'	:	addressFields
-	 	};
+		};
 
 		// Submit to PHP
 		jQuery.post( storeAPI.ajaxURL, data, function(results) {

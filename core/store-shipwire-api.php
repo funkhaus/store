@@ -79,8 +79,7 @@
 
 		// Return object of response
 		return $output;
-
-	};
+	}
 
 
 /*
@@ -126,8 +125,7 @@
 		}
 
 		return $output;
-
-	};
+	}
 
 
 /*
@@ -175,8 +173,7 @@
 		}
 
 		return $output;
-
-	};
+	}
 
 
 /*
@@ -243,7 +240,6 @@
 		if ( ! $count ) $count = false;
 
 		return $count;
-
 	}
 
 
@@ -351,8 +347,7 @@
 		if ( $output ) update_post_meta($order->ID, '_store_shipwire_receipt', $body );
 
 		return $output;
-
-	};
+	}
 
 
 /*
@@ -448,27 +443,28 @@
 
 		// Send request
 		$response = wp_remote_post(
-		    $url,
-		    array(
-		        'method' => 'POST',
-		        'timeout' => 45,
-		        'redirection' => 5,
-		        'httpversion' => '1.0',
-		        'headers' => array(
+			$url,
+			array(
+				'method' => 'POST',
+				'timeout' => 45,
+				'redirection' => 5,
+				'httpversion' => '1.0',
+				'headers' => array(
 					'Content-Type' => 'application/xml',
-		        ),
-		        'body' => trim( $request ),
-		        'sslverify' => false
-		    )
+				),
+				'body' => trim( $request ),
+				'sslverify' => false
+			)
 		);
 		$body = wp_remote_retrieve_body( $response );
 
 		// Parse XML into usable object
 		$output = simplexml_load_string( $body );
+		$output = store_shipwire_retrieve_shipping( $output );
 
 		// Return useful output of shipping info.
-		return store_shipwire_retrieve_shipping( $output );
-	};
+		return $output;
+	}
 
 
 /*
@@ -493,7 +489,7 @@
 		$items = store_get_cart_items($cart);
 
 		// If all not all data is available, abort
-		if ( ! $order || ! $items || ! $address ) return false;
+		if ( ! $cart || ! $items || ! $address ) return false;
 
 		// Set URL to send request to
 		$url = 'https://api.shipwire.com/exec/RateServices.php';
@@ -511,7 +507,7 @@
 					$_[] = '<Address2>' . $address['line_2'] . '</Address2>';
 					$_[] = '<City>' . $address['city'] . '</City>';
 					$_[] = '<State>' . $address['state'] . '</State>';
-					$_[] = '<Country>us</Country>';
+					$_[] = '<Country>' . $address['country'] . '</Country>';
 					$_[] = '<Zip>' . $address['zip'] . '</Zip>';
 				$_[] = '</AddressInfo>';
 
@@ -539,27 +535,27 @@
 
 		// Send request
 		$response = wp_remote_post(
-		    $url,
-		    array(
-		        'method' => 'POST',
-		        'timeout' => 45,
-		        'redirection' => 5,
-		        'httpversion' => '1.0',
-		        'headers' => array(
+			$url,
+			array(
+				'method' => 'POST',
+				'timeout' => 45,
+				'redirection' => 5,
+				'httpversion' => '1.0',
+				'headers' => array(
 					'Content-Type' => 'application/xml',
-		        ),
-		        'body' => trim( $request ),
-		        'sslverify' => false
-		    )
+				),
+				'body' => trim( $request ),
+				'sslverify' => false
+			)
 		);
 		$body = wp_remote_retrieve_body( $response );
 
 		// Parse XML into usable object
 		$output = simplexml_load_string( $body );
+		$output = store_shipwire_retrieve_shipping($output);
 
-		// Return useful output of shipping info.
-		return store_shipwire_retrieve_shipping( $output );
-	};
+		return $output;
+	}
 
 
 /*
@@ -576,7 +572,6 @@
 		if ( $response->Status ) $output = true;
 
 		return $output;
-
 	}
 
 
@@ -589,11 +584,11 @@
 	function store_shipwire_retrieve_shipping( $response = false ){
 
 		// If response came back with errors, abort
-		if ( ! store_shipwire_retrieve_status($response) ) return false;
+		if ( ! store_shipwire_retrieve_status($response) ) return $response;
 
 		$i = 0;
 		$output = false;
-		foreach( $response->Order->Quotes->Quote as $quote ) {
+		foreach( $response->Order->Quotes->Quote as $quote ){
 
 			// Format relevant figures into output
 			$output[$i]['service'] = (string) $quote->Service;
@@ -606,7 +601,6 @@
 		}
 
 		return $output;
-
 	}
 
 ?>

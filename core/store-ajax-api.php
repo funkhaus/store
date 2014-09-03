@@ -213,18 +213,23 @@
 
 		$address = array();
 		if( isset($_REQUEST['address']) ){
-			var_dump( $_REQUEST['address'] ); exit;
+			$address = $_REQUEST['address'];
 		}
 
-		$options = store_shipwire_request_cart_shipping( $address, $cart );
+		// Get quote from shipwire
+		$options = store_shipwire_request_cart_shipping( $address );
 
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode($options);
+		die;
 	}
 
 
 /*
- * @Description: Sync inventory with shipwire
+ * @Description:
  *
- * @Returns: MIXED, result of store_update_shipwire_inventory
+ * @Returns:
  */
 	add_action( 'wp_ajax_nopriv_stripe_charge', 'store_ajax_stripe_charge' );
 	add_action( 'wp_ajax_stripe_charge', 'store_ajax_stripe_charge' );

@@ -329,8 +329,8 @@
 		// Get full cart object
 		$cart = store_get_cart($cart);
 
-		// Get shippng options from shipwire
-		return store_shipwire_request_shipping($cart);
+		// Get shipping options from shipwire
+		return store_shipwire_request_order_shipping($cart);
 
 	}
 

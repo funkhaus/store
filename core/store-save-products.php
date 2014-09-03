@@ -105,7 +105,7 @@
 	 	$combinations = store_get_combinations($options);
 
 	 	// Get any existing children of this post
-	 	$all_children = get_children('post_parent=' . $post_id );
+	 	$all_children = get_children('post_type="product"&post_parent=' . $post_id );
 
 	 	// Loop through children
 	 	foreach ( $all_children as $child ) {
