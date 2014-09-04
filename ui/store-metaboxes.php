@@ -112,7 +112,7 @@
 								<td><?php echo store_get_sku() ? store_get_sku() : '-'; ?></td>
 								<td><?php echo $post->_store_qty ? $post->_store_qty : '-'; ?></td>
 								<td>
-									<?php echo $post->_store_price; ?>
+									<?php echo number_format(($post->_store_price / 100), 2, '.', ''); ?>
 									<?php edit_post_link( 'edit', '<span class="edit" style="float: right;">', '</span>' ); ?>
 								</td>
 							</tr>
@@ -149,7 +149,7 @@
 					<strong>Price</strong>
 				</p>
 				<label class="screen-reader-text" for="store-price">Price</label>
-				<input id="store-price" class="short" title="" size="4" name="_store_price" type="text" value="<?php echo $post->_store_price; ?>">
+				<input id="store-price" class="short" title="" size="4" name="_store_price" type="text" value="<?php echo number_format( ($post->_store_price / 100), 2, '.', '') ; ?>">
 				<br/>
 
 			</div>
@@ -259,7 +259,7 @@
 								</td>
 								<td><?php echo get_the_title($product->ID); ?></td>
 								<td><?php echo $prod_qty; ?></td>
-								<td><?php echo $product->_store_price; ?></td>
+								<td><?php echo number_format( ($post->_store_price / 100), 2, '.', '') ; ?></td>
 							</tr>
 
 						<?php endforeach; ?>
@@ -429,7 +429,7 @@
 			// Update a parent (if it has one)
 		}
 		if( isset($_POST["_store_price"]) ) {
-			update_post_meta($post->ID, "_store_price", $_POST["_store_price"]);
+			update_post_meta($post->ID, "_store_price", (int)($_POST["_store_price"] * 100) );
 		}
 		if( isset($_POST["_store_sku"]) ) {
 			update_post_meta($post->ID, "_store_sku", $_POST["_store_sku"]);

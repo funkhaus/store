@@ -460,7 +460,6 @@
 
 		// Parse XML into usable object
 		$output = simplexml_load_string( $body );
-		$output = store_shipwire_retrieve_shipping( $output );
 
 		// Return useful output of shipping info.
 		return $output;
@@ -552,7 +551,6 @@
 
 		// Parse XML into usable object
 		$output = simplexml_load_string( $body );
-		$output = store_shipwire_retrieve_shipping($output);
 
 		return $output;
 	}

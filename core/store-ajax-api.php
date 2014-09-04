@@ -31,6 +31,7 @@
 			foreach ( $data as $prop => $val ) {
 				if ( array_key_exists($prop, $template) ) $template[$prop] = $val;
 			}
+			if ( $data['options'] ) $template['options'] = $data['options'];
 		}
 
 		return $template;
@@ -249,11 +250,30 @@
 		}
 
 		// Get quote from shipwire
-		$options = store_shipwire_request_cart_shipping( $address );
+		$xml = store_shipwire_request_cart_shipping( $address );
+
+		// Set api logging
+		$output = array();
+		if ( $xml->Order->Errors ) {
+			$output['code'] = 'NO_COUNTRY';
+			$output['message'] = 'Address has no country set.';
+		} else {
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			if ( $xml->Order->Warnings->Warning ) {
+				$output['message'] = (string) $xml->Order->Warnings->Warning;
+			} else {
+				$output['message'] = 'This is a useable address.';
+			}
+		}
+
+		$output['vendor_response'] = (array) $xml;
+		$output['vendor_response']['vendor'] = 'shipwire';
+		$output['options'] = store_shipwire_retrieve_shipping($xml);
 
 		// Set proper header, output
 		header('Content-Type: application/json');
-		echo json_encode($options);
+		echo json_encode( store_get_json_template($output) );
 		die;
 	}
 

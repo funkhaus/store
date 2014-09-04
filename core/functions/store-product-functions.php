@@ -102,7 +102,7 @@
 		$price = get_post_meta( $product->ID, '_store_price', true );
 
 		// format number into cents
-		$price = intval( (int) $price * 100);
+		$price = intval( (int) $price );
 
 		// If price is falsey, set to false
 		if ( ! $price ) $price = false;
@@ -166,9 +166,6 @@
 	 	// Get full post object
 	 	$product = store_get_product( $product );
 
-	 	// Make sure this is a top-level product
-	 	if ( $product->post_parent !== 0 ) $product = get_post($product->post_parent);
-
 	 	// Get all meta for this product
 	 	$meta = get_post_meta($product->ID);
 
@@ -199,8 +196,18 @@
 		 	// format key to be readable
 		 	$key = store_format_option_key($key);
 
-		 	// Set key to be array of options
-		 	$output[$key] = explode(', ', $value);
+		 	// if value is comma-separated...
+		 	if ( strstr($value, ', ') ) {
+
+			 	// Set key to be array of options
+			 	$output[$key] = explode(', ', $value);
+
+		 	} else {
+
+			 	// otherwise just set to be value
+			 	$output[$key] = $value;
+
+		 	}
 
 	 	}
 

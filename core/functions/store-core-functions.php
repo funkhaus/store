@@ -14,6 +14,9 @@
 	// Get product functions
 	include_once( trailingslashit( pp() ) . 'core/functions/store-product-functions.php' );
 
+	// Get product functions
+	include_once( trailingslashit( pp() ) . 'core/functions/store-page-functions.php' );
+
 	// Get user functions
 	include_once( trailingslashit( pp() ) . 'core/functions/store-customer-functions.php' );
 

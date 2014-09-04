@@ -190,7 +190,7 @@
 			 	if ( $ID = wp_insert_post( $post_template ) ) {
 
 				 	// Update store meta
-				 	if ( $_POST['_store_price'] ) update_post_meta( $ID, '_store_price', $_POST['_store_price'] );
+				 	if ( $_POST['_store_price'] ) update_post_meta( $ID, '_store_price', (int)($_POST['_store_price'] * 100) );
 				 	if ( $qty ) update_post_meta( $ID, '_store_qty', $qty );
 
 				 	foreach ( $combo_vals as $combo_key => $combo_val ) {
