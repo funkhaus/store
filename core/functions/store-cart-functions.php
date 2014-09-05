@@ -190,15 +190,9 @@
 			return false;			
 		}
 
-		// Test cart is set and is still avaible
-		if( !empty($cart_id) && store_is_cart_available($cart_id) ) {
-			// Cart is set, and is avaible, use it!
-			$cart_id = $cart_id;
-
-		} else {
-			// Fallback to active cart
-			$cart_id = store_get_active_cart_id();						
-		}
+		// Attempt to get a valid cart
+		$cart = store_get_cart();
+		$cart_id = $cart->ID;
 
 		// If still no cart, make one!
 		if( empty($cart_id) ) {

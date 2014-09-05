@@ -21,7 +21,19 @@
 			'zip'			=> '11102'
 		);
 
-		//var_dump(store_get_product_option_keys()); exit;
+		// Set args defaults
+		$args = array(
+			'options'	=> true,
+			'title'		=> true,
+			'price'		=> true,
+			'content'	=> true,
+			'excerpt'	=> true,
+			'images'	=> 'full',
+			'sku'		=> true,
+			'slug'		=> true
+		);
+
+		//var_dump(store_get_product_matrix($args, 90)); exit;
 		//var_dump( store_ajax_get_cart_contents() ); exit;
 		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
 		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
@@ -50,6 +62,9 @@
 
 	// Add cart AJAX functions
 	include_once( trailingslashit( pp() ) . 'core/store-ajax-api.php' );
+
+	// Add js product matrix
+	include_once( trailingslashit( pp() ) . 'core/store-product-matrix.php' );
 
 	// Add shipwire AJAX functions
 	include_once( trailingslashit( pp() ) . 'core/store-shipwire-api.php' );

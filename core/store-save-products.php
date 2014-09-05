@@ -65,6 +65,9 @@
  */
 	function store_sort_options($meta_array) {
 
+		// not array? abort
+		if ( ! is_array($meta_array) ) return false;
+
 	 	// Figure out the keys for the created options
 	 	$meta_keys = array();
 	 	foreach ( $meta_array as $post_key => $post_value ) {

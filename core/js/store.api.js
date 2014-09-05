@@ -35,12 +35,12 @@ var storeAPI = {
 				data.options[key] = jQuery(this).val();
 			});
 
+		} else {
+			data = args;
 		}
 
 		// The PHP AJAX action hook to call
 		data.action = 'add_to_cart';
-
-		console.log(data);
 
 		// Submit to PHP
 		jQuery.post( storeAPI.ajaxURL, data, function(results) {
@@ -230,6 +230,8 @@ var storeAPI = {
 
 	 	// set output variable
 	 	var addressFields = {};
+	 	var context = window;
+	 	if (address.jquery) context = address;
 
 	 	// Set each address field, default to an input with the proper data-ship value set
 	 	addressFields.line_1	= address.line_1 	|| address.find('input[data-ship="line_1"]').val();
@@ -247,7 +249,7 @@ var storeAPI = {
 
 		// Submit to PHP
 		jQuery.post( storeAPI.ajaxURL, data, function(results) {
-			if ( typeof callback === 'function' ) callback(results);
+			if ( typeof callback === 'function' ) callback.apply(context, [results]);
 		});
 
 		return;

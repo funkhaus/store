@@ -589,7 +589,7 @@
 		foreach( $response->Order->Quotes->Quote as $quote ){
 
 			// Format relevant figures into output
-			$output[$i]['service'] = (string) $quote->Service;
+			$output[$i]['service'] = (string) $quote->CarrierCode;
 			$output[$i]['cost'] = (string) $quote->Cost;
 			$output[$i]['delivery']['min'] = (string) $quote->DeliveryEstimate->Minimum;
 			$output[$i]['delivery']['max'] = (string) $quote->DeliveryEstimate->Maximum;

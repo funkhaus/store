@@ -2,7 +2,6 @@
 
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-
 /*
  * @Description: Helper function used to return the calculated inventory quantity of a post based on its' variations
  *
@@ -41,7 +40,7 @@
 		}
 
 		return $quantity;
-	};
+	}
 
 
 /*
@@ -69,7 +68,7 @@
 		}
 
 		return $qty;
-	};
+	}
 
 
 /*
@@ -84,7 +83,7 @@
 
 		return get_post_meta( $product->ID, '_store_sku', true );
 
-	};
+	}
 
 
 /*
@@ -108,8 +107,7 @@
 		if ( ! $price ) $price = false;
 
 		return $price;
-
-	};
+	}
 
 
 /*
@@ -151,8 +149,7 @@
 
 		// Return results of get_posts();
 		return $products;
-
-	};
+	}
 
 
 /*
@@ -190,26 +187,30 @@
 	 	// Get all option key => value pairs
 	 	$keys = store_get_product_option_keys($product);
 
-	 	// Loop through keys
-	 	foreach ( $keys as $key => $value ) {
+	 	if ( is_array($keys) ) {
 
-		 	// format key to be readable
-		 	$key = store_format_option_key($key);
-
-		 	// if value is comma-separated...
-		 	if ( strstr($value, ', ') ) {
-
-			 	// Set key to be array of options
-			 	$output[$key] = explode(', ', $value);
-
-		 	} else {
-
-			 	// otherwise just set to be value
-			 	$output[$key] = $value;
-
+		 	// Loop through keys
+		 	foreach ( $keys as $key => $value ) {
+	
+			 	// format key to be readable
+			 	$key = store_format_option_key($key);
+	
+			 	// if value is comma-separated...
+			 	if ( strstr($value, ', ') ) {
+	
+				 	// Set key to be array of options
+				 	$output[$key] = explode(', ', $value);
+	
+			 	} else {
+	
+				 	// otherwise just set to be value
+				 	$output[$key] = $value;
+	
+			 	}
+	
 		 	}
 
-	 	}
+		 }
 
 	 	return $output;
  	}
@@ -283,7 +284,6 @@
 
 		// Return result
 		return $product;
-
  	}
 
 
