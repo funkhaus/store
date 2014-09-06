@@ -253,6 +253,90 @@ var storeAPI = {
 		});
 
 		return;
+ 	},
+
+// ---------------- Product Matrix API ---------------- //
+
+ 	matrix: {
+
+		data: store_product_matrix,
+
+		matchOptions: function(obj, options){
+
+			// init output
+			var output = true;
+
+			// loop through options
+			for ( var prop in options ) {
+
+				// If target post does not have a match for this option, break and return false
+				if ( obj[prop] != options[prop] ) {
+					output = false;
+					break;
+				}
+			}
+
+			return output;
+		},
+
+		getProducts: function(options){
+
+			// init vars
+			var output = [];
+			var products = storeAPI.matrix.data;
+
+			// If integer was provided...
+			if ( options === parseInt(options) ) {
+
+				if ( products.hasOwnProperty(options) ) {
+					// try to set as top-level product
+					output = [products[options]];
+				}
+
+				// if it didn't work...
+				if ( output.length === 0 ) {
+
+					// loop through products
+					for ( var id in products ) {
+
+						// when a match is found...
+						if ( options in products[id].variants ) {
+
+							// set output and break
+							output.push(products[id].variants[options]);
+							break;
+
+						}
+					}
+				}
+			}
+
+			// If object was provided...
+			if ( typeof options === 'object' ) {
+
+				// Loop through products
+				for ( var id in products ){
+
+					// loop through variants
+					for ( var varId in products[id].variants ) {
+
+						// no options? skip
+						if ( ! options in products[id].variants[varId] ) continue;
+
+						// if matchOptions comes back true,
+						if ( storeAPI.matrix.matchOptions(products[id].variants[varId].options, options) ) {
+							output.push( products[id].variants[varId] );
+						}
+
+					}
+				}
+
+			}
+
+			if ( output.length === 0 ) output = false;
+			return output;
+		}
+
  	}
 
 };

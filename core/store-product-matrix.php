@@ -8,7 +8,117 @@
  * @Param: MIXED,
  * @Returns: BOOL,
  */
-	function store_get_product_matrix( $args = null, $product = null, $return = null ){
+	function store_set_product_matrix_properties($args, $post){
+
+		// init output
+		$output;
+
+		// if title arg is set...
+		if ( $args['title'] ) {
+	
+			// add title to variant
+			$output['title'] = get_the_title($post);
+	
+		}
+	
+		// if price arg is set...
+		if ( $args['price'] ) {
+	
+			// add price to variant
+			$output['price'] = store_get_product_price($post);
+	
+		}
+	
+		// if content arg is set...
+		if ( $args['content'] ) {
+	
+			// clean content
+			$content = $post->post_content;
+			$content = apply_filters( 'the_content', $content );
+			$content = str_replace( ']]>', ']]&gt;', $content );
+	
+			// add content to variant
+			$output['content'] = $content;
+	
+		}
+	
+		// if excerpt arg is set...
+		if ( $args['excerpt'] ) {
+	
+			// clean the excerpt
+			$excerpt = $post->post_excerpt;
+			$excerpt = apply_filters( 'get_the_excerpt', $excerpt );
+			$excerpt = apply_filters( 'the_excerpt', $excerpt );
+	
+			// add excerpt to variant
+			$output['excerpt'] = $excerpt;
+	
+		}
+	
+		// if images arg is set...
+		if ( $args['images'] ) {
+
+			// Identify this variant's featured image
+			$featured_id = get_post_thumbnail_id( $post->ID );
+
+			// set default for images prop
+			$output['images'] = false;
+
+			// if there is a featured image...
+			if ( $featured_id ) {
+
+				// init sizes
+				$sizes = false;
+
+				// if arg is a string, treat it as a size and get the featured image in that size
+				if ( is_string($args['images']) ) $sizes = array($args['images']);
+
+				// if arg is set to all or true, do all sizes
+				if ( $args['images'] === true || $args['images'] === 'all' ) $sizes = get_intermediate_image_sizes();
+
+				// if sizes are set...
+				if ( $sizes ) {
+					foreach ( $sizes as $size ) {
+	
+						// Get image src atts
+						$featured_url = wp_get_attachment_image_src( $featured_id, $size );
+	
+						// if src atts...
+						if ( $featured_url ) {
+	
+							// Set url into array
+							$output['images'][$size] = $featured_url[0];
+	
+						}
+					}
+				}
+			}
+		}
+
+		// if sku arg is set...
+		if ( $args['sku'] ) {
+	
+			// set sku for this variant
+			$output['sku'] = store_get_sku($post);
+		}
+
+		// if slug args is set...
+		if ( $args['slug'] ) {
+	
+			// set slug for this variant
+			$output['slug'] = $post->post_name;
+		}
+
+		return $output;
+	}
+
+/*
+ * @Description:
+ *
+ * @Param: MIXED,
+ * @Returns: BOOL,
+ */
+	function store_get_product_matrix( $args = null, $product = null, $return = 'script' ){
 
 		// init array
 		$products = array();
@@ -69,18 +179,23 @@
 		// loop through target products
 		foreach ( $products as $parent_id => $parent_product ) {
 
+			// Add properties to this ID
+			$output[$parent_id] = store_set_product_matrix_properties($args_master, $parent_product);
+
 			// Get variants of this product
 			$variants = store_get_product_variants($parent_product);
 
 			// no variants? move on
 			if ( ! $variants ) {
-				$output[$parent_id] = false;
 				continue;
 			}
 
 			// Loop through variants
 			// @TODO: add support for individual options
 			foreach ( $variants as $variant ) {
+
+				// 
+				$output[$parent_id]['variants'][$variant->ID] = store_set_product_matrix_properties($args_master, $variant);
 
 				// if options arg is set...
 				if ( $args_master['options'] ) {
@@ -95,111 +210,10 @@
 						foreach ( $options as $option => $val ) {
 
 							// add options to this variant
-							$output[$parent_id][$variant->ID]['options'][$option] = $val;
+							$output[$parent_id]['variants'][$variant->ID]['options'][$option] = $val;
 
 						}
 					}
-
-				}
-
-				// if title arg is set...
-				if ( $args_master['title'] ) {
-
-					// add title to variant
-					$output[$parent_id][$variant->ID]['title'] = get_the_title($variant);
-
-				}
-
-				// if price arg is set...
-				if ( $args_master['price'] ) {
-
-					// add price to variant
-					$output[$parent_id][$variant->ID]['price'] = store_get_product_price($variant);
-
-				}
-
-				// if content arg is set...
-				if ( $args_master['content'] ) {
-
-					// clean content
-					$content = $variant->post_content;
-					$content = apply_filters( 'the_content', $content );
-					$content = str_replace( ']]>', ']]&gt;', $content );
-
-					// add content to variant
-					$output[$parent_id][$variant->ID]['content'] = $content;
-
-				}
-
-				// if excerpt arg is set...
-				if ( $args_master['excerpt'] ) {
-
-					// clean the excerpt
-					$excerpt = $variant->post_excerpt;
-					$excerpt = apply_filters( 'get_the_excerpt', $excerpt );
-					$excerpt = apply_filters( 'the_excerpt', $excerpt );
-
-					// add excerpt to variant
-					$output[$parent_id][$variant->ID]['excerpt'] = $excerpt;
-
-				}
-
-				// if images arg is set...
-				if ( $args_master['images'] ) {
-
-					// Identify this variant's featured image
-					$featured_id = get_post_thumbnail_id( $variant->ID );
-
-					// set default for images prop
-					$output[$parent_id][$variant->ID]['images'] = false;
-
-					// if there is a featured image...
-					if ( $featured_id ) {
-
-						// init sizes
-						$sizes = false;
-
-						// if arg is a string, treat it as a size and get the featured image in that size
-						if ( is_string($args_master['images']) ) $sizes = array($args_master['images']);
-
-						// if arg is set to all or true, do all sizes
-						if ( $args_master['images'] === true || $args_master['images'] === 'all' ) $sizes = get_intermediate_image_sizes();
-
-						// if sizes are set...
-						if ( $sizes ) {
-							foreach ( $sizes as $size ) {
-
-								// Get image src atts
-								$featured_url = wp_get_attachment_image_src( $featured_id, $size );
-	
-								// if src atts...
-								if ( $featured_url ) {
-	
-									// Set url into array
-									$output[$parent_id][$variant->ID]['images'][$size] = $featured_url[0];
-	
-								}
-
-							}
-						}
-
-					}
-
-				}
-
-				// if sku arg is set...
-				if ( $args_master['sku'] ) {
-
-					// set sku for this variant
-					$output[$parent_id][$variant->ID]['sku'] = store_get_sku($variant);
-
-				}
-
-				// if slug args is set...
-				if ( $args_master['slug'] ) {
-
-					// set slug for this variant
-					$output[$parent_id][$variant->ID]['slug'] = $variant->post_name;
 
 				}
 
@@ -207,6 +221,22 @@
 
 		}
 
-		return $output;
+		// Set output accordingly
+		if ( $return === 'array' ) {
+			
+			$output = (array) $output;
 
+		} elseif ( $return === 'json' ) {
+
+			$output = json_encode($output);
+
+		} else {
+			$output = '<script type="text/javascript">
+			/* <![CDATA[ */
+			var store_product_matrix = ' . json_encode( $output ) . ';
+			/* ]]> */
+			</script>';
+		}
+
+		return $output;
 	};

@@ -28,12 +28,12 @@
 			'price'		=> true,
 			'content'	=> true,
 			'excerpt'	=> true,
-			'images'	=> 'full',
+			'images'	=> 'all',
 			'sku'		=> true,
 			'slug'		=> true
 		);
 
-		//var_dump(store_get_product_matrix($args, 90)); exit;
+		//print_r( store_get_product_matrix($args, 9, 'array') ); exit;
 		//var_dump( store_ajax_get_cart_contents() ); exit;
 		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
 		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
