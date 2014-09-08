@@ -23,6 +23,7 @@
 			if( isset($_COOKIE['_store_active_cart_id']) ) {
 				$active_cart_id = $_COOKIE['_store_active_cart_id'];
 			}
+
 		}
 
 		// Is it empty?
@@ -34,8 +35,10 @@
 		if( store_is_cart_available($active_cart_id) ) {
 			// Retrun ID
 			return intval($active_cart_id);
+
 		} else {
 			return false;
+
 		}
 
 	};

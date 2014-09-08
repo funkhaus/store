@@ -69,7 +69,7 @@ var storeAPI = {
 
 		return;
 	},
-	
+
 /*
  * @Description: 
  *
@@ -156,7 +156,6 @@ var storeAPI = {
 	 	});
 
 	 	return;
-
  	},
 
 /*
@@ -257,10 +256,19 @@ var storeAPI = {
 
 // ---------------- Product Matrix API ---------------- //
 
+
  	matrix: {
 
+	 	// holds all product data
 		data: store_product_matrix,
 
+	/*
+	 * @Description: Helper function used to check if an object has a set of all required properties
+	 *
+	 * @Param: OBJ, object to check properties of
+	 * @Param: OBJ, set of required options to search for
+	 * @Returns: BOOL, true if all required options are matched, false if not
+	 */
 		matchOptions: function(obj, options){
 
 			// init output
@@ -276,14 +284,21 @@ var storeAPI = {
 				}
 			}
 
+			// if all options are matched, output will still be true
 			return output;
 		},
 
+	/*
+	 * @Description: Flexible function used to query for products out of storeAPI.matrix.data
+	 *
+	 * @Param: MIXED, can be an integer of a product ID, an object of properties to query by, or an array of product IDs
+	 * @Returns: ARRAY, all objects that match the criteria provided
+	 */
 		getProducts: function(options){
 
 			// init vars
 			var output = [];
-			var products = storeAPI.matrix.data;
+			var products = this.data;
 
 			// If integer was provided...
 			if ( options === parseInt(options) ) {
@@ -323,8 +338,8 @@ var storeAPI = {
 						// no options? skip
 						if ( ! options in products[id].variants[varId] ) continue;
 
-						// if matchOptions comes back true,
-						if ( storeAPI.matrix.matchOptions(products[id].variants[varId].options, options) ) {
+						// if matchOptions comes back true, push this product to output
+						if ( this.matchOptions(products[id].variants[varId].options, options) ) {
 							output.push( products[id].variants[varId] );
 						}
 
@@ -333,6 +348,7 @@ var storeAPI = {
 
 			}
 
+			// if empty array, set to false
 			if ( output.length === 0 ) output = false;
 			return output;
 		}
