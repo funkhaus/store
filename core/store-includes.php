@@ -33,8 +33,8 @@
 			'slug'		=> true
 		);
 
+		//var_dump( store_shipwire_retrieve_shipping( store_shipwire_request_order_shipping(102) ) ); exit;
 		//print_r( store_get_product_matrix($args, 9, 'array') ); exit;
-		//var_dump( store_ajax_get_cart_contents() ); exit;
 		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
 		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
 		//var_dump( store_update_shipwire_inventory() ); exit;

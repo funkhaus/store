@@ -42,17 +42,17 @@
  * @Param: INT, cart ID to test. Required.
  */
 	function store_is_cart_available( $cart_id ){
-		$cart = store_get_cart($cart_id);
-		
-		if( is_object($cart) ) {
-			if( $cart->post_status !== 'trash' ) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}
+
+		// get full post object
+		$cart = get_post($cart_id);
+
+		// init output
+		$output = true;
+
+		// Set false if is not an object, not a cart, or is in trash
+		if( ! is_object($cart) || $cart->post_type !== 'cart' || $cart->post_status === 'trash' ) $output = false;
+
+		return $output;
 	}
 	
 ?>

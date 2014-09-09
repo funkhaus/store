@@ -60,6 +60,9 @@
 			// Update name and title
 			wp_update_post( $cart );
 
+			// Log creation in order history
+			store_add_order_history($order_id, 'order ' . $order_id . ' created.');
+
 			// Set default order status
 			$status = store_set_order_status( $order_id );
 
@@ -108,8 +111,12 @@
 		$existing_term = get_term_by( $field, $status, 'store_status' );
 		if ( $existing_term ) $output = wp_set_post_terms( $order_id, $existing_term->name, 'store_status' );
 
-		return $output;
+		// Log in order history
+		if ( $output ) {
+			store_add_order_history($order_id, 'order status changed to ' . $existing_term->name);
+		}
 
+		return $output;
 	}
 
 
@@ -272,6 +279,19 @@
 
 
 /*
+ * @Description: Save shipping rate data to a given order
+ *
+ * @Param 1:
+ * @Return:
+ */
+	function store_set_order_shipping_rate( ) {
+
+		return false;
+
+	}
+
+
+/*
  * @Description: Get billing address for an order
  *
  * @Param: INT, order ID. Required.
@@ -330,6 +350,105 @@
 
  	}
 
+
+/*
+ * @Description:
+ *
+ * @Param:
+ * @Param:
+ * @Return:
+ */
+ 	function store_submit_order( $args ) {
+
+	 	// make sure all arguments are there
+	 	if ( $args['shipping_address'] || $args['billing_address'] || $args['stripe_token'] ) return false;
+
+		// Set for api logging
+		$output = array();
+
+		// Create the order from active cart
+		$order_id = store_create_order();
+
+		// if order created...
+		if ( $order_id ) {
+
+			// Add shipping to order
+			$set_ship = store_set_order_shipping_address($order_id, $args['shipping_address']);
+
+			// Add billing to order
+			$set_bill = store_set_order_billing_address($order_id, $args['billing_address']);
+
+			// Set status to submitted
+			$set_status = store_set_order_status($order_id, 'submitted');
+
+			// If shipping or billing were not set, remove order and fail
+			if ( ! $set_ship || ! $set_bill ) {
+				wp_delete_post( $order_id, true );
+				$order_id = false;
+			}
+
+		} else {
+
+			$output['code'] = 'FAILED_ORDER';
+			$output['message'] = 'Failed to create order from active cart.';
+			return store_get_json_template($output);
+
+		}
+
+		// Check inventory
+		$items = store_get_order_items($order_id);
+		if ( $items ) {
+			$can_ship = true;
+			foreach ( $items as $id => $qty ) {
+
+				// Get stock from shipwire
+				$stock = store_get_shipwire_qty( $id );
+
+				// if stock is not greater than quantity in cart, set var
+				if ( ! $stock || intval($stock) < intval($qty) ) $can_ship = false;
+			}
+		}
+
+		// If order cannot ship, return with errors
+		if ( ! $can_ship ) {
+
+			$output['code'] = 'FAILED_INVENTORY';
+			$output['message'] = 'There is not enough stock in Shipwire to complete this order.';
+			return store_get_json_template($output);
+
+		}
+
+		// Calculate shipping        shipping_method
+
+		// Get usable shipping options
+		$ship_options = store_shipwire_retrieve_shipping( store_shipwire_request_order_shipping($order_id) );
+		$ship_method = false;
+
+		// If options came back
+		if ( $ship_options ) {
+
+			// if shipping method is set, target that method
+			if ( isset($args['shipping_method']) ) {
+				// loop through methods, find target
+
+			} else {
+				$ship_method = $ship_options[0];
+
+			}
+
+			// Add shipping method data to order
+			// Make get_order_total() function
+
+		}
+
+		// Charge card
+		
+
+
+		// Place order with shipwire
+
+		return false;
+	}
 
 /*
  * @Description: Get all items in order by ID or obj

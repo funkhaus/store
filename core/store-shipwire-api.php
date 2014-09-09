@@ -283,6 +283,7 @@
 			$_[] = '<Username>' . $options['usnm'] . '</Username>';
 			$_[] = '<Password>' . $options['pswd'] . '</Password>';
 			$_[] = '<Server>Production</Server>';
+			$_[] = '<AffiliateId>10852</AffiliateId>';
 			$_[] = '<Order id="order-' . $order->ID . '">';
 				$_[] = '<Warehouse>00</Warehouse>';
 				$_[] = '<AddressInfo type="ship">';
@@ -590,6 +591,7 @@
 
 			// Format relevant figures into output
 			$output[$i]['service'] = (string) $quote->CarrierCode;
+			$output[$i]['method'] = (string) $quote->attributes()->method;
 			$output[$i]['cost'] = (string) $quote->Cost;
 			$output[$i]['delivery']['min'] = (string) $quote->DeliveryEstimate->Minimum;
 			$output[$i]['delivery']['max'] = (string) $quote->DeliveryEstimate->Maximum;

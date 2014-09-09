@@ -334,43 +334,31 @@
 /*
  * @Description:
  */
-	add_action( 'wp_ajax_nopriv_make_order', 'store_ajax_make_order' );
-	add_action( 'wp_ajax_make_order', 'store_ajax_make_order' );
-	function store_ajax_make_order() {
+	add_action( 'wp_ajax_nopriv_submit_order', 'store_ajax_submit_order' );
+	add_action( 'wp_ajax_submit_order', 'store_ajax_submit_order' );
+	function store_ajax_submit_order() {
 
 		// init address, get from request if available
-		$ship_address = array();
-		$bill_address = array();
+		$args = array();
 		if( isset($_REQUEST['shipping_address']) ){
-			$ship_address = $_REQUEST['shipping_address'];
+			$args['shipping_address'] = $_REQUEST['shipping_address'];
+		}
+		if( isset($_REQUEST['shipping_method']) ){
+			$args['shipping_method'] = $_REQUEST['shipping_method'];
 		}
 		if( isset($_REQUEST['billing_address']) ){
-			$bill_address = $_REQUEST['billing_address'];
+			$args['billing_address'] = $_REQUEST['billing_address'];
+		}
+		if( isset($_REQUEST['stripe_token']) ){
+			$args['stripe_token'] = $_REQUEST['stripe_token'];
 		}
 
-		// Create the order from active cart
-		$order_id = store_create_order();
-
-		// if order created...
-		if ( $order_id ) {
-
-			// Add shipping to order
-			$set_ship = store_set_order_shipping_address($order_id, $ship_address);
-
-			// Add billing to order
-			$set_bill = store_set_order_billing_address($order_id, $bill_address);
-
-			// If shipping or billing were not set, remove order and fail
-			if ( ! $set_ship || ! $set_bill ) {
-				wp_delete_post( $order_id, true );
-				$order_id = false;
-			}
-
-		}
+		// 
+		$results = store_submit_order($args);
 
 		// Set api logging
 		$output = array();
-		if ( $order_id ) {
+		if ( $results ) {
 			$output['success'] = true;
 			$output['code'] = 'OK';
 			$output['message'] = 'Order ' . $order_id . ' successfully created.';

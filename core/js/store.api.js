@@ -43,7 +43,7 @@ var storeAPI = {
 		data.action = 'add_to_cart';
 
 		// Submit to PHP
-		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+		jQuery.post( this.ajaxURL, data, function(results) {
 			if ( typeof callback === 'function' ) callback(results);
 		});
 
@@ -63,7 +63,7 @@ var storeAPI = {
 		data.action = 'remove_from_cart';
 
 		// Submit to PHP
-		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+		jQuery.post( this.ajaxURL, data, function(results) {
 			if ( typeof callback === 'function' ) callback(results);
 		});
 
@@ -79,14 +79,14 @@ var storeAPI = {
  */
 	emptyCart: function(callback){
 
-		// init
+		// init data
 		var data = {};
 
 		// The PHP AJAX action hook to call
 		data.action = 'empty_cart';
 
 		// Submit to PHP
-		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+		jQuery.post( this.ajaxURL, data, function(results) {
 			if ( typeof callback === 'function' ) callback(results);
 		});
 
@@ -106,7 +106,7 @@ var storeAPI = {
     	};
 
 		// Submit to PHP
-		jQuery.post( storeAPI.ajaxURL, data, function(response){
+		jQuery.post( this.ajaxURL, data, function(response){
 
 			// if function was passed in, use as callback
 			if ( typeof callback === 'function' ) callback(response);
@@ -179,7 +179,7 @@ var storeAPI = {
 		 	};
 
 			// Submit to PHP
-			jQuery.post( storeAPI.ajaxURL, data, function(results) {
+			jQuery.post( this.ajaxURL, data, function(results) {
 				if ( typeof callback === 'function' ) callback(results);
 			});
 
@@ -199,7 +199,7 @@ var storeAPI = {
  	pay: function(cardData, callback){
 
 	 	// get token from stripe.js
-		storeAPI.encryptCard(cardData, function(response, token){
+		this.encryptCard(cardData, function(response, token){
 
 			// if response failed, return full error message
 			if ( ! response.success ){
@@ -208,7 +208,7 @@ var storeAPI = {
 			}
 
 			// take response and submit it for payment, then run callback
-			storeAPI.submitPayment(token, function(results){
+			this.submitPayment(token, function(results){
 				if ( typeof callback === 'function' ) callback(results);
 			});
 
@@ -216,6 +216,72 @@ var storeAPI = {
 
 		return;
  	},
+
+
+/*
+ * @Description: Helper function to flexibly retrieve a valid address from a number of different formats
+ *
+ * @Param: OBJ, can be a jQuery object containing address inputs, or an object with address formatted property > value pairs
+ * @Returns: 
+ */
+ 	parseAddress: function(address){
+
+	 	if ( ! address ) return false;
+
+	 	// init output
+	 	var output = {};
+
+	 	// Set each address field, default to an input with the proper data-ship value set
+	 	output.line_1	= address.line_1 	|| address.find('input[data-address="line_1"]').val();
+	 	output.line_2	= address.line_2 	|| address.find('input[data-address="line_2"]').val();
+	 	output.city		= address.city 		|| address.find('input[data-address="city"]').val();
+	 	output.state	= address.state 	|| address.find('input[data-address="state"]').val();
+	 	output.country	= address.country 	|| address.find('input[data-address="country"]').val();
+	 	output.zip		= address.zip 		|| address.find('input[data-address="zip"]').val();
+
+	 	return output;
+ 	},
+
+/*
+ * @Description:
+ *
+ * @Param:
+ * @Param:
+ * @Returns:
+ */
+ 	submitOrder: function( args, callback ){
+
+	 	// validate shipping and billing addresses
+	 	args.shipping_address = this.parseAddress(args.shipping_address) || false;
+	 	args.billing_address = this.parseAddress(args.billing_address) || args.shipping_address;
+
+	 	// get token from stripe.js
+		this.encryptCard(args.credit_card, function(response, token){
+
+			// if card encryption failed, callback with failure message
+			if ( ! response.success ) {
+				if ( typeof callback === 'function' ) callback(response);
+				return;
+			}
+
+			// remove card info from args
+			delete args.credit_card;
+
+			// Set stripe token
+			args.stripe_token = token;
+
+		 	// add proper action to args
+		 	args.action = 'submit_order';
+
+			// Submit to PHP
+			jQuery.post( this.ajaxURL, args, function(results) {
+				if ( typeof callback === 'function' ) callback(results);
+			});
+
+		});
+
+		return;
+ 	}, 	
 
 
 /*
@@ -227,27 +293,21 @@ var storeAPI = {
  */
  	shippingQuote: function(address, callback){
 
-	 	// set output variable
-	 	var addressFields = {};
+	 	// Set context for callback
 	 	var context = window;
 	 	if (address.jquery) context = address;
 
-	 	// Set each address field, default to an input with the proper data-ship value set
-	 	addressFields.line_1	= address.line_1 	|| address.find('input[data-ship="line_1"]').val();
-	 	addressFields.line_2	= address.line_2 	|| address.find('input[data-ship="line_2"]').val();
-	 	addressFields.city		= address.city 		|| address.find('input[data-ship="city"]').val();
-	 	addressFields.state		= address.state 	|| address.find('input[data-ship="state"]').val();
-	 	addressFields.country	= address.country 	|| address.find('input[data-ship="country"]').val();
-	 	addressFields.zip		= address.zip 		|| address.find('input[data-ship="zip"]').val();
+	 	// format address properly
+	 	address = this.parseAddress(address);
 
 	 	// set data
 	 	data = {
 		 	'action'	:	'shipwire_quote',
-		 	'address'	:	addressFields
+		 	'address'	:	address
 		};
 
 		// Submit to PHP
-		jQuery.post( storeAPI.ajaxURL, data, function(results) {
+		jQuery.post( this.ajaxURL, data, function(results) {
 			if ( typeof callback === 'function' ) callback.apply(context, [results]);
 		});
 
