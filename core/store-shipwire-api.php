@@ -249,7 +249,9 @@
  * @Param: MIXED, ID or object of order to submit
  * @Returns: MIXED, XML object of shipwire response on success, false on failure
  */
-	function store_shipwire_request_order( $order = null ){
+	function store_shipwire_request_order( $order = null, $shipping_method = null ){
+
+		if ( empty($shipping_method) ) $shipping_method = 'GD';
 
 		// Get user options
 		$options = get_option('store_sw_settings');
@@ -297,6 +299,7 @@
 					$_[] = '<Phone></Phone>';
 					$_[] = '<Email>' . $email . '</Email>';
 				$_[] = '</AddressInfo>';
+				$_[] = '<Shipping>' . $shipping_method . '</Shipping>';
 
 				$count = 0;
 				// Loop through order products and add to xml
@@ -342,10 +345,10 @@
 		$output = simplexml_load_string( $body );
 
 		// Set output to be status of request
-		$output = store_shipwire_retrieve_status($output);
+		$status = store_shipwire_retrieve_status($output);
 
 		// If order was successful, save receipt
-		if ( $output ) update_post_meta($order->ID, '_store_shipwire_receipt', $body );
+		if ( $status ) update_post_meta($order->ID, '_store_shipwire_receipt', $body );
 
 		return $output;
 	}

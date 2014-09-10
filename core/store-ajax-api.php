@@ -353,23 +353,13 @@
 			$args['stripe_token'] = $_REQUEST['stripe_token'];
 		}
 
-		// 
+		// comes back pre-formatted for JSON
 		$results = store_submit_order($args);
-
-		// Set api logging
-		$output = array();
-		if ( $results ) {
-			$output['success'] = true;
-			$output['code'] = 'OK';
-			$output['message'] = 'Order ' . $order_id . ' successfully created.';
-			$output['vendor_response'] = array('order_id' => $order_id);
-		}
 
 		// Set proper header, output
 		header('Content-Type: application/json');
-		echo json_encode(store_get_json_template($output));
+		echo json_encode( $results );
 		die;
 	}
-
 
 ?>

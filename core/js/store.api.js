@@ -208,7 +208,7 @@ var storeAPI = {
 			}
 
 			// take response and submit it for payment, then run callback
-			this.submitPayment(token, function(results){
+			storeAPI.submitPayment(token, function(results){
 				if ( typeof callback === 'function' ) callback(results);
 			});
 
@@ -274,7 +274,7 @@ var storeAPI = {
 		 	args.action = 'submit_order';
 
 			// Submit to PHP
-			jQuery.post( this.ajaxURL, args, function(results) {
+			jQuery.post( storeAPI.ajaxURL, args, function(results) {
 				if ( typeof callback === 'function' ) callback(results);
 			});
 

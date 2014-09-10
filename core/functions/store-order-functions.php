@@ -10,14 +10,8 @@
  */
 	function store_create_order( $cart = null ) {
 
-		// Set default to be active cart
-		if ( ! $cart ) $cart = store_get_active_cart_id();
-
-		// Get whole post
-		$cart = get_post( $cart );
-
-		// If cart is not a cart post, abort.
-		if ( $cart->post_type != 'cart' ) return false;
+		// Get full cart object
+		$cart = store_get_cart( $cart );
 
 		// If cart has already been made into an order, abort.
 		if ( store_cart_is_order($cart->ID) ) return false;
@@ -281,13 +275,28 @@
 /*
  * @Description: Save shipping rate data to a given order
  *
- * @Param 1:
+ * @Param 1: INT, Order ID. Required.
+ * @Param 2: Shipping option
  * @Return:
  */
-	function store_set_order_shipping_rate( ) {
+	function store_set_order_shipping_meta( $order_id = null, $shipping_option = null ) {
 
-		return false;
+		// return output of update post meta
+		return update_post_meta($order_id, '_store_shipping_option', $shipping_option);
+	}
 
+
+/*
+ * @Description: Save shipping rate data to a given order
+ *
+ * @Param 1: INT, Order ID. Required.
+ * @Param 2: Shipping option
+ * @Return:
+ */
+	function store_get_order_shipping_meta( $order_id = null ) {
+
+		// return output of update post meta
+		return get_post_meta($order_id, '_store_shipping_option', true);
 	}
 
 
@@ -352,16 +361,60 @@
 
 
 /*
+ * @Description: Calculate the total of a given order.
+ *
+ * @Param: MIXED, cart ID or object. Defaults to currently active cart. Optional.
+ * @Returns: MIXED, integer of total in cents, false on failure
+ */
+ 	function store_calculate_order_total( $order = null ) {
+
+	 	// Get order object
+	 	$order = get_post($order);
+
+	 	// Get order items
+	 	$items = store_get_order_items($order);
+
+	 	// set output
+	 	$total = false;
+
+	 	// if items found in cart, loop through them
+	 	if ( $items ) {
+	 		$total = 0;
+		 	foreach ( $items as $id => $qty ) {
+
+			 	// if price comes back, add into total
+			 	if ( $price = store_get_product_price($id) ) $total += ($price * $qty);
+
+		 	}
+
+		 	// if order shipping is available, add it to the total
+		 	if ( $shipping = store_get_order_shipping_meta($order->ID) ) $total += (int) ( $shipping['cost'] * 100 ); // * 100 because shipwire returns in decimal (8.75)
+
+	 	}
+
+	 	return $total;
+
+ 	}
+
+
+/*
  * @Description:
  *
- * @Param:
- * @Param:
+ * @Param: ARRAY, arguments for function
+ *		shipping_address: ARRAY, valid address array to use for shipping. Required.
+ *		stripe_token: STRING, a valid charge token from stripe.js to charge card with. Required.
+ *		billing_address: ARRAY, valid address array to use for billing, will default to shipping address. Optional.
+ *		
+ *
  * @Return:
  */
  	function store_submit_order( $args ) {
 
 	 	// make sure all arguments are there
-	 	if ( $args['shipping_address'] || $args['billing_address'] || $args['stripe_token'] ) return false;
+	 	if ( empty( $args['shipping_address'] ) || empty( $args['stripe_token'] ) ) return false;
+
+	 	// default billing to be shipping
+	 	if ( empty( $args['billing_address'] ) ) $args['billing_address'] = $args['shipping_address'];
 
 		// Set for api logging
 		$output = array();
@@ -418,7 +471,7 @@
 
 		}
 
-		// Calculate shipping        shipping_method
+		// Calculate shipping
 
 		// Get usable shipping options
 		$ship_options = store_shipwire_retrieve_shipping( store_shipwire_request_order_shipping($order_id) );
@@ -430,24 +483,73 @@
 			// if shipping method is set, target that method
 			if ( isset($args['shipping_method']) ) {
 				// loop through methods, find target
-
-			} else {
-				$ship_method = $ship_options[0];
-
+				foreach ( $ship_options as $option ) {
+					if ( $option['method'] == $args['shipping_method'] ) $ship_method = $option;
+				}
 			}
 
+			// If no ship method, default to first
+			if ( ! $ship_method ) $ship_method = $ship_options[0];
+
 			// Add shipping method data to order
+			$save_shipping = store_set_order_shipping_meta($order_id, $ship_method);
+
+			// if save shipping failed, report and output
+			if ( ! $save_shipping ) {
+				$output['code'] = 'FAILED_SAVE_SHIPPING';
+				$output['message'] = 'Failed to save the shipping data to this order.';
+				return store_get_json_template($output);
+			}
 			// Make get_order_total() function
 
+		} else {
+
+			$output['code'] = 'FAILED_SHIPPING_QUOTE';
+			$output['message'] = 'Failed to get shipping options from Shipwire.';
+			return store_get_json_template($output);
 		}
 
 		// Charge card
-		
+		$charged = store_stripe_run_charge( $args['stripe_token'], store_calculate_order_total($order_id), $description = 'Charge for Order ID ' . $order_id );
 
+		// If error on charge, log and return
+		if ( ! $charged['id'] ) {
+
+			$output['code'] = strtoupper($charge['error']['code']);
+			$output['message'] = $charge['error']['message'];
+			$output['vendor_response'] = $charged;
+			$output['vendor_response']['vendor'] = 'stripe';
+			return store_get_json_template($output);
+		}
+
+		// Set order to paid
+		store_set_order_status($order_id, 'paid');
 
 		// Place order with shipwire
+		$xml = store_shipwire_request_order($order_id, $ship_method['method']);
 
-		return false;
+		// If order didn't go through...
+		if ( ! $xml->Status ) {
+
+			$output['code'] = 'FAILED_SHIPPING_QUOTE';
+			$output['message'] = 'The order has been charged, but not shipped.';
+			$output['vendor_response'] = (array) $xml;
+			$output['vendor_response']['vendor'] = 'shipwire';
+			return store_get_json_template($output);
+		}
+
+		// Set order to shipped
+		store_set_order_status($order_id, 'shipped');
+
+		// Made it this far? everything is cool!
+		$output['success'] = true;
+		$output['code'] = 'OK';
+		$output['message'] = 'Order #' . $order_id . ' successfully paid, processed and sent to shipwire.';
+		$output['vendor_response']['stripe'] = $charged;
+		$output['vendor_response']['shipwire'] = (array) json_decode(json_encode($xml));
+
+		// Return
+		return store_get_json_template($output);
 	}
 
 /*
