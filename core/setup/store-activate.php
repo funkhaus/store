@@ -41,7 +41,7 @@
 			store_create_taxonomy_status();
 
 			// Create order statuses
-			foreach ( array('Active', 'Inactive', 'Submitted', 'Paid', 'Shipped', 'Refunded', 'Void') as $store_status ) {
+			foreach ( array('Active', 'Inactive', 'Submitted', 'Paid', 'Processed', 'Shipped', 'Refunded', 'Void') as $store_status ) {
 
 				// Make slug from name
 				$slug = sanitize_title($store_status);

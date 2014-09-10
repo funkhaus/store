@@ -210,6 +210,7 @@
 		 	add_meta_box("store_cart_list_addresses", "Addresses", "store_cart_list_addresses", "orders", "normal", "low");
 		}
 		add_meta_box("store_list_order_history", "History", "store_list_order_history", "orders", "side", "low");
+		add_meta_box("store_transaction_info", "Transaction Info", "store_transaction_info", "orders", "side", "low");
 	}
  	add_action("add_meta_boxes", "store_add_cart_meta");
 
@@ -259,7 +260,7 @@
 								</td>
 								<td><?php echo get_the_title($product->ID); ?></td>
 								<td><?php echo $prod_qty; ?></td>
-								<td><?php echo number_format( ($post->_store_price / 100), 2, '.', '') ; ?></td>
+								<td><?php echo number_format( ($product->_store_price / 100), 2, '.', '') ; ?></td>
 							</tr>
 
 						<?php endforeach; ?>
@@ -339,6 +340,34 @@
 				</table>
 
 			<?php endif;
+	}
+
+	function store_transaction_info(){
+		global $post;
+
+		$transaction_info = get_post_meta($post->ID, '_store_transaction_info', true);
+		$shipping_info = get_post_meta($post->ID, '_store_shipping_option', true); ?>
+
+		<?php //var_dump($shipping_info); exit; ?>
+
+			<div class="custom-meta">
+				<p>
+					<strong>Stripe ID:</strong><span style="float: right;"><?php echo $transaction_info['stripe_id']; ?></span>
+				</p>
+				<br/>
+
+				<p>
+					<strong>Shipwire ID:</strong><span style="float: right;"><?php echo $transaction_info['shipwire_id']; ?></span>
+				</p>
+				<br/>
+
+				<p>
+					<strong>Shipping Cost:</strong><span style="float: right;"><?php echo $shipping_info['cost']; ?></span>
+				</p>
+				<br/>
+			</div>
+
+		<?php
 	}
 
 	function store_order_show_status() {

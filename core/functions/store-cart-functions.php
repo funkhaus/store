@@ -190,7 +190,7 @@
 
 		// Check product is available to add to cart
 		if( !store_is_product_available($product_id) ) {
-			return false;			
+			return false;
 		}
 
 		// Attempt to get a valid cart

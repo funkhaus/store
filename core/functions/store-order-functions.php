@@ -356,7 +356,6 @@
 
 	 	// return output of update post meta
 	 	return update_post_meta( $order->ID, '_store_billing_address', $output );
-
  	}
 
 
@@ -445,7 +444,6 @@
 			$output['code'] = 'FAILED_ORDER';
 			$output['message'] = 'Failed to create order from active cart.';
 			return store_get_json_template($output);
-
 		}
 
 		// Check inventory
@@ -539,7 +537,14 @@
 		}
 
 		// Set order to shipped
-		store_set_order_status($order_id, 'shipped');
+		store_set_order_status($order_id, 'processed');
+
+		$transaction = array();
+		$transaction['stripe_id'] = $charged['id'];
+		$transaction['shipwire_id'] = (string) $xml->TransactionId;
+
+		// save receipt to order
+		update_post_meta($order_id, '_store_transaction_info', $transaction);
 
 		// Made it this far? everything is cool!
 		$output['success'] = true;
@@ -569,8 +574,6 @@
  			$output = get_post_meta($order->ID, '_store_cart_products', true);
 
 	 	return $output;
-
  	}
-
 
 ?>

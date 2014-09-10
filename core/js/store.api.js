@@ -21,7 +21,7 @@ var storeAPI = {
 
 			// Set ID and qty
 			data.product_id = args.data('productId') || args.find('*[data-product-id]').first().data('productId');
-			data.quantity = args.find('*[data-product-quantity]').first().data('productQuantity') || args.find('*[data-product="quantity"]').val() || 1;
+			data.quantity = args.find('*[data-product-quantity]').first().data('productQuantity') || args.find('*[data-product="quantity"]').val();
 
 			// Init options
 			data.options = {};
@@ -43,7 +43,7 @@ var storeAPI = {
 		data.action = 'add_to_cart';
 
 		// Submit to PHP
-		jQuery.post( this.ajaxURL, data, function(results) {
+		jQuery.post( storeAPI.ajaxURL, data, function(results) {
 			if ( typeof callback === 'function' ) callback(results);
 		});
 
@@ -98,7 +98,7 @@ var storeAPI = {
  *
  * @Returns: OBJ, the jQuery XMLHTTPRequest object from $.post()
  */
-	getMiniCart: function(callback){
+	updateMiniCart: function(callback){
 
 		// The PHP AJAX action hook to call
     	data = {
@@ -320,7 +320,7 @@ var storeAPI = {
  	matrix: {
 
 	 	// holds all product data
-		data: store_product_matrix,
+		data: {},
 
 	/*
 	 * @Description: Helper function used to check if an object has a set of all required properties

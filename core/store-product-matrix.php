@@ -116,45 +116,14 @@
  * @Description:
  *
  * @Param: MIXED,
- * @Returns: BOOL,
+ * @Returns: MIXED, 
  */
-	function store_get_product_matrix( $args = null, $product = null, $return = 'script' ){
-
-		// init array
-		$products = array();
-
-		// if several products provided in array, load them all
-		if ( is_array($product) ) {
-
-			// Loop through provided products
-			foreach ( $product as $target_product ) {
-
-				// get full object for product
-				$target_product = store_get_product($target_product);
-
-				// if product is not top level, get parent
-				if ( $target_product->post_parent !== 0 ) $target_product = store_get_product($target_product->post_parent);
-				if ( !isset($products[$target_product->ID]) )
-					$products[$target_product->ID] = $target_product;
-
-			}
-
-		// not an array provided?
-		} else {
-
-			// get full product object
-			$target_product = store_get_product($product);
-
-			// if product is not top level, switch to parent
-			if ( $target_product->post_parent !== 0 ) $target_product = store_get_product($target_product->post_parent);
-
-			// set to array with single element, defaults to $post
-			$products = array( $target_product->ID => $target_product );
-
-		}
+	function store_get_product_matrix( $args = null, $return = 'script' ){
 
 		// Set args defaults
 		$args_master = array(
+			'product'	=> false,
+			'return'	=> 'script',
 			'options'	=> true,
 			'title'		=> false,
 			'price'		=> false,
@@ -173,6 +142,15 @@
 
 		}
 
+		// get product object
+		$product = store_get_product($args_master['product']);
+
+		// no product? return empty string
+		if ( ! $product ) return '';
+
+		// keep this format just in case (formatted for multiple products)
+		$products = array($product->ID => $product);
+
 		// init output
 		$output = array();
 
@@ -180,7 +158,7 @@
 		foreach ( $products as $parent_id => $parent_product ) {
 
 			// Add properties to this ID
-			$output[$parent_id] = store_set_product_matrix_properties($args_master, $parent_product);
+			$output = store_set_product_matrix_properties($args_master, $parent_product);
 
 			// Get variants of this product
 			$variants = store_get_product_variants($parent_product);
@@ -195,7 +173,7 @@
 			foreach ( $variants as $variant ) {
 
 				// 
-				$output[$parent_id]['variants'][$variant->ID] = store_set_product_matrix_properties($args_master, $variant);
+				$output['variants'][$variant->ID] = store_set_product_matrix_properties($args_master, $variant);
 
 				// if options arg is set...
 				if ( $args_master['options'] ) {
@@ -210,7 +188,7 @@
 						foreach ( $options as $option => $val ) {
 
 							// add options to this variant
-							$output[$parent_id]['variants'][$variant->ID]['options'][$option] = $val;
+							$output['variants'][$variant->ID]['options'][$option] = $val;
 
 						}
 					}
@@ -222,18 +200,18 @@
 		}
 
 		// Set output accordingly
-		if ( $return === 'array' ) {
-			
+		if ( $args_master['return'] === 'array' ) {
+
 			$output = (array) $output;
 
-		} elseif ( $return === 'json' ) {
+		} elseif ( $args_master['return'] === 'json' ) {
 
 			$output = json_encode($output);
 
 		} else {
 			$output = '<script type="text/javascript">
 			/* <![CDATA[ */
-			var store_product_matrix = ' . json_encode( $output ) . ';
+			storeAPI.matrix.data[' . $product->ID . '] = ' . json_encode( $output ) . ';
 			/* ]]> */
 			</script>';
 		}

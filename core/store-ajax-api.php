@@ -13,7 +13,6 @@
  *	The one trick to this is that if you want to handle BOTH cases (i.e. the user is logged in as well as not), you need to implement both action hooks.
  */
 
-
 /*
  * @Description: Get a standardized template to build json responses on. Defaults to a general error.
  * @Returns: ARRAY, response template in the form of an associative array 
@@ -255,6 +254,8 @@
 
 		// Get quote from shipwire
 		$xml = store_shipwire_request_cart_shipping( $address );
+
+		var_dump($xml); exit;
 
 		// Set api logging
 		$output = array();
