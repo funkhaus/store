@@ -232,7 +232,11 @@
  */
 	function store_shipwire_request_order( $order = null, $shipping_method = null ){
 
+		// set default shipping
 		if ( empty($shipping_method) ) $shipping_method = 'GD';
+
+		// get full obj
+		$order = get_post($order);
 
 		// Get user options
 		$options = get_option('store_sw_settings');
@@ -257,7 +261,6 @@
 		$email = $customer->user_email ? $customer->user_email : '';
 
 
-
 		$json_items = array();
 
 		// loop through items
@@ -269,8 +272,8 @@
 
 			// add this item's values to request
 			$json_items[] = array(
-				'sku'								=> $product->_store_sku,
-				'quantity'							=> $qty
+				'sku'			=> $product->_store_sku,
+				'quantity'		=> $qty
 			);
 		}
 
@@ -306,15 +309,19 @@
 		// Set URL to send request to
 		$url = 'https://api.shipwire.com/api/v3/orders';
 
-		// Set authentication
-		$headers = array( 'Authorization' => 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ) );
+		// Set authentication and content type
+		$headers = array( 
+			'Authorization'		=> 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ),
+			'Content-Type'		=> 'application/json'
+		);
 
 		// Send request
 		$response = wp_remote_post(
 		    $url,
 		    array(
 		        'headers'		=> $headers,
-		        'httpversion' => '1.1'
+		        'httpversion' 	=> '1.1',
+		        'body'			=> $request
 			)
 		);
 		$body = wp_remote_retrieve_body( $response );
@@ -323,7 +330,7 @@
 		$output = json_decode($body, true);
 
 		// If order was successful, save receipt
-		if ( $output['status'] === 200 ) update_post_meta($order->ID, '_store_shipwire_receipt', $body );
+		if ( $output['status'] === 200 ) update_post_meta($order->ID, '_store_shipwire_receipt', $output );
 
 		return $output;
 	}
@@ -353,18 +360,12 @@
 
 
 /*
- * @Description: get shipping quote from shipwire based on order
+ * @Description: wrapper function to do a shipping request on an order post
  *
  * @Param: MIXED, ID or object of order to quote.
- * @Returns: MIXED, array of shipping options on success, false on failure
+ * @Returns: MIXED, json_decoded shipwire response on success, or false on failure
  */
 	function store_shipwire_request_order_shipping( $order = null ){
-
-		// Get user options
-		$options = get_option('store_sw_settings');
-
-		// Not enabled in settings? abort
-		if ( ! $options['enabled'] ) return false;
 
 		// get full order object
 		$order = get_post( $order );
@@ -375,90 +376,19 @@
 		// Get shipping address for this order
 		$ship_address = store_get_order_shipping_address($order);
 
-		// If all not all data is available, abort
-		if ( ! $order || ! $items || ! $ship_address ) return false;
-
-		// Set URL to send request to
-		$url = 'https://api.shipwire.com/exec/RateServices.php';
-
-		// Set XML request
-		$_ = array('<?xml version="1.0" encoding="UTF-8"?>');
-		$_[] = '<!DOCTYPE RateRequest SYSTEM "http://www.shipwire.com/exec/download/RateRequest.dtd">';
-		$_[] = '<RateRequest>';
-			$_[] = '<Username>' . $options['usnm'] . '</Username>';
-			$_[] = '<Password>' . $options['pswd'] . '</Password>';
-			$_[] = '<Order id="order-' . $order->ID . '">';
-				$_[] = '<Warehouse>00</Warehouse>'; // leave this as 0, shipwire will decide
-				$_[] = '<AddressInfo type="ship">';
-					$_[] = '<Address1>' . $ship_address['line_1'] . '</Address1>';
-					$_[] = '<Address2>' . $ship_address['line_2'] . '</Address2>';
-					$_[] = '<City>' . $ship_address['city'] . '</City>';
-					$_[] = '<State>' . $ship_address['state'] . '</State>';
-					$_[] = '<Country>us</Country>';
-					$_[] = '<Zip>' . $ship_address['zip'] . '</Zip>';
-				$_[] = '</AddressInfo>';
-
-				$count = 0;
-				// Loop through order products and add to xml
-				foreach ( $items as $id => $qty ) {
-
-					$product = store_get_product($id);
-					if ( ! $product || ! $product->_store_sku ) continue;
-
-					$_[] = '<Item num="' . $count . '">';
-						$_[] = '<Code>' . $product->_store_sku . '</Code>';
-						$_[] = '<Quantity>' . $qty . '</Quantity>';
-					$_[] = '</Item>';
-
-					$count++;
-				};
-
-			$_[] = '</Order>';
-		$_[] = '</RateRequest>';
-		$request = join( "\n", $_ );
-
-		// Set output
-		$output = false;
-
-		// Send request
-		$response = wp_remote_post(
-			$url,
-			array(
-				'method' => 'POST',
-				'timeout' => 45,
-				'redirection' => 5,
-				'httpversion' => '1.0',
-				'headers' => array(
-					'Content-Type' => 'application/xml',
-				),
-				'body' => trim( $request ),
-				'sslverify' => false
-			)
-		);
-		$body = wp_remote_retrieve_body( $response );
-
-		// Parse XML into usable object
-		$output = simplexml_load_string( $body );
-
-		// Return useful output of shipping info.
-		return $output;
+		// Return output of shipping request
+		return store_shipwire_request_shipping($ship_address, $order, $items);
 	}
 
 
 /*
- * @Description: get shipping quote from shipwire based on address and cart
+ * @Description: wrapper function to do a shipping request on a cart post
  *
  * @Param: MIXED, address object to quote shipping for. Required.
  * @Param: MIXED, ID or object of cart to quote for. Defaults to active cart. Optional.
- * @Returns: MIXED, array of shipping options on success, false on failure
+ * @Returns: MIXED, json_decoded shipwire response on success, or false on failure
  */
 	function store_shipwire_request_cart_shipping( $address = null, $cart = null ){
-
-		// Get user options
-		$options = get_option('store_sw_settings');
-
-		// Not enabled in settings? abort
-		if ( ! $options['enabled'] ) return false;
 
 		// get full cart object
 		$cart = store_get_cart($cart);
@@ -466,70 +396,98 @@
 		// Get order items, return false if none exist.
 		$items = store_get_cart_items($cart);
 
+		// Return output of shipping request
+		return store_shipwire_request_shipping($address, $cart, $items);
+	}
+
+/*
+ * @Description: Core function to get a shipping quote from shipwire.
+ *
+ * @Param: MIXED, address object to quote shipping for. Required.
+ * @Param: MIXED, ID or object of cart OR order to quote for. Required.
+ * @Param: ARRAY, array of items in [id] => [qty] format. Required.
+ * @Returns: MIXED, json_decoded shipwire response on success, or false on failure
+ */
+	function store_shipwire_request_shipping( $address = null, $cart = null, $items = null ){
+
+		// Get user options
+		$options = get_option('store_sw_settings');
+
+		// Not enabled in settings? abort
+		if ( ! $options['enabled'] ) return false;
+
+		// get full cart/order obj
+		$cart = get_post($cart);
+
 		// If all not all data is available, abort
-		if ( ! $cart || ! $items || ! $address ) return false;
+		if ( ! $cart || ! is_array($items) || empty($address) ) return false;
 
-		// Set URL to send request to
-		$url = 'https://api.shipwire.com/exec/RateServices.php';
+		$json_items = array();
 
-		// Set XML request
-		$_ = array('<?xml version="1.0" encoding="UTF-8"?>');
-		$_[] = '<!DOCTYPE RateRequest SYSTEM "http://www.shipwire.com/exec/download/RateRequest.dtd">';
-		$_[] = '<RateRequest>';
-			$_[] = '<Username>' . $options['usnm'] . '</Username>';
-			$_[] = '<Password>' . $options['pswd'] . '</Password>';
-			$_[] = '<Order id="order-' . $order->ID . '">';
-				$_[] = '<Warehouse>00</Warehouse>'; // leave this as 0, shipwire will decide
-				$_[] = '<AddressInfo type="ship">';
-					$_[] = '<Address1>' . $address['line_1'] . '</Address1>';
-					$_[] = '<Address2>' . $address['line_2'] . '</Address2>';
-					$_[] = '<City>' . $address['city'] . '</City>';
-					$_[] = '<State>' . $address['state'] . '</State>';
-					$_[] = '<Country>' . $address['country'] . '</Country>';
-					$_[] = '<Zip>' . $address['zip'] . '</Zip>';
-				$_[] = '</AddressInfo>';
+		// loop through items
+		foreach ( $items as $id => $qty ) {
 
-				$count = 0;
-				// Loop through order products and add to xml
-				foreach ( $items as $id => $qty ) {
+			// get and validate product
+			$product = store_get_product($id);
+			if ( ! $product || ! $product->_store_sku ) continue;
 
-					$product = store_get_product($id);
-					if ( ! $product || ! $product->_store_sku ) continue;
+			// add this item's values to request
+			$json_items[] = array(
+				'sku'		=> $product->_store_sku,
+				'quantity'	=> $qty
+			);
+		}
 
-					$_[] = '<Item num="' . $count . '">';
-						$_[] = '<Code>' . $product->_store_sku . '</Code>';
-						$_[] = '<Quantity>' . $qty . '</Quantity>';
-					$_[] = '</Item>';
-
-					$count++;
-				};
-
-			$_[] = '</Order>';
-		$_[] = '</RateRequest>';
-		$request = join( "\n", $_ );
+		// Build request for shipwire
+		$json = array(
+			'options'			=> array(
+				'currency'			=> 'USD',
+				'groupBy'			=> 'all',
+				'canSplit'			=> 0,
+				'warehouseArea'		=> 'US'
+			),
+			'order'				=> array(
+				'shipTo'			=> array(
+					'address1'			=> $address['line_1'],
+					'address2'			=> $address['line_2'],
+					'city'				=> $address['city'],
+					'region'			=> $address['state'],
+					'postalCode'		=> $address['zip'],
+					'country'			=> 'US'
+				),
+				'items'				=> $json_items
+			)
+		);
+		$request = json_encode($json);
 
 		// Set output
 		$output = false;
 
+		// Set URL to send request to
+		$url = 'https://api.shipwire.com/api/v3/rate';
+
+		// Set authentication and content type
+		$headers = array( 
+			'Authorization'		=> 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ),
+			'Content-Type'		=> 'application/json'
+		);
+
 		// Send request
 		$response = wp_remote_post(
-			$url,
-			array(
-				'method' => 'POST',
-				'timeout' => 45,
-				'redirection' => 5,
-				'httpversion' => '1.0',
-				'headers' => array(
-					'Content-Type' => 'application/xml',
-				),
-				'body' => trim( $request ),
-				'sslverify' => false
+		    $url,
+		    array(
+		        'headers'		=> $headers,
+		        'httpversion' 	=> '1.1',
+		        'body'			=> $request
 			)
 		);
 		$body = wp_remote_retrieve_body( $response );
 
-		// Parse XML into usable object
-		$output = simplexml_load_string( $body );
+		// Decode into array
+		$output = json_decode($body, true);
+
+		// If order was successful, save receipt
+		if ( $output['status'] === 200 ) update_post_meta($order->ID, '_store_shipwire_receipt', $output );
 
 		return $output;
 	}
@@ -543,10 +501,10 @@
  */
 	function store_shipwire_retrieve_status( $response = false ){
 
-		if ( ! is_object($response) ) return false;
+		if ( ! is_array($response) ) return false;
 
 		$output = false;
-		if ( $response->Status ) $output = true;
+		if ( $response['status'] == 200 && ! isset($response['errors']) ) $output = true;
 
 		return $output;
 	}
@@ -565,17 +523,17 @@
 
 		$i = 0;
 		$output = false;
-		foreach( $response->Order->Quotes->Quote as $quote ){
+
+		foreach( $response['resource']['rates'][0]['serviceOptions'] as $quote ){
 
 			// Format relevant figures into output
-			$output[$i]['service'] = (string) $quote->CarrierCode;
-			$output[$i]['method'] = (string) $quote->attributes()->method;
-			$output[$i]['cost'] = (string) $quote->Cost;
-			$output[$i]['delivery']['min'] = (string) $quote->DeliveryEstimate->Minimum;
-			$output[$i]['delivery']['max'] = (string) $quote->DeliveryEstimate->Maximum;
+			$output[$i]['service'] = (string) $quote['shipments'][0]['carrier']['description'];
+			$output[$i]['method'] = (string) $quote['serviceLevelCode'];
+			$output[$i]['cost'] = (string) $quote['shipments'][0]['cost']['amount'];
+			$output[$i]['delivery']['min'] = (string) $quote['shipments'][0]['expectedDeliveryMinDate'];
+			$output[$i]['delivery']['max'] = (string) $quote['shipments'][0]['expectedDeliveryMaxDate'];
 
 			$i++;
-
 		}
 
 		return $output;

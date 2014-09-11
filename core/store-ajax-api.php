@@ -253,28 +253,26 @@
 		}
 
 		// Get quote from shipwire
-		$xml = store_shipwire_request_cart_shipping( $address );
-
-		var_dump($xml); exit;
+		$response = store_shipwire_request_cart_shipping( $address );
 
 		// Set api logging
 		$output = array();
-		if ( $xml->Order->Errors ) {
+		if ( $response['errors'] ) {
 			$output['code'] = 'NO_COUNTRY';
 			$output['message'] = 'Address has no country set.';
 		} else {
 			$output['success'] = true;
 			$output['code'] = 'OK';
-			if ( $xml->Order->Warnings->Warning ) {
-				$output['message'] = (string) $xml->Order->Warnings->Warning;
+			if ( $response['warnings'] ) {
+				$output['message'] = $response['warnings'];
 			} else {
 				$output['message'] = 'This is a useable address.';
 			}
 		}
 
-		$output['vendor_response'] = (array) $xml;
+		$output['vendor_response'] = (array) $response;
 		$output['vendor_response']['vendor'] = 'shipwire';
-		$output['options'] = store_shipwire_retrieve_shipping($xml);
+		$output['options'] = store_shipwire_retrieve_shipping($response);
 
 		// Set proper header, output
 		header('Content-Type: application/json');

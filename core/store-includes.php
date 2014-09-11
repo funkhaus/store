@@ -33,7 +33,7 @@
 			'slug'		=> true
 		);
 
-		//var_dump( store_update_shipwire_inventory() ); exit;
+		//var_dump( store_shipwire_request_cart_shipping($address) ); exit;
 		//print_r( store_get_product_matrix($args, 9, 'array') ); exit;
 		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
 		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
