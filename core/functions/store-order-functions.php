@@ -524,14 +524,14 @@
 		store_set_order_status($order_id, 'paid');
 
 		// Place order with shipwire
-		$xml = store_shipwire_request_order($order_id, $ship_method['method']);
+		$ship_request = store_shipwire_request_order($order_id, $ship_method['method']);
 
 		// If order didn't go through...
-		if ( ! $xml->Status ) {
+		if ( $ship_request['status'] !== 200 || isset($ship_request['errors']) ) {
 
-			$output['code'] = 'FAILED_SHIPPING_QUOTE';
+			$output['code'] = 'FAILED_SHIPPING';
 			$output['message'] = 'The order has been charged, but not shipped.';
-			$output['vendor_response'] = (array) $xml;
+			$output['vendor_response'] = (array) $ship_request;
 			$output['vendor_response']['vendor'] = 'shipwire';
 			return store_get_json_template($output);
 		}
@@ -541,7 +541,7 @@
 
 		$transaction = array();
 		$transaction['stripe_id'] = $charged['id'];
-		$transaction['shipwire_id'] = (string) $xml->TransactionId;
+		$transaction['shipwire_id'] = (string) $ship_request['resource']['transactionId'];
 
 		// save receipt to order
 		update_post_meta($order_id, '_store_transaction_info', $transaction);
@@ -551,7 +551,7 @@
 		$output['code'] = 'OK';
 		$output['message'] = 'Order #' . $order_id . ' successfully paid, processed and sent to shipwire.';
 		$output['vendor_response']['stripe'] = $charged;
-		$output['vendor_response']['shipwire'] = (array) json_decode(json_encode($xml));
+		$output['vendor_response']['shipwire'] = (array) $ship_request;
 
 		// Return
 		return store_get_json_template($output);

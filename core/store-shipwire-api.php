@@ -22,62 +22,43 @@
 	function store_shipwire_request_inventory(){
 
 		// Set unique ID by session
-		// Use md5 hash to gaurantee 16 char length
+		// Use md5 hash to gaurantee 16 char length (no encoding, so it will look like complete nonsense)
 		$session = md5(session_id(), true);
 
-		// if transient is set, return it
-		if ( $output = get_transient( $session . '_sw_inventory' ) ) {
+		// get shipwire settings
+		$options = get_option('store_sw_settings');
 
-			$output = simplexml_load_string( $output );
-			return $output;
+		// shipwire not enabled? abort
+		if ( ! store_is_shipping_enabled() ) return false;
 
-		} else {
-
-			// Get user options
-			$options = get_option('store_sw_settings');
-
-			// Not enabled in settings? abort
-			if ( ! $options['enabled'] ) return false;
+		// If transient CANNOT be retrieved and set to output...
+		if ( ! $output = get_transient( $session . '_sw_inventory' ) ) {
 
 			// Set URL to send request to
-			$url = 'https://api.shipwire.com/exec/InventoryServices.php';
+			$url = 'https://api.shipwire.com/api/v3/stock';
 
-			// Set XML request
-			$_ = array('<?xml version="1.0" encoding="UTF-8"?>');
-			$_[] = '<!DOCTYPE InventoryUpdate SYSTEM "http://www.shipwire.com/exec/download/InventoryUpdate.dtd">';
-			$_[] = '<InventoryUpdate>';
-				$_[] = '<Username>' . $options['usnm'] . '</Username>';
-				$_[] = '<Password>' . $options['pswd'] . '</Password>';
-				$_[] = '<Server>Production</Server>';
-			$_[] = '</InventoryUpdate>';
-			$request = join( "\n", $_ );
+			// Set authentication
+			$headers = array( 'Authorization' => 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ) );
 
 			// Send request
-			$response = wp_remote_post(
+			$response = wp_remote_get(
 			    $url,
 			    array(
-			        'method' => 'POST',
-			        'timeout' => 45,
-			        'redirection' => 5,
-			        'httpversion' => '1.0',
-			        'headers' => array(
-						'Content-Type' => 'application/xml',
-			        ),
-			        'body' => trim( $request ),
-			        'sslverify' => false
-			    )
+			        'headers'		=> $headers,
+			        'httpversion' => '1.1'
+				)
 			);
 			$body = wp_remote_retrieve_body( $response );
 
-			// Parse XML into usable object
-			$output = simplexml_load_string( $body );
+			// Decode into array
+			$output = json_decode($body, true);
 
 			// Cache raw shipwire API response for 10 seconds
-			set_transient( $session . '_sw_inventory', $body, 10 );
+			set_transient( $session . '_sw_inventory', $output, 10 );
 
 		}
 
-		// Return object of response
+		// return decoded response
 		return $output;
 	}
 
@@ -112,16 +93,16 @@
 
 		// loop through inventory and find target product
 		$output = false;
-		foreach ( $inventory as $item ) {
+		if ( $inventory['status'] === 200 ) {
+			foreach ( $inventory['resource']['items'] as $item ) {
 
-			foreach ( $item->attributes() as $atts ) {
-				if ( $atts == $sku ) {
+				if ( $item['resource']['sku'] == $sku ) {
 					// Set output to be integer value of quantity
-					$output = intval( $item->attributes()->quantity );
+					$output = intval( $item['resource']['good'] );
 					break;
 				}
-			}
 
+			}
 		}
 
 		return $output;
@@ -275,80 +256,74 @@
 		if ( $order->post_author ) $customer = store_get_customer( $order->post_author );
 		$email = $customer->user_email ? $customer->user_email : '';
 
-		// Set URL to send request to
-		$url = 'https://api.shipwire.com/exec/FulfillmentServices.php';
 
-		// Set XML request
-		$_ = array('<?xml version="1.0" encoding="UTF-8"?>');
-		$_[] = '<!DOCTYPE OrderList SYSTEM "http://www.shipwire.com/exec/download/OrderList.dtd">';
-		$_[] = '<OrderList>';
-			$_[] = '<Username>' . $options['usnm'] . '</Username>';
-			$_[] = '<Password>' . $options['pswd'] . '</Password>';
-			$_[] = '<Server>Production</Server>';
-			$_[] = '<AffiliateId>10852</AffiliateId>';
-			$_[] = '<Order id="order-' . $order->ID . '">';
-				$_[] = '<Warehouse>00</Warehouse>';
-				$_[] = '<AddressInfo type="ship">';
-					// NAME STUFF GOES HERE
-					$_[] = '<Address1>' . $ship_address['line_1'] . '</Address1>';
-					$_[] = '<Address2>' . $ship_address['line_2'] . '</Address2>';
-					$_[] = '<City>' . $ship_address['city'] . '</City>';
-					$_[] = '<State>' . $ship_address['state'] . '</State>';
-					$_[] = '<Country>us</Country>';
-					$_[] = '<Zip>' . $ship_address['zip'] . '</Zip>';
-					$_[] = '<Phone></Phone>';
-					$_[] = '<Email>' . $email . '</Email>';
-				$_[] = '</AddressInfo>';
-				$_[] = '<Shipping>' . $shipping_method . '</Shipping>';
 
-				$count = 0;
-				// Loop through order products and add to xml
-				foreach ( $items as $id => $qty ) {
+		$json_items = array();
 
-					$product = store_get_product($id);
-					if ( ! $product || ! $product->_store_sku ) continue;
+		// loop through items
+		foreach ( $items as $id => $qty ) {
 
-					$_[] = '<Item num="' . $count . '">';
-						$_[] = '<Code>' . $product->_store_sku . '</Code>';
-						$_[] = '<Quantity>' . $qty . '</Quantity>';
-					$_[] = '</Item>';
+			// get and validate product
+			$product = store_get_product($id);
+			if ( ! $product || ! $product->_store_sku ) continue;
 
-					$count++;
+			// add this item's values to request
+			$json_items[] = array(
+				'sku'								=> $product->_store_sku,
+				'quantity'							=> $qty
+			);
+		}
 
-				};
-
-			$_[] = '</Order>';
-		$_[] = '</OrderList>';
-		$request = join( "\n", $_ );
+		// Build request for shipwire
+		$json = array(
+			'orderNo' 			=> $order->ID,
+			'externalId'		=> $order->ID,
+			'commerceName'		=> 'Funkhaus Store',
+			'items'				=> $json_items,
+			'options'			=> array(
+				'serviceLevelCode'	=> $shipping_method,
+				'affiliate'			=> 10852,
+				'currency'			=> 'USD',
+				'server'			=> 'Production'
+			),
+			'shipTo'			=> array(
+				'email'				=> $email,
+				'name'				=> '', // name stuff here
+				'address1'			=> $ship_address['line_1'],
+				'address2'			=> $ship_address['line_2'],
+				'city'				=> $ship_address['city'],
+				'state'				=> $ship_address['state'],
+				'postalCode'		=> $ship_address['zip'],
+				'country'			=> 'US',
+				'phone'				=> '',
+			)
+		);
+		$request = json_encode($json);
 
 		// Set output
 		$output = false;
+
+		// Set URL to send request to
+		$url = 'https://api.shipwire.com/api/v3/orders';
+
+		// Set authentication
+		$headers = array( 'Authorization' => 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ) );
 
 		// Send request
 		$response = wp_remote_post(
 		    $url,
 		    array(
-		        'method' => 'POST',
-		        'timeout' => 45,
-		        'redirection' => 5,
-		        'httpversion' => '1.0',
-		        'headers' => array(
-					'Content-Type' => 'application/xml',
-		        ),
-		        'body' => trim( $request ),
-		        'sslverify' => false
-		    )
+		        'headers'		=> $headers,
+		        'httpversion' => '1.1'
+			)
 		);
 		$body = wp_remote_retrieve_body( $response );
 
-		// Parse XML into usable object
-		$output = simplexml_load_string( $body );
-
-		// Set output to be status of request
-		$status = store_shipwire_retrieve_status($output);
+		// Decode into array
+		$output = json_decode($body, true);
 
 		// If order was successful, save receipt
-		if ( $status ) update_post_meta($order->ID, '_store_shipwire_receipt', $body );
+		if ( $output['status'] === 200 ) update_post_meta($order->ID, '_store_shipwire_receipt', $body );
 
 		return $output;
 	}
