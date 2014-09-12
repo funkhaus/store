@@ -315,7 +315,6 @@
 	 	if ( ! $order ) return false;
 
 	 	return get_post_meta( $order->ID, '_store_billing_address', true );
-
  	}
 
 
@@ -498,7 +497,6 @@
 				$output['message'] = 'Failed to save the shipping data to this order.';
 				return store_get_json_template($output);
 			}
-			// Make get_order_total() function
 
 		} else {
 
@@ -519,6 +517,7 @@
 			$output['vendor_response']['vendor'] = 'stripe';
 			return store_get_json_template($output);
 		}
+		$output['vendor_response']['stripe'] = $charged;
 
 		// Set order to paid
 		store_set_order_status($order_id, 'paid');
@@ -550,7 +549,6 @@
 		$output['success'] = true;
 		$output['code'] = 'OK';
 		$output['message'] = 'Order #' . $order_id . ' successfully paid, processed and sent to shipwire.';
-		$output['vendor_response']['stripe'] = $charged;
 		$output['vendor_response']['shipwire'] = (array) $ship_request;
 
 		// Return

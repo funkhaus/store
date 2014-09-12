@@ -257,17 +257,14 @@
 
 		// Set api logging
 		$output = array();
-		if ( $response['errors'] ) {
-			$output['code'] = 'NO_COUNTRY';
-			$output['message'] = 'Address has no country set.';
+		if ( $response['warnings'] ) {
+			$output['success'] = true;
+			$output['code'] = strtoupper( $response['warnings'][0]['code'] );
+			$output['message'] = $response['warnings'][0]['message'];
 		} else {
 			$output['success'] = true;
 			$output['code'] = 'OK';
-			if ( $response['warnings'] ) {
-				$output['message'] = $response['warnings'];
-			} else {
-				$output['message'] = 'This is a useable address.';
-			}
+			$output['message'] = 'This is a useable address.';
 		}
 
 		$output['vendor_response'] = (array) $response;
