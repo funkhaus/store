@@ -33,6 +33,7 @@
 			'slug'		=> true
 		);
 
+		//var_dump(store_run_hourly()); exit;
 		//var_dump( store_shipwire_request_cart_shipping($address) ); exit;
 		//print_r( store_get_product_matrix($args, 9, 'array') ); exit;
 		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
@@ -61,19 +62,22 @@
 	include_once( trailingslashit( pp() ) . 'core/store-save-products.php' );
 
 	// Add cart AJAX functions
-	include_once( trailingslashit( pp() ) . 'core/store-ajax-api.php' );
+	include_once( trailingslashit( pp() ) . 'core/apis/store-ajax-api.php' );
 
 	// Add js product matrix
 	include_once( trailingslashit( pp() ) . 'core/store-product-matrix.php' );
 
 	// Add shipwire AJAX functions
-	include_once( trailingslashit( pp() ) . 'core/store-shipwire-api.php' );
+	include_once( trailingslashit( pp() ) . 'core/apis/store-shipwire-api.php' );
 
 	// Add stripe setup AJAX functions
-	include_once( trailingslashit( pp() ) . 'core/store-stripe-api.php' );
+	include_once( trailingslashit( pp() ) . 'core/apis/store-stripe-api.php' );
 
 	// Setup user meta functions
 	include_once( trailingslashit( pp() ) . 'core/store-customer-meta.php' );
+
+	// Set crons
+	include_once( trailingslashit( pp() ) . 'core/store-set-crons.php' );
 
 	/*
 	 * Enqueue JavaScript API Scripts

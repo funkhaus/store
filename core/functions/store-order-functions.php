@@ -70,7 +70,6 @@
 
 		// return
 		return $order_id;
-
 	}
 
 
@@ -540,16 +539,22 @@
 
 		$transaction = array();
 		$transaction['stripe_id'] = $charged['id'];
-		$transaction['shipwire_id'] = (string) $ship_request['resource']['transactionId'];
+		$transaction['shipwire_id'] = (string) $ship_request['resource']['items'][0]['resource']['id'];
 
 		// save receipt to order
 		update_post_meta($order_id, '_store_transaction_info', $transaction);
+
+		// set tracking info to false, so it can be queried by the tracking cron
+		update_post_meta($order_id, '_store_order_tracking', false);
 
 		// Made it this far? everything is cool!
 		$output['success'] = true;
 		$output['code'] = 'OK';
 		$output['message'] = 'Order #' . $order_id . ' successfully paid, processed and sent to shipwire.';
 		$output['vendor_response']['shipwire'] = (array) $ship_request;
+
+		// run anything hooked to completed orders
+		do_action('store_order_completed');
 
 		// Return
 		return store_get_json_template($output);

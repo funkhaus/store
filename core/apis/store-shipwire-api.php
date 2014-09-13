@@ -61,6 +61,54 @@
 		// return decoded response
 		return $output;
 	}
+	
+	
+/*
+ * @Description: Send a full inventory request to shipwire
+ *
+ * @Param: MIXED, ID of product to retrieve quantity for, or $post object
+ * @Returns: MIXED, shipwire xml response on success, bool false on failure
+ */
+	function store_shipwire_request_tracking( $order = null ){
+
+		// get shipwire settings
+		$options = get_option('store_sw_settings');
+
+		// shipwire not enabled? abort
+		if ( ! store_is_shipping_enabled() ) return false;
+
+		// get order post
+		$order = get_post( $order );
+
+		// if order has shipping info...
+		if ( $transaction_info = get_post_meta($order->ID, '_store_transaction_info', true) ) {
+
+			// Set URL to send request to
+			$url = 'https://api.shipwire.com/api/v3/orders/' . $transaction_info['shipwire_id'] . '/trackings';
+
+			// Set authentication
+			$headers = array( 'Authorization' => 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ) );
+	
+			// Send request
+			$response = wp_remote_get(
+			    $url,
+			    array(
+			        'headers'		=> $headers,
+			        'httpversion' => '1.1'
+				)
+			);
+			$body = wp_remote_retrieve_body( $response );
+
+			// Decode into array
+			$output = json_decode($body, true);
+		}
+
+		// set empty output to be false
+		if ( empty($output) ) $output = false;
+
+		// return decoded response
+		return $output;
+	}
 
 
 /*

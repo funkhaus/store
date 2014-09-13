@@ -346,25 +346,40 @@
 		global $post;
 
 		$transaction_info = get_post_meta($post->ID, '_store_transaction_info', true);
-		$shipping_info = get_post_meta($post->ID, '_store_shipping_option', true); ?>
-
-		<?php //var_dump($shipping_info); exit; ?>
+		$shipping_info = get_post_meta($post->ID, '_store_shipping_option', true); 
+		$tracking = get_post_meta($post->ID, '_store_order_tracking', true); ?>
 
 			<div class="custom-meta">
 				<p>
-					<strong>Stripe ID:</strong><span style="float: right;"><?php echo $transaction_info['stripe_id']; ?></span>
+					<strong>Stripe ID:</strong>
 				</p>
-				<br/>
+				<p style="margin-left: 20px;">
+					<span><?php echo $transaction_info['stripe_id']; ?></span>
+				</p>
 
 				<p>
-					<strong>Shipwire ID:</strong><span style="float: right;"><?php echo $transaction_info['shipwire_id']; ?></span>
+					<strong>Shipwire ID:</strong>
 				</p>
-				<br/>
+				<p style="margin-left: 20px;">
+					<span><?php echo $transaction_info['shipwire_id']; ?></span>
+				</p>
 
 				<p>
-					<strong>Shipping Cost:</strong><span style="float: right;"><?php echo $shipping_info['cost']; ?></span>
+					<strong>Shipping Cost:</strong>
 				</p>
-				<br/>
+				<p style="margin-left: 20px;">
+					<span><?php echo $shipping_info['cost']; ?></span>
+				</p>
+
+				<?php if ( $tracking ) : ?>
+					<p>
+						<strong>Package Tracking:</strong>
+					</p>
+					<p style="margin-left: 20px;">
+						<span><?php echo $tracking['id']; ?></span>
+					</p>
+				<?php endif; ?>
+
 			</div>
 
 		<?php
