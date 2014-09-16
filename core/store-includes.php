@@ -55,6 +55,9 @@
 	// Run activation functions
 	include_once( trailingslashit( pp() ) . 'core/setup/store-activate.php' );
 
+	// Include term meta plugin
+	include_once( trailingslashit( pp() ) . 'core/plugins/simple-term-meta.php' );
+
 	// Load stripe classes
 	include_once( trailingslashit( pp() ) . 'core/stripe-php/Stripe.php' );
 

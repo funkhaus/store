@@ -68,4 +68,39 @@
 		}
 		add_action( 'init', 'store_create_taxonomy_status', 0 );
 
+
+		function jrr_report_screen(){
+			$screen = get_current_screen();
+
+			echo $screen->id; exit;
+		}
+		//add_action('current_screen', 'jrr_report_screen');
+
+	/*
+	 * add action links to store_categories
+	 */
+		add_filter("manage_edit-store_category_columns", 'store_add_taxonomy_actions', 10, 3);
+
+		function store_add_taxonomy_actions($cols) {
+			$cols['order'] = 'Order';
+			return $cols;
+		}
+
+
+		add_filter('manage_store_category_custom_column', 'manage_theme_columns', 10, 3);
+
+		function manage_theme_columns($out, $column_name, $term_id) {
+
+			switch ($column_name) {
+				case 'order':
+					$data = maybe_unserialize($theme->description);
+					$out .= 'testingg ' . $term_id;
+					break;
+
+				default:
+					break;
+			}
+			return $out;
+		}
+
 ?>

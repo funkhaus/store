@@ -2,7 +2,6 @@
 
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-
 	// check if hook is scheduled, if not schedule it
 	function store_set_schedule() {
 		if ( ! wp_next_scheduled( 'store_hourly_cron' ) ) {
@@ -43,7 +42,11 @@
 
 				if ( count($response['resource']['items']) ) {
 
-					// Package has shipped, run hook
+				/*
+				 * @Hook: store_order_shipped, fires when an order has been shipped by shipwire
+				 *
+				 * @Param: OBJ, the full post object of the shipped order
+				 */
 					do_action('store_order_shipped', $order);
 
 					// set tracking into meta

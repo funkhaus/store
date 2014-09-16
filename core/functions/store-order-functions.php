@@ -464,7 +464,6 @@
 			$output['code'] = 'FAILED_INVENTORY';
 			$output['message'] = 'There is not enough stock in Shipwire to complete this order.';
 			return store_get_json_template($output);
-
 		}
 
 		// Calculate shipping
@@ -478,10 +477,12 @@
 
 			// if shipping method is set, target that method
 			if ( isset($args['shipping_method']) ) {
+
 				// loop through methods, find target
 				foreach ( $ship_options as $option ) {
 					if ( $option['method'] == $args['shipping_method'] ) $ship_method = $option;
 				}
+
 			}
 
 			// If no ship method, default to first
@@ -553,10 +554,14 @@
 		$output['message'] = 'Order #' . $order_id . ' successfully paid, processed and sent to shipwire.';
 		$output['vendor_response']['shipwire'] = (array) $ship_request;
 
-		// run anything hooked to completed orders
-		do_action('store_order_completed');
+	/*
+	 * @Hook: store_order_completed, fires any time an order has been successfully completed, paid, and sent to shipwire
+	 *
+	 * @Param: INT, the ID of the order that was completed
+	 */
+		do_action('store_order_completed', $order_id);
 
-		// Return
+		// Return JSON response
 		return store_get_json_template($output);
 	}
 

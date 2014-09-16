@@ -63,6 +63,23 @@
 		}
 
 	/*
+	 * Register admin page for category ordering
+	 */
+		function store_register_category_ordering() {
+			add_submenu_page( null, 'Store Category Order', 'Order Categories', 'manage_options', 'store_category_order', 'store_output_order_page' );
+		}
+		add_action('admin_menu', 'store_register_category_ordering');
+
+	/*
+	 * Output UI for store category ordering
+	 */
+		function store_output_order_page() {
+
+			// Output stuff for category ordering page
+
+		}
+
+	/*
 	 * Register these options on settings save
 	 */
 		function store_register_settings(){

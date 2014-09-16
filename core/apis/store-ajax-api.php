@@ -261,7 +261,7 @@
 			$output['success'] = true;
 			$output['code'] = strtoupper( $response['warnings'][0]['code'] );
 			$output['message'] = $response['warnings'][0]['message'];
-		} else {
+		} elseif ( $response && $response['status'] == 200 ) {
 			$output['success'] = true;
 			$output['code'] = 'OK';
 			$output['message'] = 'This is a useable address.';
