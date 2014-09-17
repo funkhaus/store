@@ -1,9 +1,28 @@
 <div class="wrap">
+
+	<?php if ( isset($_REQUEST['message']) ) : ?>
+		<?php if ( $_REQUEST['message'] ) : ?>
+			<div id="message" class="updated">
+				<p>
+					Order successfully updated
+				</p>
+			</div>
+		<?php else : ?>
+			<div id="message" class="error">
+				<p>
+					There was a problem updating the order
+				</p>
+			</div>
+		<?php endif; ?>
+	<?php endif; ?>
+
 	<form action="admin-post.php" method="post" id="store-cat-order">
 		<?php
+			// Get category from request, get full term object
 			$term_id = isset( $_REQUEST['category'] ) ? $_REQUEST['category'] : false;
 			$term = get_term( $term_id, 'store_category' );
 
+			// Check if there is currently an order set for this category, set into variable
 			$current_order = get_term_meta( $term_id, 'store-category-order', true );
 			$current_order = !empty( $current_order ) ? implode( ',', $current_order ) : 0;
 
@@ -25,7 +44,8 @@
 			);
 			$products = get_posts($args); ?>
 
-			<h2>Set Order for Category: <?php echo $term->name; ?></h2>
+			<h2>Set Order</h2>
+			<p class="description">Category: <?php echo $term->name; ?></p>
 
 			<?php if ( $products ) : ?>
 

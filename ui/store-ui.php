@@ -88,21 +88,34 @@
 
 		function store_admin_save_category_order() {
 
+			// Set term ID from request
 			if ( isset($_REQUEST['category']) ) {
 				$term_id = intval( $_REQUEST['category'] );
 			}
+
+			// Get order from request (string of IDs)
 			if ( isset($_REQUEST['order']) ) {
+
+				// explode to array
 				$order = explode(',', $_REQUEST['order']);
+
+				// clear out empties
 				$order = array_filter($order);
 			}
 
 			// attempt to update metadata
 			$result = update_term_meta( $term_id, 'store-category-order', $order);
 
+			// Set message param in query string
 			$message = 0;
 			if ( $result ) $message = 1;
 
-			header('Location: admin.php?page=store_category_order&category=' . $_REQUEST['category'] . '&message=' . $message );
+			// Set url to referrer, add message
+			$url = wp_get_referer();
+			$url = add_query_arg('message', $message, $url);
+
+			// Redirect with message
+			wp_safe_redirect($url);
 		}
 
 	/*
