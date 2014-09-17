@@ -12,6 +12,9 @@ var store_admin = {
 		store_admin.disableVariations();
 		store_admin.toggleDisabling();
 
+		// UI for category sorting
+		store_admin.categorySorting();
+
     },
 
 	updateOptionsNames: function(){
@@ -67,6 +70,23 @@ var store_admin = {
 		});
 		jQuery('input#store-sku').keyup(function(){
 			jQuery('#submitdiv').css('opacity', 1).find('input[type=submit]').attr('disabled', false);
+		});
+
+	},
+
+	categorySorting: function(){
+
+		jQuery('#order-products').sortable({
+			stop: function() {
+
+				var orderList = [];
+
+				jQuery('.product[data-id]').each(function(){
+					orderList.push( jQuery(this).data('id') );
+				});
+
+				jQuery('input[name="order"]').val( orderList.join(',') );
+			}
 		});
 
 	}

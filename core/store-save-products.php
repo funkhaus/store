@@ -78,7 +78,7 @@
 		 		}
 		 		$meta_keys[ sanitize_key($post_key) ] = $post_value;
 		 	}
-	 	}		
+	 	}
 
 		return $meta_keys;
 	}
@@ -238,5 +238,49 @@
 
 	}
 	add_action('save_post', 'store_shipwire_inv_save');
+
+
+/*
+ * Save this post to its' store_categories order lists
+ */
+	function store_product_save_term_order( $post_id ){
+
+		if ( isset( $_REQUEST['tax_input'] ) && isset($_REQUEST['tax_input']['store_category']) ) {
+
+			// get categories from request variable
+			$cats = $_REQUEST['tax_input']['store_category'];
+
+			// split categories
+			$cats = explode( ',', $cats );
+
+			// loop through categories
+			foreach ( $cats as $cat ) {
+
+				// get full term object
+				$term = get_term_by( 'name', $cat, 'store_category' );
+
+				// get meta for this term
+				$meta = get_term_meta( $term->term_id, 'store-category-order', true );
+
+				// if term has an order set...
+				if ( ! empty($meta) ) {
+
+					// if post is not already in the array
+					if ( ! in_array($post_id, $meta) ) {
+
+						// add this post to the beginning of the order
+						array_unshift($meta, $post_id);
+	
+						// update meta
+						update_term_meta($term->term_id, 'store-category-order', $meta);
+
+					}
+				}
+			}
+
+		}
+
+	}
+	add_action('save_post', 'store_product_save_term_order');
 
 ?>

@@ -94,7 +94,7 @@
 			switch ($column_name) {
 				case 'order':
 					$data = maybe_unserialize($theme->description);
-					$out .= 'testingg ' . $term_id;
+					$out .= '<a href="' . admin_url() . 'admin.php?page=store_category_order&category=' . $term_id . '">Edit</a>';
 					break;
 
 				default:

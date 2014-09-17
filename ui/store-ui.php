@@ -11,6 +11,7 @@
 
 			wp_enqueue_style( 'store_admin_css');
 			wp_enqueue_script( 'store_admin_js');
+			wp_enqueue_script( 'jquery-ui-sortable' );
 
 	        // Setup JS variables in scripts
 			wp_localize_script('store_admin_js', 'store_admin_vars', 
@@ -76,7 +77,32 @@
 		function store_output_order_page() {
 
 			// Output stuff for category ordering page
+			include_once( trailingslashit( pp() ) . 'ui/store-order-category.php' );
 
+		}
+
+	/*
+	 * Function to catch and process submition of a category order
+	 */
+		add_action( 'admin_post_save_order', 'store_admin_save_category_order' );
+
+		function store_admin_save_category_order() {
+
+			if ( isset($_REQUEST['category']) ) {
+				$term_id = intval( $_REQUEST['category'] );
+			}
+			if ( isset($_REQUEST['order']) ) {
+				$order = explode(',', $_REQUEST['order']);
+				$order = array_filter($order);
+			}
+
+			// attempt to update metadata
+			$result = update_term_meta( $term_id, 'store-category-order', $order);
+
+			$message = 0;
+			if ( $result ) $message = 1;
+
+			header('Location: admin.php?page=store_category_order&category=' . $_REQUEST['category'] . '&message=' . $message );
 		}
 
 	/*

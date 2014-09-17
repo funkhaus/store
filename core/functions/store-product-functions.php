@@ -287,6 +287,19 @@
  	}
 
 
+/*
+ * @Description:
+ *
+ * @Param:
+ * @Returns:
+ */
+ 	function store_get_category_order( $term_id = null ) {
+
+	 	// get meta for this term
+	 	return get_term_meta( $term_id, 'store-category-order', true );
+ 	}
+
+
 /* ------------ Higher level functions below ------------ */
 
 
