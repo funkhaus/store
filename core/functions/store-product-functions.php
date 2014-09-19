@@ -300,6 +300,28 @@
  	}
 
 
+/*
+ * @Description: Get term object of the first category this post is in
+ *
+ * @Param:
+ * @Returns:
+ */
+	function store_get_product_category( $product = null ){
+
+		// get product object
+		$product = store_get_product( $product );
+
+		// Get terms for this product
+		$terms = wp_get_post_terms( $product->ID, 'store_category', $args );
+
+		// Set output
+		$output = false;
+		if ( ! empty($terms) ) $output = reset($terms);
+
+		return $output;
+	}
+
+
 /* ------------ Higher level functions below ------------ */
 
 

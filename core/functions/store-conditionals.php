@@ -14,26 +14,28 @@
 		} elseif( is_object($product) ) {
 			// Assume post object passed
 			$product = $product;
+
 		} else {
 			// Try to get from global
 			global $post;
 			$product = $post;
+
 		}
-		
+
 		// Check that we have an object
 		if( !is_object($product) ) {
 			return false;
+
 		}
-		
+
 		// Check for quantity 
 		if( $product->_store_qty > 0 ) {
 			return true;
 		} else {
 			return false;
 		}
-	
+
 	}
-	
 
 
 /*
@@ -54,5 +56,29 @@
 
 		return $output;
 	}
-	
+
+
+/*
+ * @Description: Used to check if the current page is within the whole store umbrella (products, checkout, archives, etc.)
+ *
+ * @Param:
+ */
+	function store_is_within_store( $post = null ){
+		$post = get_post($post);
+
+		// init output
+		$output = false;
+
+		// if post is any of these post types, output true
+		if (
+			get_post_type($post) === 'product'	||
+			get_post_type($post) === 'orders'	|| 
+			get_post_type($post) === 'cart'		|| 
+			get_post_type($post) === 'store'
+
+		) { $output = true; }
+
+		return $output;
+	}
+
 ?>

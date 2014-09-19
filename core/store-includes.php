@@ -73,6 +73,9 @@
 	// Add shipwire AJAX functions
 	include_once( trailingslashit( pp() ) . 'core/apis/store-shipwire-api.php' );
 
+	// Add functions for init
+	include_once( trailingslashit( pp() ) . 'core/store-init.php' );
+
 	// Add stripe setup AJAX functions
 	include_once( trailingslashit( pp() ) . 'core/apis/store-stripe-api.php' );
 
