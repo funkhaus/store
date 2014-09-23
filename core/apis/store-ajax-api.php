@@ -61,22 +61,13 @@
 		// Find variant based on options and parent
 		if ( $options ) {
 			$product_id = store_get_variant_id($options, $product_id);
-			$product_id = $product_id->ID;
 		}
 
 		// Set default qty
 		if ( ! $quantity ) $quantity = 1;
 
 		// Pass into PHP function, echo results and die.
-		$added = store_add_product_to_cart($product_id, $cart_id, $quantity);
-
-		// Set api logging
-		$output = array();
-		if ( $added ) {
-			$output['success']			= true;
-			$output['code']				= 'OK';
-			$output['message']			= 'Product successfully added to cart.';
-		}
+		$output = store_add_product_to_cart($product_id, $cart_id, $quantity);
 
 		// Set proper header, output
 		header('Content-Type: application/json');

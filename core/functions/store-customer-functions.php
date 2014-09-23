@@ -58,7 +58,7 @@
 		$user_id = wp_insert_user( $userdata );
 
 		// If user wasn't created, abort
-		if ( ! $user_id ) return $false;
+		if ( ! $user_id ) return false;
 
 		// If temp password was created, save it to meta
 		if ( $temp ) update_user_meta( $user_id, 'store_temp_pass', $password );

@@ -247,7 +247,7 @@
  			'meta_query'		=> $meta_query,
  			'post_type'			=> 'product',
  			'post_parent'		=> $product->ID,
- 			'feilds'			=> 'id'
+ 			'fields'			=> 'ids'
  		);
 
  		// query for variant

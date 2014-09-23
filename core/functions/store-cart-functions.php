@@ -183,14 +183,21 @@
  */
 	function store_add_product_to_cart($product_id = null, $cart_id = null, $quantity = 1){
 
+		// init output
+		$output = false;
+
 		// If no product ID set, or not an INT, then return false.
 		if( empty($product_id) || !is_int($product_id) ) {
-			return false;
+			return $output;
 		}
 
-		// Check product is available to add to cart
-		if( !store_is_product_available($product_id) ) {
-			return false;
+		// Check product is available to add to cart, report if not
+		if( ! store_is_product_available($product_id) ) {
+			$output = store_get_json_template(array(
+				'code' => 'NOT_AVAILABLE',
+				'message' => 'This product is not available to add to the cart.'
+			));
+			return $output;
 		}
 
 		// Attempt to get a valid cart
@@ -204,9 +211,12 @@
 
 		// Get cart product meta as array
 		$products = get_post_meta($cart_id, '_store_cart_products', true);
+		if ( ! $products ) $products = array();
 
+		// if product is already in cart, increment
 		if ( isset($products[$product_id]) ) {
 
+			// Add quantity to current quantity val
 			$products[$product_id] = intval($products[$product_id]) + $quantity;
 
 		} else {
@@ -217,7 +227,19 @@
 		}
 
 		// Save meta array, return result
-		return update_post_meta($cart_id, '_store_cart_products', $products);
+		$result = update_post_meta($cart_id, '_store_cart_products', $products);
+
+		// if meta was added, log success
+		if ( $result ) {
+			$output = store_get_json_template(array(
+				'success'			=> true,
+				'code'				=> 'OK',
+				'message'			=> get_the_title($product_id) . ' successfully added to cart.',
+				'vendor_response'	=> $resut
+			));
+		}
+
+		return $output;
 	};
 
 
