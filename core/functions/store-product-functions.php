@@ -322,6 +322,115 @@
 	}
 
 
+/*
+ * @Description:
+ *
+ * @Param:
+ * @Returns:
+ */
+	function store_get_attached_images( $product = null, $featured = true, $attachments = true ){
+
+		// get product object
+		$product = store_get_product($product);
+
+		// Set featured ID
+		$featured_id = get_post_thumbnail_id($product->ID);
+
+		// init output
+		$output = array();
+
+		// if attachments is true...
+		if ( $attachments ) {
+
+			$exclude = '';
+			if ( ! $featured ) $exclude = $featured_id;
+
+			// query attachments
+			$args = array(
+				'posts_per_page'	=> -1,
+				'exclude'			=> $exclude,
+				'orderby'			=> 'menu_order',
+				'order'				=> 'ASC',
+				'post_type'			=> 'attachment',
+				'post_mime_type'	=> 'image',
+				'post_parent'		=> $product->ID
+			);
+			$output = get_posts($args);
+
+		// if only featured images targeted...
+		} elseif ( $featured ) {
+
+			// if product has featured...
+			if ( $featured_id ) {
+
+				// get full post object
+				$featured_image = get_post($featured_id);
+
+				// add to output array
+				$output[] = $featured_image;
+			}
+		}
+
+		return $output;
+	}
+
+
+/*
+ * @Description: Gather all images for product and variants
+ *
+ * @Param:
+ * @Returns:
+ */
+	function store_get_product_images( $args = null ){
+
+		// set defaults
+		$defaults = array(
+			'product_parent'	=> false,
+			'featured'			=> true,
+			'attachments'		=> true,
+			'maximum'			=> -1
+		);
+
+		// parse incoming args and merge with defaults
+		$args = wp_parse_args( $args, $defaults );
+
+		// get valid parent
+		$parent = store_get_product( $args['product_parent'] );
+
+		// bail out if no parent
+		if ( ! $parent ) return false;
+
+		// Add parent images into array
+		$output = store_get_attached_images($parent);
+
+		// get all variants
+		$all_products = store_get_product_variants($parent);
+
+		// push parent product into array
+		$all_products[] = $parent;
+
+		// init output
+		$output = array();
+
+		// if any posts, loop through
+		if ( $all_products ) {
+			foreach ( $all_products as $product ) {
+
+				// add all $product/variant attachments into output
+				$output = array_merge( $output, store_get_attached_images($product, $args['featured'], $args['attachments']) );
+
+			}
+		}
+
+		// enforce maximum if needed
+		if ( $args['maximum'] > 0 ) {
+			array_splice($output, 0, $args['maximum']);
+		}
+
+		return $output;
+	}
+
+
 /* ------------ Higher level functions below ------------ */
 
 

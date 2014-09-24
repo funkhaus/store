@@ -13,6 +13,8 @@
 		// init output
 		$output;
 
+		$output['id'] = $post->ID;
+
 		// if title arg is set...
 		if ( $args['title'] ) {
 	
@@ -64,35 +66,72 @@
 			// set default for images prop
 			$output['images'] = false;
 
-			// if there is a featured image...
-			if ( $featured_id ) {
+			// init sizes
+			$sizes = false;
 
-				// init sizes
-				$sizes = false;
+			// if arg is a string, treat it as a size and get the featured image in that size
+			if ( is_string($args['images']) ) $sizes = array($args['images']);
 
-				// if arg is a string, treat it as a size and get the featured image in that size
-				if ( is_string($args['images']) ) $sizes = array($args['images']);
+			// if arg is set to all or true, do all sizes
+			if ( $args['images'] === true || $args['images'] === 'all' ) $sizes = get_intermediate_image_sizes();
 
-				// if arg is set to all or true, do all sizes
-				if ( $args['images'] === true || $args['images'] === 'all' ) $sizes = get_intermediate_image_sizes();
+			// if attachemnts were requested, query them BEFORE we loop through sizes
+			if ( $args['attached'] ) {
 
-				// if sizes are set...
-				if ( $sizes ) {
-					foreach ( $sizes as $size ) {
-	
+				// query all attachments
+				$attached_args = array(
+					'posts_per_page'	=> -1,
+					'orderby'			=> 'menu_order',
+					'exclude'			=> $featured_id,
+					'order'				=> 'ASC',
+					'post_type'			=> 'attachment',
+					'post_mime_type'	=> 'image',
+					'post_parent'		=> $post->ID,
+					'fields'			=> 'ids'
+				);
+				$attachments = get_posts($attached_args);
+			}
+
+			// if sizes are set...
+			if ( $sizes ) {
+				foreach ( $sizes as $size ) {
+
+					// if featured image requested
+					if ( $args['featured'] ) {
+
 						// Get image src atts
 						$featured_url = wp_get_attachment_image_src( $featured_id, $size );
 	
 						// if src atts...
 						if ( $featured_url ) {
-	
+
 							// Set url into array
-							$output['images'][$size] = $featured_url[0];
-	
+							$output['images']['featured'][$size] = $featured_url[0];
+
 						}
 					}
+
+					// if attached images requested
+					if ( $args['attached'] ) {
+
+						// Loop through attachments
+						if ( $attachments ) {
+							foreach ( $attachments as $i => $attached ) {
+
+								// Get src URL
+								$image_url = wp_get_attachment_image_src( $attached, $size );
+
+								// add url to output
+								$output['images']['attached'][$i][$size] = $image_url[0];
+
+							}
+						}
+
+					}
+
 				}
 			}
+
 		}
 
 		// if sku arg is set...
@@ -112,24 +151,42 @@
 		return $output;
 	}
 
+
+	function store_product_matrix( $args = null ){
+
+		// Get matrix as array, forward args
+		$matrix = store_get_product_matrix($args);
+
+		// Set output to be full script tag
+		$output = '<script type="text/javascript">
+		/* <![CDATA[ */
+		storeAPI.matrix.data[' . $matrix['id'] . '] = ' . json_encode( $matrix ) . ';
+		/* ]]> */
+		</script>';
+
+		echo $output;
+	}
+
 /*
  * @Description:
  *
  * @Param: MIXED,
  * @Returns: MIXED, 
  */
-	function store_get_product_matrix( $args = null, $return = 'script' ){
+	function store_get_product_matrix( $args = null ){
 
 		// Set args defaults
 		$args_master = array(
 			'product'	=> false,
-			'return'	=> 'script',
+			'return'	=> 'array',
 			'options'	=> true,
 			'title'		=> false,
 			'price'		=> false,
 			'content'	=> false,
 			'excerpt'	=> false,
 			'images'	=> 'full',
+			'featured'	=> true,
+			'attached'	=> true,
 			'sku'		=> false,
 			'slug'		=> false
 		);
@@ -150,9 +207,6 @@
 
 		// keep this format just in case (formatted for multiple products)
 		$products = array($product->ID => $product);
-
-		// init output
-		$output = array();
 
 		// loop through target products
 		foreach ( $products as $parent_id => $parent_product ) {
@@ -208,12 +262,6 @@
 
 			$output = json_encode($output);
 
-		} else {
-			$output = '<script type="text/javascript">
-			/* <![CDATA[ */
-			storeAPI.matrix.data[' . $product->ID . '] = ' . json_encode( $output ) . ';
-			/* ]]> */
-			</script>';
 		}
 
 		return $output;
