@@ -92,6 +92,9 @@
 				$attachments = get_posts($attached_args);
 			}
 
+			$output['images']['attached'] = array();
+			$output['images']['featured'] = array();
+
 			// if sizes are set...
 			if ( $sizes ) {
 				foreach ( $sizes as $size ) {
@@ -106,7 +109,7 @@
 						if ( $featured_url ) {
 
 							// Set url into array
-							$output['images']['featured'][$size] = $featured_url[0];
+							$output['images']['featured'][$featured_id][$size] = $featured_url[0];
 
 						}
 					}
@@ -122,7 +125,7 @@
 								$image_url = wp_get_attachment_image_src( $attached, $size );
 
 								// add url to output
-								$output['images']['attached'][$i][$size] = $image_url[0];
+								$output['images']['attached'][$attached][$size] = $image_url[0];
 
 							}
 						}

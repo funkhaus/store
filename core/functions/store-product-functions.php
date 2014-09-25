@@ -424,7 +424,7 @@
 
 		// enforce maximum if needed
 		if ( $args['maximum'] > 0 ) {
-			array_splice($output, 0, $args['maximum']);
+			$output = array_splice($output, 0, $args['maximum']);
 		}
 
 		return $output;

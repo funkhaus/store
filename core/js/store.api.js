@@ -411,8 +411,35 @@ var storeAPI = {
 			// if empty array, set to false
 			if ( output.length === 0 ) output = false;
 			return output;
+		},
+
+
+	/*
+	 * @Description: recursive search for properies through array or object
+	 *
+	 * @Param:
+	 * @Returns:
+	 */
+		searchFor: function(haystack, needle){
+
+			var found = [];
+			function recursiveSearch( obj ){
+
+				if ( typeof obj === 'object' && obj.hasOwnProperty(needle) ) found.push(obj);
+
+				if ( typeof obj === 'array' || typeof obj === 'object' ) {
+
+					for ( var prop in obj ) {
+
+						recursiveSearch(obj[prop]);
+
+					}
+				}
+			}
+			recursiveSearch( haystack );
+
+			return found;
 		}
 
- 	}
-
+	}
 };
