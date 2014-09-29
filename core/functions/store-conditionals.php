@@ -81,4 +81,25 @@
 		return $output;
 	}
 
+
+/*
+ * @Description: check if a given product is a variant
+ *
+ * @Param: MIXED, ID or full object of a product. Defaults to $post. Optional
+ * @Returns: BOOL, true if a variant is given, false if not
+ */
+ 	function store_is_variant( $product = null ){
+
+	 	// get full post object, or $post
+	 	$product = get_post($product);
+
+	 	// init output
+	 	$output = false;
+
+	 	// if is a product and has a parent, it's a variant
+	 	if ( $product->post_type === 'product' && $product->post_parent !== 0 ) $output = true;
+
+	 	return $output;
+ 	}
+
 ?>

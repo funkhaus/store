@@ -17,20 +17,20 @@
 		global $post;
 
 		if ( is_post_type_archive( 'product' )  ) {
-			$new_template = locate_template( array( 'store/front-page.php' ) );
+			$new_template = locate_template( array( 'store/store-front-page.php' ) );
 			if ( '' != $new_template ) {
 				return $new_template ;
 			}
 
 		} elseif ( is_single() && get_post_type() === 'store' ) {
-			$new_template = locate_template( array( 'store/page-' . $post->post_name . '.php' ) );
+			$new_template = locate_template( array( 'store/store-page-' . $post->post_name . '.php' ) );
 			if ( '' != $new_template ) {
 				return $new_template ;
 			}
 
 		} elseif ( is_single() && get_post_type() === 'product' ) {
-			$new_template = locate_template( array( 'store/product-' . $post->post_name . '.php' ) );
-			if ( ! $new_template ) $new_template = locate_template( array( 'store/product.php' ) );
+			$new_template = locate_template( array( 'store/store-product-' . $post->post_name . '.php' ) );
+			if ( ! $new_template ) $new_template = locate_template( array( 'store/store-product.php' ) );
 			if ( '' != $new_template ) {
 				return $new_template ;
 			}

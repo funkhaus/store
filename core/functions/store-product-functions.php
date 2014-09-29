@@ -174,6 +174,26 @@
 
 
 /*
+ * @Description: Get the value of a particular option for a given variant
+ *
+ * @Param: STRING, a specific key to get the value of
+ * @Param: MIXED, the ID or object of the variant to get the option value for. Required.
+ * @Returns: MIXED, the value of the option on success, false on failure. Defaults to $post. Optional.
+ */
+ 	function store_get_option_value( $key = null, $product = null ){
+
+	 	// no key? abort
+	 	if ( ! $key ) return false;
+
+	 	// get valid product object
+	 	$product = store_get_product( $product );
+
+	 	// ------------------ LEFT ---------------------- //
+
+ 	}
+
+
+/*
  * @Description: Get array of options for a given product
  *
  * @Param: MIXED, ID or object of product (or variant) to get options for. Defaults to $post. Optional
@@ -261,6 +281,24 @@
  		return reset($results);
  	}
 
+
+/*
+ * @Description: Consistently get the ID of a given product. If a variant is given, its parent product ID will be returned.
+ *
+ * @Param: MIXED, product/variant ID or object. If none provided, $post will be used. Optional.
+ * @Returns: INT, ID of product
+ */
+ 	function store_get_product_id( $product = null ){
+
+	 	// get full product obj
+	 	$product = store_get_product($product);
+
+	 	// If variant given, return parent ID
+	 	$output = $product->ID;
+	 	if ( $product->post_parent !== 0 ) $output = $product->post_parent;
+
+	 	return $output;
+ 	}
 
 /*
  * @Description: Get product object, use $post as default
