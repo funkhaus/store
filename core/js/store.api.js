@@ -3,6 +3,7 @@ var storeAPI = {
 	// Globals
 	homeURL: store_api_vars.homeURL,
 	ajaxURL: store_api_vars.ajaxURL,
+	pluginURL: store_api_vars.pluginURL,
 
 /*
  * @Description: Add a product to a cart
@@ -232,12 +233,12 @@ var storeAPI = {
 	 	var output = {};
 
 	 	// Set each address field, default to an input with the proper data-ship value set
-	 	output.line_1	= address.line_1 	|| address.find('input[data-address="line_1"]').val();
-	 	output.line_2	= address.line_2 	|| address.find('input[data-address="line_2"]').val();
-	 	output.city		= address.city 		|| address.find('input[data-address="city"]').val();
-	 	output.state	= address.state 	|| address.find('input[data-address="state"]').val();
-	 	output.country	= address.country 	|| address.find('input[data-address="country"]').val();
-	 	output.zip		= address.zip 		|| address.find('input[data-address="zip"]').val();
+	 	output.line_1	= address.line_1 	|| address.find('[data-address="line_1"]').val();
+	 	output.line_2	= address.line_2 	|| address.find('[data-address="line_2"]').val();
+	 	output.city		= address.city 		|| address.find('[data-address="city"]').val();
+	 	output.state	= address.state 	|| address.find('[data-address="state"]').val();
+	 	output.country	= address.country 	|| address.find('[data-address="country"]').val();
+	 	output.zip		= address.zip 		|| address.find('[data-address="zip"]').val();
 
 	 	return output;
  	},
@@ -306,6 +307,8 @@ var storeAPI = {
 		 	'address'	:	address
 		};
 
+		console.log(address);
+
 		// Submit to PHP
 		jQuery.post( this.ajaxURL, data, function(results) {
 			if ( typeof callback === 'function' ) callback.apply(context, [results]);
@@ -313,6 +316,7 @@ var storeAPI = {
 
 		return;
  	},
+
 
 // ---------------- Product Matrix API ---------------- //
 

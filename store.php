@@ -16,14 +16,14 @@
 	// Helper function to always reference this directory
 	if ( ! function_exists( 'pp' ) ) {
 	    function pp() {
-	        return dirname( __FILE__ );
+	        return trailingslashit( dirname( __FILE__ ) );
 	    }
 	}
 
 	// Get core
-	include_once( trailingslashit( pp() ) . 'core/store-includes.php');
+	include_once( pp() . 'core/store-includes.php');
 
 	// Get UI
-	include_once( trailingslashit( pp() ) . 'ui/store-ui.php');
+	include_once( pp() . 'ui/store-ui.php');
 
 ?>

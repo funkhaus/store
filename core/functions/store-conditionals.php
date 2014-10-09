@@ -102,4 +102,29 @@
 	 	return $output;
  	}
 
+
+/*
+ * @Description: check if a given product has variants
+ *
+ * @Param: MIXED, ID or full object of a product. Defaults to $post. Optional
+ * @Returns: BOOL, true if product has variants. false if not
+ */
+    function store_has_variants($product = null) {
+
+	 	// get full post object, or $post
+	 	$product = store_get_product($product);
+	 	$output = false;
+
+	 	$args = array(
+	 		'post_parent' 		=> $product->ID,
+	 		'post_type'			=> 'product',
+	 		'posts_per_page'	=> 1,
+	 		'fields'			=> 'ids'
+	 	);
+	 	$variants = get_posts($args);
+
+	 	if( count( $variants ) !== 0 ) $output = true;
+	 	return $output;
+    }
+
 ?>

@@ -311,7 +311,6 @@
 		if ( ! empty($found_order) ) $found_order = reset($found_order);
 
 		return $found_order;
-
 	};
 
 
@@ -350,7 +349,6 @@
 
 		// Get shipping options from shipwire
 		return store_shipwire_request_order_shipping($cart);
-
 	}
 
 
@@ -387,7 +385,6 @@
 	 	}
 
 	 	return $total;
-
  	}
 
 
@@ -404,7 +401,23 @@
 
 	 	// return
 	 	return store_get_order_items($cart);
+ 	}
 
+
+/*
+ * @Description: Get total count of items in a cart
+ *
+ * @Param: MIXED, ID or object of cart. Defaults to active cart. Optional.
+ * @Returns: INT, quantity of items on success, 0 on failure
+ */
+ 	function store_cart_item_count($cart = null) {
+
+	 	// get items in cart
+	 	$items = store_get_cart_items($cart);
+
+	 	if ( ! $items ) return 0;
+
+	 	return array_sum($items);
  	}
 
 

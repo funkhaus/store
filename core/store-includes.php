@@ -3,9 +3,7 @@
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 	// Get functions
-	include_once( trailingslashit( pp() ) . 'core/functions/store-core-functions.php' );
-
-
+	include_once( pp() . 'core/functions/store-core-functions.php' );
 
 
 	// Testing function to run things. Delete Me eventually.
@@ -33,6 +31,7 @@
 			'slug'		=> true
 		);
 
+		//var_dump(store_list_countries()); exit;
 		//var_dump(store_run_hourly()); exit;
 		//var_dump( store_shipwire_request_cart_shipping($address) ); exit;
 		//print_r( store_get_product_matrix($args, 9, 'array') ); exit;
@@ -47,43 +46,43 @@
 
 
 	// Setup product post types
-	include_once( trailingslashit( pp() ) . 'core/setup/store-post-types.php' );
+	include_once( pp() . 'core/setup/store-post-types.php' );
 
 	// Setup taxonomies
-	include_once( trailingslashit( pp() ) . 'core/setup/store-taxonomy.php' );
+	include_once( pp() . 'core/setup/store-taxonomy.php' );
 
 	// Run activation functions
-	include_once( trailingslashit( pp() ) . 'core/setup/store-activate.php' );
+	include_once( pp() . 'core/setup/store-activate.php' );
 
 	// Include term meta plugin
-	include_once( trailingslashit( pp() ) . 'core/plugins/simple-term-meta.php' );
+	include_once( pp() . 'core/plugins/simple-term-meta.php' );
 
 	// Load stripe classes
-	include_once( trailingslashit( pp() ) . 'core/stripe-php/Stripe.php' );
+	include_once( pp() . 'core/includes/stripe-php/Stripe.php' );
 
 	// Hook saving functionality
-	include_once( trailingslashit( pp() ) . 'core/store-save-products.php' );
+	include_once( pp() . 'core/store-save-products.php' );
 
 	// Add cart AJAX functions
-	include_once( trailingslashit( pp() ) . 'core/apis/store-ajax-api.php' );
+	include_once( pp() . 'core/apis/store-ajax-api.php' );
 
 	// Add js product matrix
-	include_once( trailingslashit( pp() ) . 'core/store-product-matrix.php' );
+	include_once( pp() . 'core/store-product-matrix.php' );
 
 	// Add shipwire AJAX functions
-	include_once( trailingslashit( pp() ) . 'core/apis/store-shipwire-api.php' );
+	include_once( pp() . 'core/apis/store-shipwire-api.php' );
 
 	// Add functions for init
-	include_once( trailingslashit( pp() ) . 'core/store-init.php' );
+	include_once( pp() . 'core/store-init.php' );
 
 	// Add stripe setup AJAX functions
-	include_once( trailingslashit( pp() ) . 'core/apis/store-stripe-api.php' );
+	include_once( pp() . 'core/apis/store-stripe-api.php' );
 
 	// Setup user meta functions
-	include_once( trailingslashit( pp() ) . 'core/store-customer-meta.php' );
+	include_once( pp() . 'core/store-customer-meta.php' );
 
 	// Set crons
-	include_once( trailingslashit( pp() ) . 'core/store-set-crons.php' );
+	include_once( pp() . 'core/store-set-crons.php' );
 
 	/*
 	 * Enqueue JavaScript API Scripts
@@ -96,7 +95,8 @@
 			wp_localize_script('store_api_js', 'store_api_vars',
 				array(
 					'homeURL'		=> home_url(),
-					'ajaxURL'		=> admin_url( 'admin-ajax.php' )
+					'ajaxURL'		=> admin_url( 'admin-ajax.php' ),
+					'pluginURL'		=> pp()
 				)
 			);
 

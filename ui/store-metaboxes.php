@@ -7,11 +7,14 @@
  */
  	function store_add_variations(){
 	 	global $post;
+	 	$variants = store_get_product_variants();
 	 	add_meta_box("store_price_meta", "Stock/Price", "store_price_meta", "product", "side", "default");
 	 	if ( $post->post_parent != 0 ) {
 		 	add_meta_box("store_enable_meta", "Enable Editing", "store_enable_meta", "product", "side", "high");
 		} else {
-		 	add_meta_box("store_options_meta", "Options/Variations", "store_options_meta", "product", "normal", "low");
+			if ( ! $post->_store_sku ) {
+			 	add_meta_box("store_options_meta", "Options/Variations", "store_options_meta", "product", "normal", "low");
+			}
 		}
 	}
  	add_action("add_meta_boxes", "store_add_variations");
@@ -131,19 +134,22 @@
     }
 
     function store_price_meta(){
-		global $post; ?>
+		global $post;
+		$has_variants = store_has_variants(); ?>
 
-			<div class="custom-meta">
-				<p>
-					<strong>Quantity</strong>
-				</p>
-				<label class="screen-reader-text" for="store-qty">Quantity</label>
-
-				<?php $quantity = store_get_quantity($post->ID); ?>
-				<input <?php echo ( $quantity && ! $post->post_parent ) ? 'disabled' : ''; ?> id="store-qty" class="short" title="" size="3" name="_store_qty" type="text" value="<?php echo $quantity; ?>">
-				<br/>
-
-			</div>
+			<?php if ( ! $has_variants ) : ?>
+				<div class="custom-meta">
+					<p>
+						<strong>Quantity</strong>
+					</p>
+					<label class="screen-reader-text" for="store-qty">Quantity</label>
+	
+					<?php $quantity = store_get_quantity($post); ?>
+					<input disabled id="store-qty" class="short" title="" size="3" name="_store_qty" type="text" value="<?php echo $quantity; ?>">
+					<br/>
+	
+				</div>
+			<?php endif; ?>
 			<div class="custom-meta">
 				<p>
 					<strong>Price</strong>
@@ -153,6 +159,17 @@
 				<br/>
 
 			</div>
+			<?php if ( ! $has_variants ) : ?>
+				<div class="custom-meta">
+					<p>
+						<strong>SKU</strong>
+					</p>
+					<label class="screen-reader-text" for="store-sku">SKU</label>
+					<input id="store-sku" class="short" title="" size="10" name="_store_sku" type="text" value="<?php echo store_get_sku(); ?>">
+					<br/>
+	
+				</div>
+			<?php endif; ?>
 
 		<?php
 	}
@@ -163,15 +180,6 @@
 		<div class="custom-meta">
 			<label class="screen-reader-text" for="store-enable-variant">Enable Editing</label>
 			<input id="store-enable-variant" class="short" title="" name="_store_enable_variant" type="checkbox" <?php checked($post->_store_enable_variant); ?> value="1"> Override defaults
-			<br/>
-
-		</div>
-		<div class="custom-meta">
-			<p>
-				<strong>SKU</strong>
-			</p>
-			<label class="screen-reader-text" for="store-sku">SKU</label>
-			<input id="store-sku" class="short" title="" size="8" name="_store_sku" type="text" value="<?php echo store_get_sku(); ?>">
 			<br/>
 
 		</div>
@@ -466,12 +474,6 @@
 			update_post_meta($post->ID, $key, $value);			
 		}
 
-		// Meta for stock/price
-		if( isset($_POST["_store_qty"]) ) {
-			update_post_meta($post->ID, "_store_qty", $_POST["_store_qty"]);
-
-			// Update a parent (if it has one)
-		}
 		if( isset($_POST["_store_price"]) ) {
 			update_post_meta($post->ID, "_store_price", (int)($_POST["_store_price"] * 100) );
 		}

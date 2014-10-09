@@ -177,24 +177,17 @@
 			 	$post_template['post_name'] = $combo_slug;
 			 	$post_template['post_title'] = $title;
 
-			 	// Set ID var
+			 	// init ID
 			 	$ID = false;
 
 			 	// Set Qty if applicable
 			 	$qty = false;
-			 	if ( $_POST['_store_qty'] ) {
-
-				 	// qty = Parent Qty / variations
-				 	$qty = floor( intval($_POST['_store_qty']) / count($combinations) );
-
-			 	}
 
 			 	// Create/Update post info, if successful...
 			 	if ( $ID = wp_insert_post( $post_template ) ) {
 
 				 	// Update store meta
 				 	if ( $_POST['_store_price'] ) update_post_meta( $ID, '_store_price', (int)($_POST['_store_price'] * 100) );
-				 	if ( $qty ) update_post_meta( $ID, '_store_qty', $qty );
 
 				 	foreach ( $combo_vals as $combo_key => $combo_val ) {
 					 	update_post_meta( $ID, $combo_key, $combo_val );
@@ -231,6 +224,7 @@
 				update_post_meta($post_id, '_store_qty', $qty);
 				update_post_meta($post_id, '_store_shipwire_synced', true);
 			} else {
+				update_post_meta($post_id, '_store_qty', '');
 				update_post_meta($post_id, '_store_shipwire_synced', false);
 			}
 

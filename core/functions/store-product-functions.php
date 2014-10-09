@@ -14,16 +14,10 @@
 		$product = store_get_product( $product );
 
 		// If this is a variation, return qty
-		if ( $product->post_parent ) return $product->_store_qty;
+		if ( ! store_has_variants($product) ) return $product->_store_qty;
 
-		// query children
-	    $args = array(
-			'posts_per_page'   => -1,
-			'post_type'        => 'product',
-			'post_parent'      => $product->ID,
-			'post_status'      => 'any'
-		);
-		$variations = get_posts($args);
+		// query variants
+		$variations = store_get_product_variants($product);
 
 		$quantity = false;
 		if ( $variations ) {
@@ -188,8 +182,7 @@
 	 	// get valid product object
 	 	$product = store_get_product( $product );
 
-	 	// ------------------ LEFT ---------------------- //
-
+	 	return get_post_meta($product->ID, '_store_meta_' . $key, true);
  	}
 
 
