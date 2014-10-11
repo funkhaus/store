@@ -212,8 +212,8 @@
  		global $post;
 
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
-	 	add_meta_box("store_order_show_status", "Order Status", "store_order_show_status", "orders", "side", "low");
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "cart", "normal", "low");
+	 	add_meta_box("store_order_show_status", "Order Status", "store_order_show_status", "orders", "side", "low");
 	 	if ( store_get_order_shipping_address($post->ID) && store_get_order_billing_address($post->ID) ) {
 		 	add_meta_box("store_cart_list_addresses", "Addresses", "store_cart_list_addresses", "orders", "normal", "low");
 		}
@@ -262,8 +262,9 @@
 									<?php endif; ?>
 								</th>
 								<td class="post-title page-title column-title">
+									<?php $root_id = store_get_product_id($product); ?>
 									<strong>
-										<?php echo get_the_title($product->post_parent); ?>
+										<?php echo get_the_title($root_id); ?>
 									</strong>
 								</td>
 								<td><?php echo get_the_title($product->ID); ?></td>
@@ -462,7 +463,6 @@
  	function store_save_meta(){
 	 	global $post;
 
-
 	 	// check autosave
 	 	if( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
 		 	return $post->ID;
@@ -471,7 +471,7 @@
 		// Meta for variation data
 		$options = store_sort_options($_POST);
 		foreach( $options as $key => $value ) {
-			update_post_meta($post->ID, $key, $value);			
+			update_post_meta($post->ID, $key, $value);
 		}
 
 		if( isset($_POST["_store_price"]) ) {
@@ -480,7 +480,9 @@
 		if( isset($_POST["_store_sku"]) ) {
 			update_post_meta($post->ID, "_store_sku", $_POST["_store_sku"]);
 		}
-		update_post_meta($post->ID, "_store_enable_variant", $_POST["_store_enable_variant"]);
+		if( isset($_POST["_store_enable_variant"]) ) {
+			update_post_meta($post->ID, "_store_enable_variant", $_POST["_store_enable_variant"]);			
+		}
 
 		// Save address meta fields
 		$address_fields = store_get_address_fields();
@@ -489,13 +491,17 @@
 			if( isset($_POST["_store_address_" . $address_field]) ) {
 				update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
 			}
-			update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
+			if( isset($_POST["_store_address_" . $address_field]) ) {
+				update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);	
+			}
 
 		}
-		update_post_meta($post->ID, "_store_address_is_shipping", $_POST["_store_address_is_shipping"]);
-		update_post_meta($post->ID, "_store_address_is_billing", $_POST["_store_address_is_billing"]);
-
-
+		if( isset($_POST["_store_address_is_shipping"]) ) {
+			update_post_meta($post->ID, "_store_address_is_shipping", $_POST["_store_address_is_shipping"]);			
+		}
+		if( isset($_POST["_store_address_is_billing"]) ) {
+			update_post_meta($post->ID, "_store_address_is_billing", $_POST["_store_address_is_billing"]);			
+		}
 
 		if ( $_POST["_store_address_is_shipping"] ) {
 			$addresses = store_get_customer_addresses( $post->post_author );
