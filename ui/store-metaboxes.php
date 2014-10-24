@@ -6,20 +6,20 @@
  * Add custom metabox to the new/edit page
  */
  	function store_add_variations(){
-	 	global $post;
-	 	$variants = store_get_product_variants();
-	 	add_meta_box("store_price_meta", "Stock/Price", "store_price_meta", "product", "side", "default");
-	 	if ( $post->post_parent != 0 ) {
-		 	add_meta_box("store_enable_meta", "Enable Editing", "store_enable_meta", "product", "side", "high");
+ 		global $post;
+ 		$variants = store_get_product_variants();
+ 		add_meta_box("store_price_meta", "Stock/Price", "store_price_meta", "product", "side", "default");
+ 		if ( $post->post_parent != 0 ) {
+ 			add_meta_box("store_enable_meta", "Enable Editing", "store_enable_meta", "product", "side", "high");
 		} else {
-			if ( ! $post->_store_sku ) {
-			 	add_meta_box("store_options_meta", "Options/Variations", "store_options_meta", "product", "normal", "low");
+			if ( empty($post->_store_sku) ) {
+				add_meta_box("store_options_meta", "Options/Variations", "store_options_meta", "product", "normal", "low");
 			}
 		}
 	}
- 	add_action("add_meta_boxes", "store_add_variations");
+	add_action("add_meta_boxes", "store_add_variations");
 
- 	function store_options_meta(){
+	function store_options_meta(){
 		global $post;
 
 		wp_reset_query();
@@ -39,7 +39,7 @@
 			<div id="store-edit-options" class="<?php echo $variations ? 'hidden' : ''; ?>">
 
 			<strong>Add New Option</strong>
-		 	<?php for ( $i = 0; $i < 1; $i++ ) : ?>
+			<?php for ( $i = 0; $i < 1; $i++ ) : ?>
 
 				<div class="store-options-meta store-create-option">
 					<label for="option-<?php echo $i +1; ?>-key">Option <?php echo $i + 1; ?>:</label>
@@ -49,6 +49,8 @@
 				</div>
 
 			<?php endfor; ?>
+
+			</div>
 
 		<?php
 
@@ -212,8 +214,8 @@
  		global $post;
 
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "orders", "normal", "low");
-	 	add_meta_box("store_order_show_status", "Order Status", "store_order_show_status", "orders", "side", "low");
 	 	add_meta_box("store_cart_list_products", "Attached Products", "store_cart_list_products", "cart", "normal", "low");
+	 	add_meta_box("store_order_show_status", "Order Status", "store_order_show_status", "orders", "side", "low");
 	 	if ( store_get_order_shipping_address($post->ID) && store_get_order_billing_address($post->ID) ) {
 		 	add_meta_box("store_cart_list_addresses", "Addresses", "store_cart_list_addresses", "orders", "normal", "low");
 		}
@@ -262,8 +264,9 @@
 									<?php endif; ?>
 								</th>
 								<td class="post-title page-title column-title">
+									<?php $root_id = store_get_product_id($product); ?>
 									<strong>
-										<?php echo get_the_title($product->post_parent); ?>
+										<?php echo get_the_title($root_id); ?>
 									</strong>
 								</td>
 								<td><?php echo get_the_title($product->ID); ?></td>
@@ -373,6 +376,13 @@
 				</p>
 
 				<p>
+					<strong>Token:</strong>
+				</p>
+				<p style="margin-left: 20px;">
+					<span><?php echo $transaction_info['token']; ?></span>
+				</p>
+
+				<p>
 					<strong>Shipping Cost:</strong>
 				</p>
 				<p style="margin-left: 20px;">
@@ -462,7 +472,6 @@
  	function store_save_meta(){
 	 	global $post;
 
-
 	 	// check autosave
 	 	if( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
 		 	return $post->ID;
@@ -471,16 +480,18 @@
 		// Meta for variation data
 		$options = store_sort_options($_POST);
 		foreach( $options as $key => $value ) {
-			update_post_meta($post->ID, $key, $value);			
+			update_post_meta($post->ID, $key, $value);
 		}
 
 		if( isset($_POST["_store_price"]) ) {
-			update_post_meta($post->ID, "_store_price", (int)($_POST["_store_price"] * 100) );
+			update_post_meta($post->ID, "_store_price", intval(($_POST["_store_price"] * 100)) );
 		}
 		if( isset($_POST["_store_sku"]) ) {
 			update_post_meta($post->ID, "_store_sku", $_POST["_store_sku"]);
 		}
-		update_post_meta($post->ID, "_store_enable_variant", $_POST["_store_enable_variant"]);
+		if( isset($_POST["_store_enable_variant"]) ) {
+			update_post_meta($post->ID, "_store_enable_variant", $_POST["_store_enable_variant"]);			
+		}
 
 		// Save address meta fields
 		$address_fields = store_get_address_fields();
@@ -489,15 +500,19 @@
 			if( isset($_POST["_store_address_" . $address_field]) ) {
 				update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
 			}
-			update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);
+			if( isset($_POST["_store_address_" . $address_field]) ) {
+				update_post_meta($post->ID, "_store_address_" . $address_field, $_POST["_store_address_" . $address_field]);	
+			}
 
 		}
-		update_post_meta($post->ID, "_store_address_is_shipping", $_POST["_store_address_is_shipping"]);
-		update_post_meta($post->ID, "_store_address_is_billing", $_POST["_store_address_is_billing"]);
+		if( isset($_POST["_store_address_is_shipping"]) ) {
+			update_post_meta($post->ID, "_store_address_is_shipping", $_POST["_store_address_is_shipping"]);			
+		}
+		if( isset($_POST["_store_address_is_billing"]) ) {
+			update_post_meta($post->ID, "_store_address_is_billing", $_POST["_store_address_is_billing"]);			
+		}
 
-
-
-		if ( $_POST["_store_address_is_shipping"] ) {
+		if ( isset( $_POST["_store_address_is_shipping"] ) && $_POST["_store_address_is_shipping"] ) {
 			$addresses = store_get_customer_addresses( $post->post_author );
 			if ( $addresses ) {
 				foreach ( $addresses as $id => $address ) {
@@ -506,7 +521,7 @@
 				}
 			}
 		}
-		if ( $_POST["_store_address_is_billing"] ) {
+		if ( isset( $_POST["_store_address_is_billing"] ) && $_POST["_store_address_is_billing"] ) {
 			$addresses = store_get_customer_addresses( $post->post_author );
 			if ( $addresses ) {
 				foreach ( $addresses as $id => $address ) {

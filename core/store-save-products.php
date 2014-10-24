@@ -99,8 +99,8 @@
 	 	// Get post that's being saved
 	 	$post = get_post($post_id);
 
-	 	// If post has a parent, abort
- 		if ( $post->post_parent != 0 ) return;
+	 	// If post has a parent, or is not a product abort.
+ 		if ( $post->post_parent != 0 || $post->post_type !== 'product' ) return;
 
  		// Get any option keys
  		$options = store_sort_options($_POST);

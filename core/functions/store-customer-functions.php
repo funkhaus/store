@@ -37,36 +37,156 @@
  * @Param: STRING | password to use for customer, if none provided a 7-digit random password will be used. Optional.
  * @Return: MIXED | integer of user ID on success, false on failure
  */
-	function store_create_customer( $email, $password = null ) {
+	function store_create_customer( $userdata ) {
 
-		// No password? get a random one
+		// init output
+		$output = array();
+
+		// No email? fail.
 		$temp = false;
-		if ( ! $password ) {
-			$temp = true;
-			$password = store_get_random_password();
+		if ( empty($userdata['user_email']) || ! is_email($userdata['user_email']) ) {
+			$output['code'] = 'INVALID_EMAIL';
+			$output['message'] = 'Please provide a valid email address.';
+			return store_get_json_template( $output );
 		}
 
-		// Set user object
-		$userdata = array(
-			'user_pass'			=> $password,
-			'user_login'		=> $email,
-			'user_email'		=> $email,
-			'role'				=> 'store_customer'
-		);
+		// No password? generate a random one
+		if ( empty($userdata['user_pass'] ) ) {
+			$temp = true;
+			$userdata['user_pass'] = store_get_random_password();
+		}
+
+    	// Set username to next avaible user ID number
+    	global $wpdb;
+		$userdata['user_login'] = 'sc-' . $wpdb->get_row("SHOW TABLE STATUS WHERE name='wp_users'")->Auto_increment;
+		$userdata['role'] = 'store_customer';
 
 		// Set user ID by creating user
 		$user_id = wp_insert_user( $userdata );
 
-		// If user wasn't created, abort
-		if ( ! $user_id ) return false;
+	    // Did WP throw any errors?
+	    if( isset($user_id->errors) ) {
+	    	$wp_errors = $user_id->errors;				    
+	    }				    
+    	if( isset($wp_errors['empty_user_login']) ) {
+    		// No user login set
+    		$output['code'] = 'EMPTY_EMAIL';
+    		$output['message'] = 'No email address set.';
 
-		// If temp password was created, save it to meta
-		if ( $temp ) update_user_meta( $user_id, 'store_temp_pass', $password );
+    	}
+		if( isset($wp_errors['existing_user_login']) ) {
+			// The username already exsists
+			$output['code'] = 'EXISTING_USER';
+			$output['message'] = 'Username already used.';
 
-		// Email user what they're new password is?
+			// Send an email, this is a critcal error
+			wp_mail( 'john@funkhaus.us', 'Store Critical Bug', "Automated mail: Someone got a username invalid error when signing up. They shouldn't get this ever. Check store_create_customer().");
 
-		return $user_id;
+		}
+		if( isset($wp_errors['existing_user_email']) ) {
+			// The email is already in use.
+			$output['code'] = 'EXISTING_EMAIL';
+			$output['message'] = 'This email address is already in use.';
 
+		}
+
+		if ( ! is_wp_error($user_id) ) {
+
+			// turn off admin bar for user
+			update_user_meta( $user_id, 'show_admin_bar_front', 'false' );
+			update_user_meta( $user_id, 'show_admin_bar_admin', 'false' );
+
+			// set reporting
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			$output['message'] = 'User successfully created';
+			$output['vendor_response'] = $user_id;
+
+			// If temp password was created, save it to meta
+			if ( $temp ) update_user_meta( $user_id, 'store_temp_pass', $password );
+
+			// Email user what they're new password is?
+		}
+
+		return store_get_json_template( $output );
+	};
+
+
+/*
+ * @Description:
+ *
+ * @Param:
+ * @Return:
+ */
+	function store_get_customer_data( $field ){
+
+		// user not logged in? return empty string
+		if ( ! is_user_logged_in() ) return '';
+
+		$output = '';
+
+		if ( $field === 'first' ){
+
+			$current_user = wp_get_current_user();
+			$output = $current_user->user_firstname;
+
+		} elseif ( $field === 'last' ) {
+
+			$current_user = wp_get_current_user();
+			$output = $current_user->user_lastname;
+
+		} elseif ( $field === 'email' ) {
+
+			$current_user = wp_get_current_user();
+			$output = $current_user->user_email;
+
+		} elseif ( strstr($field, 'shipping') ) {
+			$shipping = store_get_customer_shipping_address();
+
+			switch ($field){
+				case 'shipping_line_1':
+					$output = $shipping['line_1'];
+					break;
+				case 'shipping_line_2':
+					$output = $shipping['line_2'];
+					break;
+				case 'shipping_city':
+					$output = $shipping['city'];
+					break;
+				case 'shipping_state':
+					$output = $shipping['state'];
+					break;
+				case 'shipping_zip':
+					$output = $shipping['zip'];
+					break;
+			}
+
+		} elseif ( strstr($field, 'billing') ) {
+			$billing = store_get_customer_billing_address();
+
+			switch ($field){
+				case 'billing_line_1':
+					$output = $billing['line_1'];
+					break;
+				case 'billing_line_2':
+					$output = $billing['line_2'];
+					break;
+				case 'billing_city':
+					$output = $billing['city'];
+					break;
+				case 'billing_state':
+					$output = $billing['state'];
+					break;
+				case 'billing_zip':
+					$output = $billing['zip'];
+					break;
+			}
+
+		}
+
+		// ensure that an empty string comes back
+		if ( empty($output) ) $output = '';
+		return $output;
 	};
 
 /*
@@ -145,7 +265,6 @@
 		}
 
 		return $address_id;
-
 	}
 
 	/*
@@ -166,7 +285,7 @@
 		 	$output = false;
 		    $args = array(
 				'posts_per_page'	=> 1,
-				'meta_key'			=> '_store_address_billing',
+				'meta_key'			=> '_store_address_is_billing',
 				'meta_value'		=> '1',
 				'post_type'			=> 'address',
 				'author'			=> $customer->ID
@@ -210,7 +329,7 @@
 		 	$output = false;
 		    $args = array(
 				'posts_per_page'	=> 1,
-				'meta_key'			=> '_store_address_shipping',
+				'meta_key'			=> '_store_address_is_shipping',
 				'meta_value'		=> '1',
 				'post_type'			=> 'address',
 				'author'			=> $customer->ID
@@ -224,6 +343,9 @@
 				$address = reset($result);
 			}
 
+			// return false if no address
+			if ( empty($address) ) return false;
+
 			// Loop through all address fields
 			foreach ( store_get_address_fields() as $field ) {
 
@@ -233,7 +355,6 @@
 			}
 
 			return $output;
-
 	 	}
 
 	/*
@@ -281,8 +402,54 @@
 			}
 
 			return $output;
-
 	 	}
+
+
+	/*
+	 * @Description: 
+	 *
+	 * @Param: 
+	 * @Returns: 
+	 */
+	 	function store_login( $data ){
+
+		 	if ( isset( $data['user_email'] ) ) {
+
+			 	// get username by email address
+			 	$user = get_user_by( 'email', $data['user_email'] );
+
+			 	// if user was found
+			 	if ( $user ) {
+
+			 		// set user login to be found login
+			 		$data['user_login'] = $user->data->user_login;
+				}
+
+				// remove email from data
+				unset($data['user_email']);
+		 	}
+
+		 	return wp_signon( $data, true );
+	 	};
+
+	/*
+	 * @Description: 
+	 *
+	 * @Param: 
+	 * @Returns: 
+	 */
+	 	function store_get_guest(){
+
+			// split home url
+			$url_split = parse_url( home_url() );
+
+			// set guest email
+			$guest_email = 'guest@' . $url_split['host'];
+
+			// check if user with that email exists
+			return get_user_by( 'email', $guest_email );
+	 	}
+
 
 	/*
 	 * @Description: Get user object of a given cutomer by ID, email, or currently logged in
@@ -305,7 +472,6 @@
 
 			// Get specified customer
 			return get_user_by( $field, intval($customer) );
-
 	 	}
 
 ?>

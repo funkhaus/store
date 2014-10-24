@@ -9,7 +9,7 @@
 		function store_activation() {
 
 			// Set template for query
-		    $args = array(
+			$args = array(
 				'posts_per_page'	=> 1,
 				'post_type'			=> 'store'
 			);
@@ -23,7 +23,7 @@
 			);  
 
 			// Create necessary store pages
-			foreach ( array( 'checkout', 'cart', 'api' ) as $store_page ) {
+			foreach ( array( 'checkout', 'cart', 'sign in', 'sign up', 'my account', 'thank you' ) as $store_page ) {
 
 				// If page does not exist, create it
 				$args['name'] = $store_page;
@@ -70,7 +70,40 @@
 			// Flush permalinks
 		    flush_rewrite_rules();
 
+			// Create initial guest user
+			store_create_guest_user();
+
 		}
-		register_activation_hook( trailingslashit( pp() ) . 'store.php', 'store_activation' );
+		register_activation_hook( pp() . 'store.php', 'store_activation' );
+
+
+		// Initially create the guest user for this install
+		function store_create_guest_user(){
+
+			// split home url
+			$url_split = parse_url( home_url() );
+
+			// set guest email
+			$guest_email = 'guest@' . $url_split['host'];
+
+			// check if user with that email exists
+			$existing_user = get_user_by( 'email', $guest_email );
+
+			// if no existing guest user...
+			if ( ! $existing_user ) {
+
+			    // Create store guest user here
+				$userdata = array(
+					'user_login'	=> $guest_email,
+					'user_email'	=> $guest_email,
+					'user_nicename'	=> 'Store Guest',
+					'role'			=> 'store_customer',
+					'description'	=> 'all guest purchases for the store will be made by this user',
+					'user_pass'		=> store_get_random_password(10)
+				);
+				wp_insert_user( $userdata );
+
+			}
+		}
 
 ?>

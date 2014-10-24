@@ -21,6 +21,7 @@
 		} else {
 			// If not logged in, check cookie for saved ID
 			if( isset($_COOKIE['_store_active_cart_id']) ) {
+
 				$active_cart_id = $_COOKIE['_store_active_cart_id'];
 			}
 
@@ -56,13 +57,15 @@
 
 		// If no user ID set, try to figure one out
 		if( empty($user_id) || !is_int($user_id) ) {
+
 			// Get logged in user ID
 			if ( is_user_logged_in() ) {
 				$user_id = get_current_user_id();
 
 			} else {
 				// Attribute to guest user
-				$user_id = 2; // Guest user made by Drew. Should get from settings in future.
+				$guest = store_get_guest();
+				$user_id = $guest->ID; // Guest user made by Drew. Should get from settings in future.
 
 			}
 		}
@@ -115,29 +118,34 @@
 			return false;
 		}
 
-	 	if ( is_user_logged_in() ) {
+		if ( is_user_logged_in() ) {
+
 			// If no user ID, use logged in user
 			if( empty($user_id) ) {
 				$user_id = get_current_user_id();
 
 			} else {
+
 				// Verify user exsits
 				$user = get_userdata($user_id);
 				if(!$user) {
 					// No user exists, abort
 					return false;
 				}
+
 			}
 
-			// Save cart id to user
+			// Save cart id to user, set cookie too
+			setcookie('_store_active_cart_id', $cart_id, time()+3600*24*30, '/', store_get_cookie_url(), false);  /* expire in 30 days */
 			return update_user_meta( $user_id, '_store_active_cart_id', $cart_id);
 
-	 	} else {
-		 	// Not logged in, save to cookie
+		} else {
+
+			// Not logged in, save to cookie
 			return setcookie('_store_active_cart_id', $cart_id, time()+3600*24*30, '/', store_get_cookie_url(), false);  /* expire in 30 days */
 
-	 	}
- 	}
+		}
+	}
 
 /*
  * @Description: Reset currently active cart for a given user
@@ -195,7 +203,7 @@
 		if( ! store_is_product_available($product_id) ) {
 			$output = store_get_json_template(array(
 				'code' => 'NOT_AVAILABLE',
-				'message' => 'This product is not available to add to the cart.'
+				'message' => 'This product is not available, please choose a different option.'
 			));
 			return $output;
 		}
@@ -226,8 +234,11 @@
 
 		}
 
-		// Save meta array, return result
+		// Save meta array, add output to var
 		$result = update_post_meta($cart_id, '_store_cart_products', $products);
+
+		// run this so date_modified gets updated
+		wp_update_post( array('ID' => $cart_id ));
 
 		// if meta was added, log success
 		if ( $result ) {
@@ -279,6 +290,7 @@
 		}
 
 		// Update cart, return
+		wp_update_post( array('ID' => $cart->ID ));
 		return update_post_meta($cart->ID, '_store_cart_products', $products);
 	};
 
@@ -385,6 +397,17 @@
 	 	}
 
 	 	return $total;
+ 	}
+
+/*
+ * @Description: 
+ *
+ * @Param: 
+ * @Returns: 
+ */
+ 	function store_get_cart_tax(){
+
+ 		return '0.00';
  	}
 
 

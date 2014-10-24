@@ -10,30 +10,33 @@
  */
 	function store_get_quantity( $product = false ){
 
+		// init out
+		$output = 0;
+
 		// Get product object
 		$product = store_get_product( $product );
 
 		// If this is a variation, return qty
-		if ( ! store_has_variants($product) ) return $product->_store_qty;
+		if ( ! store_has_variants($product) ) {
+			$output = intval($product->_store_qty);
 
-		// query variants
-		$variations = store_get_product_variants($product);
+		} else {
 
-		$quantity = false;
-		if ( $variations ) {
+			// query variants
+			$variations = store_get_product_variants($product);
 
-			$quantity = 0;
+			if ( $variations ) {
 
-			// Loop through children and add qtys
-			foreach ( $variations as $variation ) {
+				// Loop through children and add qtys
+				foreach ( $variations as $variation ) {
 
-				$quantity += intval( $variation->_store_qty );
+					$output += intval( $variation->_store_qty );
 
+				}
 			}
-
 		}
 
-		return $quantity;
+		return $output;
 	}
 
 
@@ -238,41 +241,41 @@
  */
  	function store_get_variant_id( $options = null, $product = null ){
 
-	 	// Get full product object
-	 	$product = store_get_product($product);
+ 		// Get full product object
+ 		$product = store_get_product($product);
 
-	 	// enforce requirements
-	 	if ( ! is_array($options) || ! $product ) return false;
+ 		// enforce requirements
+ 		if ( ! is_array($options) || ! $product ) return false;
 
-	 	// Set meta query
-	 	$meta_query = array('relation' => 'AND');
-	 	foreach ( $options as $key => $val ) {
-		 	$meta_query[] = array(
-		 		'key'		=>	'_store_meta_' . $key,
-		 		'value'		=> $val,
-		 		'compare'	=> '='
-		 	);
+ 		// Set meta query
+ 		$meta_query = array('relation' => 'AND');
+ 		foreach ( $options as $key => $val ) {
+ 			$meta_query[] = array(
+ 				'key'		=>	'_store_meta_' . $key,
+ 				'value'		=> $val,
+ 				'compare'	=> '='
+ 			);
 		}
 
-	 	// set args
- 	    $args = array(
- 			'posts_per_page'	=> 1,
- 			'meta_query'		=> $meta_query,
- 			'post_type'			=> 'product',
- 			'post_parent'		=> $product->ID,
- 			'fields'			=> 'ids'
- 		);
+		// set args
+		$args = array(
+			'posts_per_page'	=> 1,
+			'meta_query'		=> $meta_query,
+			'post_type'			=> 'product',
+			'post_parent'		=> $product->ID,
+			'fields'			=> 'ids'
+		);
 
- 		// query for variant
- 		$results = get_posts($args);
+		// query for variant
+		$results = get_posts($args);
 
- 		// if nothing came back, return false
- 		if ( empty($results) )
- 			return false;
+		// if nothing came back, return false
+		if ( empty($results) )
+			return false;
 
- 		// return first (and only) result
- 		return reset($results);
- 	}
+		// return first (and only) result
+		return reset($results);
+	}
 
 
 /*
@@ -343,7 +346,7 @@
 		$product = store_get_product( $product );
 
 		// Get terms for this product
-		$terms = wp_get_post_terms( $product->ID, 'store_category', $args );
+		$terms = wp_get_post_terms( $product->ID, 'store_category' );
 
 		// Set output
 		$output = false;
@@ -484,6 +487,24 @@
 	            echo $price;
 	        else
 		        return $price;
+		}
+	}
+
+
+/*
+ * @Description:
+ *
+ * @Param:
+ * @Returns:
+ */
+ 	if ( ! function_exists('get_the_price') ) {
+ 		function get_the_price($product = '') {
+ 			$product = store_get_product( $product );
+
+ 			$price = store_get_product_price($product);
+ 			$price = number_format(($price / 100), 2, '.', ',');
+
+			return $price;
 		}
 	}
 

@@ -5,45 +5,21 @@
 	// Get functions
 	include_once( pp() . 'core/functions/store-core-functions.php' );
 
-
 	// Testing function to run things. Delete Me eventually.
-	function jrr_run_thing(){
-
-		global $post;
+	function store_test_things(){
 
 		$address = array(
-			'line_1'		=> '1923 Noship Ave',
-			'line_2'		=> '',
-			'city'			=> 'Los angeles',
-			'state'			=> 'Ca',
-			'zip'			=> '11102'
+			'line_1'	=> '1855 Industrial St.',
+			'line_2'	=> 'Suite 103',
+			'city'		=> 'Los Angeles',
+			'state'		=> 'ca',
+			'zip'		=> '90021',
+			'country'	=> 'us'
 		);
 
-		// Set args defaults
-		$args = array(
-			'options'	=> true,
-			'title'		=> true,
-			'price'		=> true,
-			'content'	=> true,
-			'excerpt'	=> true,
-			'images'	=> 'all',
-			'sku'		=> true,
-			'slug'		=> true
-		);
-
-		//var_dump(store_list_countries()); exit;
-		//var_dump(store_run_hourly()); exit;
-		//var_dump( store_shipwire_request_cart_shipping($address) ); exit;
-		//print_r( store_get_product_matrix($args, 9, 'array') ); exit;
-		//var_dump( store_add_order_history(83, 'Billing address added successfully') ); exit;
-		//var_dump( store_stripe_run_charge('TOKEN') ); exit;
-		//var_dump( store_update_shipwire_inventory() ); exit;
-
+		//store_save_customer_address($address, null, true, true);
 	}
-	add_action('init', 'jrr_run_thing', 60);
-
-
-
+	add_action('init', 'store_test_things', 60);
 
 	// Setup product post types
 	include_once( pp() . 'core/setup/store-post-types.php' );

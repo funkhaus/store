@@ -51,12 +51,11 @@
 		if( isset($_REQUEST['quantity']) ) {
 			$quantity = (int) $_REQUEST['quantity'];
 		}
-		if( isset($_REQUEST['cart_id']) ) {
-			$cart_id = (int) $_REQUEST['cart_id'];
-		}
 		if( isset($_REQUEST['options']) ) {
 			$options = (array) $_REQUEST['options'];
 		}
+
+		$cart_id = store_get_cart();
 
 		// Find variant based on options and parent
 		if ( $options ) {
@@ -87,9 +86,6 @@
 		if( isset($_REQUEST['product_id']) ) {
 			$product_id = (int) $_REQUEST['product_id'];
 		}
-		if( isset($_REQUEST['cart_id']) ) {
-			$cart_id = (int) $_REQUEST['cart_id'];
-		}
 		if( isset($_REQUEST['quantity']) ) {
 			$quantity = (int) $_REQUEST['quantity'];
 		} else {
@@ -97,7 +93,7 @@
 		}
 
 		// Pass into PHP function, echo results and die.
-		$removed = store_remove_product_from_cart($product_id, $cart_id, $quantity);
+		$removed = store_remove_product_from_cart($product_id, null, $quantity);
 
 		// Set api logging
 		$output = array();
@@ -150,7 +146,10 @@
 	function store_ajax_get_mini_cart() {
 
 		// if theme author has defined a cart, return it
-		if( locate_template('store-mini-cart.php') ) {
+		if( locate_template('store/store-mini-cart.php') ) {
+			get_template_part('store/store-mini-cart');
+
+		} elseif( locate_template('store-mini-cart.php') ) {
 			get_template_part('store-mini-cart');
 
 		// Otherwise return json data
@@ -192,6 +191,157 @@
 			echo json_encode( $output );
 		}
 
+		die;
+	}
+
+
+/*
+ * @Description: Run the build cart function as defined by theme author. 
+ *
+ * @Returns: MIXED, either result of defined function, or JSON object
+ * @Todo: make a default json response
+ */
+	add_action( 'wp_ajax_nopriv_get_template', 'store_ajax_template_part' );
+	add_action( 'wp_ajax_get_template', 'store_ajax_template_part' );
+	function store_ajax_template_part() {
+
+		$template = $_REQUEST['template'];
+
+		// if theme author has defined a cart, return it
+		if( locate_template('store/' . $template . '.php') ) {
+			get_template_part('store/' . $template);
+
+		} elseif( locate_template($template . '.php') ) {
+			get_template_part($template);
+
+		// Otherwise return json data
+		} else {
+
+			// Set output
+			$output = array();
+
+			$output['code'] = 'NO_TEMPLATE';
+			$output['message'] = 'No matching template found, please re-check your theme folder.';
+
+			// Set header and output JSON
+			header('Content-Type: application/json');
+			echo json_encode( $output );
+		}
+
+		die;
+	}
+
+
+/*
+ * @Description: 
+ *
+ * @Returns: 
+ * @Todo: 
+ */
+	add_action( 'wp_ajax_nopriv_sign_user_on', 'store_ajax_sign_on' );
+	add_action( 'wp_ajax_sign_user_on', 'store_ajax_sign_on' );
+	function store_ajax_sign_on() {
+
+		// First check the nonce, if it fails the function will break
+		check_ajax_referer( 'ajax-login-nonce', 'security' );
+
+		// Nonce is checked, get the POST data and sign user on
+		$info = array();
+		$info['user_email'] = $_REQUEST['email'];
+		$info['user_password'] = $_REQUEST['password'];
+		$info['remember'] = isset($_REQUEST['remember']) ? $_REQUEST['remember']: false;
+
+		$output = array();
+		$user_signon = store_login( $info );
+		if ( ! is_wp_error($user_signon) ){
+
+			// Set api logging
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			$output['message'] = 'Login Successful';
+
+		} else {
+			$output['message'] = 'Wrong username or password';
+
+		}
+
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode(store_get_json_template($output));
+		die;
+	}
+
+
+/*
+ * @Description: 
+ *
+ * @Returns: 
+ * @Todo: 
+ */
+	add_action( 'wp_ajax_nopriv_create_customer', 'store_ajax_create_customer' );
+	add_action( 'wp_ajax_create_customer', 'store_ajax_create_customer' );
+	function store_ajax_create_customer() {
+
+		// First check the nonce, if it fails the function will break
+		$referrer = check_ajax_referer( 'signup_nonce', 'nonce_code', false );
+
+		// If nonce is cleared...
+		if ( $referrer ){
+
+			// forward all request data into create_customer
+			$userData = $_REQUEST;
+
+			// remove nonce code and action
+			unset($userData['nonce_code']);
+			unset($userData['action']);
+
+			// Create the user
+			$output = store_create_customer($userData);
+
+		} else {
+
+			// nonce failed, report
+			$output['message'] = 'Customer not created, failed to validate nonce.';
+			$output['code'] = 'FAILED_NONCE';
+
+		}
+
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode(store_get_json_template($output));
+		die;
+	}
+
+
+/*
+ * @Description: 
+ *
+ * @Returns: 
+ */
+	add_action( 'wp_ajax_customer_address', 'store_ajax_save_customer_address' );
+	function store_ajax_save_customer_address(){
+
+		// init output
+		$output;
+
+		// set vars
+		$address = $_REQUEST['address'];
+		$shipping = (bool) $_REQUEST['shipping'];
+		$billing = (bool) $_REQUEST['billing'];
+
+		$result = store_save_customer_address( $address, null, $shipping, $billing );
+
+		if ( $result ) {
+			$output['success'] = true;
+			$output['code'] = 'OK';
+			$output['message'] = 'Address successfully added.';
+		} else {
+			$output['message'] = 'Failed to save address.';
+		}
+
+		// Set proper header, output
+		header('Content-Type: application/json');
+		echo json_encode(store_get_json_template($output));
 		die;
 	}
 

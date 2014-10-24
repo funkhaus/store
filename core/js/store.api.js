@@ -97,7 +97,7 @@ var storeAPI = {
 /*
  * @Description: Return contents of a cart as defined by the theme developer
  *
- * @Returns: OBJ, the jQuery XMLHTTPRequest object from $.post()
+ * @Returns: Nothing, use callback
  */
 	updateMiniCart: function(callback){
 
@@ -121,6 +121,93 @@ var storeAPI = {
 	},
 
 /*
+ * @Description: Return contents of a custom template
+ *
+ * @Returns:
+ */
+	updateTemplate: function(templateName, callback){
+
+		// The PHP AJAX action hook to call
+    	data = {
+	    	'action' 	: 'get_template',
+	    	'template'	: templateName
+    	};
+
+		// Submit to PHP
+		jQuery.post( this.ajaxURL, data, function(response){
+
+			// if function was passed in, use as callback
+			if ( typeof callback === 'function' ) callback(response);
+
+			// If string was passed in, try and match it to a DOM element and replace it with the new cart
+			if ( typeof callback === 'string' ) jQuery(callback).replaceWith(jQuery(response));
+
+		});
+
+		return;
+	},
+
+/*
+ * @Description: Log a user in via AJAX
+ * @Param: object with login information
+ *
+ * @Returns: 
+ */
+	login: function(data, callback){
+
+/*
+		{
+			'email': 'YourEmail',
+			'password': 'YourPassword',
+			'security': 'ValueOfSecurityInput'
+		}
+*/
+
+		// The PHP AJAX action hook to call
+    	data.action = 'sign_user_on';
+
+		// Submit to PHP
+		jQuery.post( this.ajaxURL, data, function(response){
+
+			// if function was passed in, use as callback
+			if ( typeof callback === 'function' ) callback(response);
+
+		});
+
+		return;
+	},
+
+/*
+ * @Description:
+ * @Param:
+ *
+ * @Returns: 
+ */
+	createCustomer: function(data, callback){
+
+/*
+		{
+			'email': 'YourEmail',
+			'password': 'YourPassword',
+			'nonce_code': 'ValueOfNonceInput'
+		}
+*/
+
+		// The PHP AJAX action hook to call
+    	data.action = 'create_customer';
+
+		// Submit to PHP
+		jQuery.post( this.ajaxURL, data, function(response){
+
+			// if function was passed in, use as callback
+			if ( typeof callback === 'function' ) callback(response);
+
+		});
+
+		return;
+	},
+
+/*
  * @Description: generate a token using stripe.js, this is a just a wrapper for consistency
  *
  * @Param: MIXED, can be a jquery element of the whole <form> or an object of input values (i.e. { number: $('.card-number').val(), cvc: $('.card-cvc').val() } )
@@ -129,35 +216,35 @@ var storeAPI = {
  */
  	encryptCard: function( cardData, callback ){
 
-	 	// Asynchronous stripe call
-	 	Stripe.card.createToken( cardData, function(status, response){
+		// Asynchronous stripe call
+		Stripe.card.createToken( cardData, function(status, response){
+		
+			// run callback if provided
+			if ( typeof callback === 'function' ) {
+				var json = {};
+				var token = false;
+		
+				// set standardized response message
+				json.success = false;
+				if ( status === 200 ) {
+					json.success = true;
+					json.code = 'OK';
+					json.message = 'Card successfuly tokenized.';
+					token = response.id;
+				} else {
+					json.code = response.error.code;
+					json.message = response.error.message;
+				}
 
-	 		// run callback if provided
-		 	if ( typeof callback === 'function' ) {
-			 	var json = {};
-			 	var token = false;
+				json.vendor_response = response;
+				json.vendor_response.vendor = 'stripe';
 
-			 	// set standardized response message
-			 	json.success = false;
-			 	if ( status === 200 ) {
-			 		json.success = true;
-			 		json.code = 'OK';
-			 		json.message = 'Card successfuly tokenized.';
-			 		token = response.id;
-			 	} else {
-				 	json.code = response.error.code;
-				 	json.message = response.error.message;
-			 	}
+				if ( typeof callback === 'function' ) callback(json, token);
+			}
+		});
 
-			 	json.vendor_response = response;
-			 	json.vendor_response.vendor = 'stripe';
-
-			 	callback(json, token);
-		 	}
-	 	});
-
-	 	return;
- 	},
+		return;
+	},
 
 /*
  * @Description: submit a payment to the store ajax api (server side)
@@ -252,37 +339,73 @@ var storeAPI = {
  */
  	submitOrder: function( args, callback ){
 
-	 	// validate shipping and billing addresses
-	 	args.shipping_address = this.parseAddress(args.shipping_address) || false;
-	 	args.billing_address = this.parseAddress(args.billing_address) || args.shipping_address;
+		// validate shipping and billing addresses
+		args.shipping_address = this.parseAddress(args.shipping_address) || false;
+		args.billing_address = this.parseAddress(args.billing_address) || args.shipping_address;
 
-	 	// get token from stripe.js
-		this.encryptCard(args.credit_card, function(response, token){
+		// set proper action value
+		args.action = 'submit_order';
 
-			// if card encryption failed, callback with failure message
-			if ( ! response.success ) {
-				if ( typeof callback === 'function' ) callback(response);
-				return;
-			}
+		// if cc is set
+		if ( typeof args.credit_card !== 'undefined' ) {
 
-			// remove card info from args
-			delete args.credit_card;
+			// get token from stripe.js
+			this.encryptCard(args.credit_card, function(response, token){
 
-			// Set stripe token
-			args.stripe_token = token;
+				// if card encryption failed, callback with failure message
+				if ( ! response.success ) {
+					if ( typeof callback === 'function' ) callback(response);
+					return;
+				}
 
-		 	// add proper action to args
-		 	args.action = 'submit_order';
+				// remove card info from args
+				delete args.credit_card;
+
+				// Set stripe token
+				args.stripe_token = token;
+
+				// Submit to PHP
+				jQuery.post( storeAPI.ajaxURL, args, function(results) {
+					if ( typeof callback === 'function' ) callback(results);
+				});
+
+			});
+
+		// if stripe token is set...
+		} else if( typeof args.stripe_token !== 'undefined' ) {
 
 			// Submit to PHP
 			jQuery.post( storeAPI.ajaxURL, args, function(results) {
 				if ( typeof callback === 'function' ) callback(results);
 			});
 
-		});
+		}
 
 		return;
- 	}, 	
+	},
+
+
+/*
+ * @Description: 
+ *
+ * @Param: 
+ * @Param: 
+ * @Returns: 
+ */
+ 	saveAddress: function( address, shipping, billing, callback ){
+
+		// set data
+		var data = {
+			'action'	:	'customer_address',
+			'address'	:	this.parseAddress(address),
+			'shipping'	:	Boolean(shipping),
+			'billing'	:	Boolean(billing)
+		};
+
+		jQuery.post( this.ajaxURL, data, function(results) {
+			if ( typeof callback === 'function' ) callback(results);
+		});
+	},
 
 
 /*
@@ -302,12 +425,10 @@ var storeAPI = {
 	 	address = this.parseAddress(address);
 
 	 	// set data
-	 	data = {
+	 	var data = {
 		 	'action'	:	'shipwire_quote',
 		 	'address'	:	address
 		};
-
-		console.log(address);
 
 		// Submit to PHP
 		jQuery.post( this.ajaxURL, data, function(results) {

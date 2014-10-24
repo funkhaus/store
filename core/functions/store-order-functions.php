@@ -401,9 +401,9 @@
  *		shipping_address: ARRAY, valid address array to use for shipping. Required.
  *		stripe_token: STRING, a valid charge token from stripe.js to charge card with. Required.
  *		billing_address: ARRAY, valid address array to use for billing, will default to shipping address. Optional.
- *		
  *
- * @Return:
+ *
+ * @Return: 
  */
  	function store_submit_order( $args ) {
 
@@ -515,6 +515,7 @@
 			$output['message'] = $charge['error']['message'];
 			$output['vendor_response'] = $charged;
 			$output['vendor_response']['vendor'] = 'stripe';
+
 			return store_get_json_template($output);
 		}
 		$output['vendor_response']['stripe'] = $charged;
@@ -532,6 +533,7 @@
 			$output['message'] = 'The order has been charged, but not shipped.';
 			$output['vendor_response'] = (array) $ship_request;
 			$output['vendor_response']['vendor'] = 'shipwire';
+
 			return store_get_json_template($output);
 		}
 
@@ -541,6 +543,7 @@
 		$transaction = array();
 		$transaction['stripe_id'] = $charged['id'];
 		$transaction['shipwire_id'] = (string) $ship_request['resource']['items'][0]['resource']['id'];
+		$transaction['token'] = store_get_random_password(24);
 
 		// save receipt to order
 		update_post_meta($order_id, '_store_transaction_info', $transaction);

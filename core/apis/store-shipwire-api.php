@@ -61,8 +61,8 @@
 		// return decoded response
 		return $output;
 	}
-	
-	
+
+
 /*
  * @Description: Send a full inventory request to shipwire
  *
@@ -151,6 +151,7 @@
 				}
 
 			}
+
 		}
 
 		return $output;
@@ -339,7 +340,7 @@
 			),
 			'shipTo'			=> array(
 				'email'				=> $email,
-				'name'				=> '', // name stuff here
+				'name'				=> $ship_address['first'] . ' ' . $ship_address['last'],
 				'address1'			=> $ship_address['line_1'],
 				'address2'			=> $ship_address['line_2'],
 				'city'				=> $ship_address['city'],

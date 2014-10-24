@@ -4,7 +4,7 @@
 
 	// filter main archive
 	function store_filter_main_archive($query) {
-		if ( $query->is_main_query() && $query->is_post_type_archive('store') ) {
+		if ( $query->is_main_query() && $query->is_post_type_archive('store') && ! is_admin() ) {
 			$query->set('post_type', 'product');
 			$query->set('post_parent', 0);
 		}
@@ -25,7 +25,7 @@
 		} elseif ( is_single() && get_post_type() === 'store' ) {
 			$new_template = locate_template( array( 'store/store-page-' . $post->post_name . '.php' ) );
 			if ( '' != $new_template ) {
-				return $new_template ;
+				return $new_template;
 			}
 
 		} elseif ( is_single() && get_post_type() === 'product' ) {
@@ -35,11 +35,82 @@
 				return $new_template ;
 			}
 
+		} elseif ( is_single() && get_post_type() === 'orders' ) {
+			$new_template = locate_template( array( 'store/store-order-' . $post->ID . '.php' ) );
+			if ( ! $new_template ) $new_template = locate_template( array( 'store/store-order.php' ) );
+			if ( '' != $new_template ) {
+				return $new_template ;
+			}
+
 		}
 
 		return $template;
 	}
 	add_filter( 'template_include', 'store_set_template_redirects', 99 );
+
+
+	// if user is not authorized to view order, redirect them
+	function store_protect_orders(){
+		global $post;
+
+		// only for orders pages
+		if ( $post->post_type === 'orders' ) {
+			$transaction_info = get_post_meta($post->ID, '_store_transaction_info', true);
+
+			if( $post->post_author == get_current_user_id() ) return;
+			if ( $_REQUEST['token'] === $transaction_info['token'] ) return;
+
+			wp_redirect( home_url('/store/') );
+			exit();
+
+		}
+	}
+	add_action( 'template_redirect', 'store_protect_orders' );
+
+
+	// transfer newest cart to
+	function store_transfer_cart($user_login, $user) {
+
+		if( isset($_COOKIE['_store_active_cart_id']) ) {
+
+			// check for cookie cart and user cart
+			$cookie_cart = $_COOKIE['_store_active_cart_id'];
+			$user_cart = get_user_meta( $user->ID, '_store_active_cart_id', true );
+
+			// Does user have both types of cart?
+			if ( ! $cookie_cart ) return;
+
+			// User has cart
+			if ( $user_cart ) {
+
+				$cookie_cart = get_post($cookie_cart);
+				$user_cart = get_post($user_cart);
+
+				// check if cookie cart is newer...
+				if ( strtotime( $cookie_cart->post_modified_gmt ) > strtotime( $user_cart->post_modified_gmt ) ) {
+
+					// if so, overwrite user cart
+					update_user_meta( $user->ID, '_store_active_cart_id', $cookie_cart->ID);
+
+				// User cart is newer...
+				} else {
+
+					//overwrite cookie cart
+					setcookie('_store_active_cart_id', $user_cart->ID, time()+3600*24*30, '/', store_get_cookie_url(), false);  /* expire in 30 days */
+
+				}
+
+			// User does not have cart
+			} else {
+
+				// Set cookie as user cart
+				update_user_meta( $user->ID, '_store_active_cart_id', $cookie_cart);
+
+			}
+		}
+
+	}
+	add_action('wp_login', 'store_transfer_cart', 10, 2);
 
 
 	// Set store-specific body classes
