@@ -73,6 +73,17 @@
 		echo json_encode(store_get_json_template($output));
 		die;
 	}
+	
+/*
+ * @Description: Test AJAX function
+ */	
+	add_action( 'wp_ajax_nopriv_test_ajax_call', 'store_test_ajax_call' );
+	add_action( 'wp_ajax_test_ajax_call', 'store_test_ajax_call' );
+	function store_test_ajax_call() {
+		
+		
+		die;
+	}	
 
 
 /*

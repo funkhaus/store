@@ -2,10 +2,29 @@
 
 	if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-	// check if hook is scheduled, if not schedule it
+	// Add ten minute interval into CRON schedule
+	function store_add_tenmin( $schedules ) {
+
+		$schedules['everyten'] = array(
+			'interval' 	=> 600,
+			'display' 	=> __('Every Ten Minutes')
+		);
+		return $schedules;
+
+	}
+	add_filter( 'cron_schedules', 'store_add_tenmin' );
+
+
+	// check if hooks are scheduled, if not schedule them
 	function store_set_schedule() {
+		
+		//wp_clear_scheduled_hook( 'store_ten_cron');
+		
 		if ( ! wp_next_scheduled( 'store_hourly_cron' ) ) {
 			wp_schedule_event( time(), 'hourly', 'store_hourly_cron');
+		}
+		if ( ! wp_next_scheduled( 'store_ten_cron' ) ) {
+			wp_schedule_event( time(), 'everyten', 'store_ten_cron');
 		}
 	}
 	add_action( 'wp', 'store_set_schedule' );
@@ -61,3 +80,14 @@
 
 	}
 	add_action( 'store_hourly_cron', 'store_run_hourly' );
+
+
+	// Runs every ten minutes
+	function store_run_every_ten() {
+
+		// full inventory update
+		$report = store_update_shipwire_inventory();
+
+	}
+	add_action( 'store_ten_cron', 'store_run_every_ten' );
+

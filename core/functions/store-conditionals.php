@@ -78,7 +78,22 @@
 
 		) { $output = true; }
 
+		if ( is_search() ) $output = false;
+
 		return $output;
+	}
+
+
+/*
+ * @Description: Used to check if a given page is the store front page
+ *
+ * @Param: MIXED, ID or post object
+ * @Returns: BOOL, true if is front page, otherwise false
+ */
+	function store_is_front_page( $post = null ){
+		$post = get_post($post);
+
+		return (is_post_type_archive( 'product' ) && store_is_within_store());
 	}
 
 

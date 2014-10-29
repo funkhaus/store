@@ -50,8 +50,6 @@
 
 			<?php endfor; ?>
 
-			</div>
-
 		<?php
 
 		// Build already saved options meta

@@ -9,7 +9,7 @@
  * @Returns: MIXED, integer value of quantity on success, bool false on failure. Will return false if active cart no longer exists (been deleted or expired)
  */
 	function store_get_active_cart_id(){
-
+		
 		// Declare vars
 		$active_cart_id;
 
@@ -20,9 +20,9 @@
 
 		} else {
 			// If not logged in, check cookie for saved ID
-			if( isset($_COOKIE['_store_active_cart_id']) ) {
+			if( isset($_COOKIE['store_active_cart_id']) ) {
 
-				$active_cart_id = $_COOKIE['_store_active_cart_id'];
+				$active_cart_id = $_COOKIE['store_active_cart_id'];
 			}
 
 		}
@@ -108,7 +108,7 @@
  *
  * @Param: INT, user ID to save to, if not set uses current logged in user. 
  * @Param: INT, cart post ID to set as active. Required.
- * @Returns: MIXED, returns update_user_meta() value if logged in, else setcookie() value
+ * @Returns: Returns setcookie() value (true if set, false if not)
  */
 
  	function store_set_active_cart_id($user_id = null, $cart_id = null) {
@@ -136,16 +136,16 @@
 			}
 
 			// Save cart id to user, set cookie too
-			setcookie('_store_active_cart_id', $cart_id, time()+3600*24*30, '/', store_get_cookie_url(), false);  /* expire in 30 days */
-			return update_user_meta( $user_id, '_store_active_cart_id', $cart_id);
+			update_user_meta( $user_id, '_store_active_cart_id', $cart_id);			
+			return setcookie('store_active_cart_id', $cart_id, time()+3600*24*30, '/', store_get_cookie_url(), false, false);  /* expire in 30 days */
 
 		} else {
 
 			// Not logged in, save to cookie
-			return setcookie('_store_active_cart_id', $cart_id, time()+3600*24*30, '/', store_get_cookie_url(), false);  /* expire in 30 days */
+			return setcookie('store_active_cart_id', $cart_id, time()+3600*24*30, '/', store_get_cookie_url(), false, false);  /* expire in 30 days */
 
 		}
-	}
+	}	
 
 /*
  * @Description: Reset currently active cart for a given user
@@ -163,9 +163,13 @@
 
 		 	// No customer? abort.
 		 	if ( ! $customer ) return false;
+		 	
+		 	if (isset($_COOKIE['store_active_cart_id'])) {
+	            unset($_COOKIE['store_active_cart_id']);			 	
 
-		 	// Remove cookie just in case
-			setcookie('_store_active_cart_id', '', time()-3600, '/', store_get_cookie_url(), false);
+			 	// Remove cookie just in case
+				setcookie('store_active_cart_id', '', time()-3600, '/', store_get_cookie_url(), false, false);	            
+			}
 
 			// Save cart id to user
 			return update_user_meta( $customer->ID, '_store_active_cart_id', '');
@@ -174,8 +178,12 @@
 	 	} else {
 
 		 	// Set empty cookie that expires yesterday
-			return setcookie('_store_active_cart_id', '', time()-3600, '/', store_get_cookie_url(), false);
+		 	if (isset($_COOKIE['store_active_cart_id'])) {
+	            unset($_COOKIE['store_active_cart_id']);
 
+			 	// Remove cookie just in case
+			 	return setcookie('store_active_cart_id', '', time()-3600, '/', store_get_cookie_url(), false, false);
+			}
 	 	}
  	}
 
@@ -405,10 +413,26 @@
  * @Param: 
  * @Returns: 
  */
- 	function store_get_cart_tax(){
+ 	function store_get_cart_tax($subtotal = null){
 
- 		return '0.00';
- 	}
+ 		// set percentage here
+ 		$percentage = 8;
+
+ 		if ( is_int($subtotal) ) {
+
+ 			// calculate based on subtotal
+ 			$tax = $subtotal * ($percentage / 100);
+
+		} else {
+
+			// default to 0
+			$tax = 0;
+
+		}
+
+		// round to 2 decimals
+		return round(($tax / 100), 2);
+	}
 
 
 /*

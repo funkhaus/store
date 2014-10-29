@@ -10,8 +10,8 @@
 	function store_get_address_fields(){
 
 		$fields = array();
-		$fields[] = 'first';
-		$fields[] = 'last';
+		$fields[] = 'first_name';
+		$fields[] = 'last_name';
 		$fields[] = 'line_1';
 		$fields[] = 'line_2';
 		$fields[] = 'city';

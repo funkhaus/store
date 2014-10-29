@@ -7,6 +7,8 @@
 		if ( $query->is_main_query() && $query->is_post_type_archive('store') && ! is_admin() ) {
 			$query->set('post_type', 'product');
 			$query->set('post_parent', 0);
+			$query->set('orderby', 'menu_order');
+			$query->set('order', 'ASC');
 		}
 	}
 	add_action('pre_get_posts', 'store_filter_main_archive');
@@ -68,7 +70,7 @@
 	add_action( 'template_redirect', 'store_protect_orders' );
 
 
-	// transfer newest cart to
+	// transfer newest cart
 	function store_transfer_cart($user_login, $user) {
 
 		if( isset($_COOKIE['_store_active_cart_id']) ) {

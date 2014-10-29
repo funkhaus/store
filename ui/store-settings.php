@@ -13,6 +13,12 @@
 					</td>
 				</tr>
 				<tr valign="top">
+					<th scope="row"><label>Test Mode:</label></th>
+					<td>
+						<input name="store_sw_settings[testing]" type="checkbox" id="store_sw_testing" <?php checked( $sw_set['testing'] ); ?>  value="1">
+					</td>
+				</tr>
+				<tr valign="top">
 					<th scope="row"><label for="store_sw_usnm">Shipwire Username:</label></th>
 					<td>
 						<input name="store_sw_settings[usnm]" type="text" title="Client ID" id="store_sw_usnm" value="<?php echo $sw_set['usnm']; ?>">

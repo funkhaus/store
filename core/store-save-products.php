@@ -7,7 +7,7 @@
  	function store_get_combinations( $arrays ){
 
 	 	$count = 0;
-	 	$output = false;
+	 	$output = array();
 	 	foreach ( $arrays as $meta_key => $array ) {
 
 		 	// Convert string to array and clean
@@ -220,7 +220,9 @@
 		// If sku is set, cross-check with shipwire
 		if ( isset($_POST['_store_sku']) ){
 
-			if ( $qty = store_get_shipwire_qty($_POST['_store_sku']) ) {
+			$qty = store_get_shipwire_qty($_POST['_store_sku']);
+
+			if ( is_int($qty) ) {
 				update_post_meta($post_id, '_store_qty', $qty);
 				update_post_meta($post_id, '_store_shipwire_synced', true);
 			} else {

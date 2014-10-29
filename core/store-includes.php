@@ -8,18 +8,9 @@
 	// Testing function to run things. Delete Me eventually.
 	function store_test_things(){
 
-		$address = array(
-			'line_1'	=> '1855 Industrial St.',
-			'line_2'	=> 'Suite 103',
-			'city'		=> 'Los Angeles',
-			'state'		=> 'ca',
-			'zip'		=> '90021',
-			'country'	=> 'us'
-		);
 
-		//store_save_customer_address($address, null, true, true);
 	}
-	add_action('init', 'store_test_things', 60);
+	add_action('wp', 'store_test_things', 60);
 
 	// Setup product post types
 	include_once( pp() . 'core/setup/store-post-types.php' );

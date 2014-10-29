@@ -60,9 +60,6 @@
 			// Set default order status
 			$status = store_set_order_status( $order_id );
 
-			// reset active cart
-			$set_cart = store_unset_active_cart();
-
 		}
 
 		// If something went wrong, abort.
@@ -365,33 +362,43 @@
  */
  	function store_calculate_order_total( $order = null ) {
 
-	 	// Get order object
-	 	$order = get_post($order);
+ 		// Get order object
+ 		$order = get_post($order);
 
-	 	// Get order items
-	 	$items = store_get_order_items($order);
+ 		// Get order items
+ 		$items = store_get_order_items($order);
 
-	 	// set output
-	 	$total = false;
+ 		// set output
+ 		$subtotal = false;
 
-	 	// if items found in cart, loop through them
-	 	if ( $items ) {
-	 		$total = 0;
-		 	foreach ( $items as $id => $qty ) {
+ 		// if items found in cart, loop through them
+ 		if ( $items ) {
+ 			$subtotal = 0;
+ 			foreach ( $items as $id => $qty ) {
 
-			 	// if price comes back, add into total
-			 	if ( $price = store_get_product_price($id) ) $total += ($price * $qty);
+ 				// if price comes back, add into total
+ 				if ( $price = store_get_product_price($id) ) $subtotal += ($price * $qty);
 
-		 	}
+			}
 
-		 	// if order shipping is available, add it to the total
-		 	if ( $shipping = store_get_order_shipping_meta($order->ID) ) $total += (int) ( $shipping['cost'] * 100 ); // * 100 because shipwire returns in decimal (8.75)
+		}
 
-	 	}
+		// if order shipping is available, add it to the total
+		if ( $shipping = store_get_order_shipping_meta($order->ID) ) $shipping = (int) ( $shipping['cost'] * 100 ); // * 100 because shipwire returns in decimal (8.75)
 
-	 	return $total;
+		$totals = array(
+			'sub_total'			=> $subtotal,
+			'shipping_total'	=> $shipping
+		);
 
- 	}
+		// run any added filters attached to store_order_total
+		$totals = apply_filters('store_order_total', $totals, $order, wp_get_current_user());
+
+		// add all array values together
+		$total = array_sum($totals);
+
+		return $total;
+	}
 
 
 /*
@@ -433,7 +440,7 @@
 
 			// If shipping or billing were not set, remove order and fail
 			if ( ! $set_ship || ! $set_bill ) {
-				wp_delete_post( $order_id, true );
+				//wp_delete_post( $order_id, true );
 				$order_id = false;
 			}
 
@@ -461,12 +468,13 @@
 		// If order cannot ship, return with errors
 		if ( ! $can_ship ) {
 
+			//wp_delete_post( $order_id, true );
+			$order_id = false;
+
 			$output['code'] = 'FAILED_INVENTORY';
-			$output['message'] = 'There is not enough stock in Shipwire to complete this order.';
+			$output['message'] = 'There is not enough stock to complete this order.';
 			return store_get_json_template($output);
 		}
-
-		// Calculate shipping
 
 		// Get usable shipping options
 		$ship_options = store_shipwire_retrieve_shipping( store_shipwire_request_order_shipping($order_id) );
@@ -534,8 +542,13 @@
 			$output['vendor_response'] = (array) $ship_request;
 			$output['vendor_response']['vendor'] = 'shipwire';
 
+			wp_mail( 'john@funkhaus.us', 'Store Critical Bug', "Automated mail: Someone was charged for an order and it was not shipped. Shipwire: " . print_r($ship_request, true) . " Stripe: " . print_r($charged, true) . " Customer: " . print_r(wp_get_current_user(), true));
+
 			return store_get_json_template($output);
 		}
+
+		// reset user's active cart
+		store_unset_active_cart();
 
 		// Set order to shipped
 		store_set_order_status($order_id, 'processed');
@@ -550,6 +563,11 @@
 
 		// set tracking info to false, so it can be queried by the tracking cron
 		update_post_meta($order_id, '_store_order_tracking', false);
+
+		// Update inventory for each purchased product
+		foreach ( $items as $purchased_id => $purchased_qty ) {
+			store_update_shipwire_inventory_single($purchased_id);
+		}
 
 		// Made it this far? everything is cool!
 		$output['success'] = true;

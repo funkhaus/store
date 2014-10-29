@@ -14,16 +14,37 @@
 
 
 /*
+ * @Description: Get the proper host URL name for shipwire
+ *
+ * @Returns: STRING, shipwire host URL depending on test mode setting
+ */
+	function store_get_shipwire_host(){
+		$sw_settings = get_option('store_sw_settings');
+		$test_mode = $sw_settings['testing'];
+
+		$output = 'https://api.shipwire.com';
+		if ( $test_mode == '1' ) $output = 'https://api.beta.shipwire.com';
+
+		return $output;
+	}
+
+
+/*
  * @Description: Send a full inventory request to shipwire
  *
  * @Param: MIXED, ID of product to retrieve quantity for, or $post object
  * @Returns: MIXED, shipwire xml response on success, bool false on failure
  */
-	function store_shipwire_request_inventory(){
+	function store_shipwire_request_inventory($sku = null){
+
+		// guarentee that sku is a string
+		if ( !is_string($sku) || empty($sku) ) {
+			$sku = '';
+		}
 
 		// Set unique ID by session
 		// Use md5 hash to gaurantee 16 char length (no encoding, so it will look like complete nonsense)
-		$session = md5(session_id(), true);
+		$session = md5(session_id() . $sku, true);
 
 		// get shipwire settings
 		$options = get_option('store_sw_settings');
@@ -35,17 +56,28 @@
 		if ( ! $output = get_transient( $session . '_sw_inventory' ) ) {
 
 			// Set URL to send request to
-			$url = 'https://api.shipwire.com/api/v3/stock';
+			$url = store_get_shipwire_host() . '/api/v3/stock';
 
 			// Set authentication
 			$headers = array( 'Authorization' => 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ) );
 
+			// Set request body
+			$parameters = '';
+
+			// valid SKU has been specified
+			if ( is_string($sku) && !empty($sku) ) {
+				$parameters = array(
+					'sku'	=> $sku
+				);
+				$parameters = '?' . http_build_query($parameters);
+			}
+
 			// Send request
 			$response = wp_remote_get(
-			    $url,
+			    $url . $parameters,
 			    array(
 			        'headers'		=> $headers,
-			        'httpversion' => '1.1'
+			        'httpversion'	=> '1.1'
 				)
 			);
 			$body = wp_remote_retrieve_body( $response );
@@ -84,7 +116,7 @@
 		if ( $transaction_info = get_post_meta($order->ID, '_store_transaction_info', true) ) {
 
 			// Set URL to send request to
-			$url = 'https://api.shipwire.com/api/v3/orders/' . $transaction_info['shipwire_id'] . '/trackings';
+			$url = store_get_shipwire_host() . '/api/v3/orders/' . $transaction_info['shipwire_id'] . '/trackings';
 
 			// Set authentication
 			$headers = array( 'Authorization' => 'Basic ' . base64_encode( $options['usnm'] . ':' . $options['pswd'] ) );
@@ -137,7 +169,7 @@
 		if ( ! $sku ) return false;
 
 		// Get full inventory
-		$inventory = store_shipwire_request_inventory();
+		$inventory = store_shipwire_request_inventory($sku);
 
 		// loop through inventory and find target product
 		$output = false;
@@ -166,20 +198,27 @@
  */
 	function store_update_shipwire_inventory( $product = null ){
 
-		$output = 0;
+		$updated = array();
 
 		// Set product to default, unless product was left empty
 		if ( $product ) {
-
-			$output = store_update_shipwire_inventory_single($product);
+			
+			// Set Shipwire synch and get ID of product/variant updated
+			$inv = store_update_shipwire_inventory_single($product);
+			
+			// Add new item to updated array			
+			if( $inv ) {
+				$updated[] = $inv;
+			}
 
 		// If product was left empty, update all products
 		} else {
 
 		    $args = array(
-				'posts_per_page'   => -1,
-				'post_type'        => 'product',
-				'post_parent'      => 0
+				'posts_per_page'   	=> -1,
+				'post_type'        	=> 'product',
+				'orderby'			=> 'rand',
+				'post_parent'      	=> 0
 			);
 			$products = get_posts($args);
 
@@ -187,22 +226,19 @@
 			if ( $products ) {
 				foreach ( $products as $target_product ) {
 
-					// update inventory for this product
+					// Set Shipwire synch and get ID of product/variant updated
 					$inv = store_update_shipwire_inventory_single($target_product);
-
-					// on success, add count to output
-					if ( $inv ) $output += $inv;
-
+					
+					// Add new item to updated array					
+					if( $inv ) {
+						$updated[] = $inv;
+					}
 				}
-
-				// If output is 0, set to false
-				if ( ! $output ) $output = false;
-
 			}
 
 		}
 
-		return $output;
+		return $updated;
 	}
 
 
@@ -224,11 +260,13 @@
 			if ( $product->post_type !== 'product' ) return false;
 		}
 
-		// Start counter
-		$count = 0;
+		// Start collection of updated IDs
+		$updated = array();
+
+		$variants = store_get_product_variants($product);
 
 		// If there are variants for this product...
-		if ( $variants = store_get_product_variants($product) ) {
+		if ( ! empty($variants) ) {
 
 			// loop through variants
 			foreach ( $variants as $variant ) {
@@ -236,14 +274,16 @@
 				// get quantity from shipwire for this variant
 				$qty = store_get_shipwire_qty($variant);
 
-				if ( $qty ) {
-					$count++;
+				if ( is_int($qty) ) {
 					update_post_meta($variant->ID, '_store_qty', $qty);
 					update_post_meta($variant->ID, '_store_shipwire_synced', true);
 				} else {
+					update_post_meta($variant->ID, '_store_qty', 0);
 					update_post_meta($variant->ID, '_store_shipwire_synced', false);
 				}
-
+				
+				// Add varient ID to array
+				$updated[] = $variant->ID;
 			}
 
 		// No variants? attempt to update qty for just this product
@@ -253,23 +293,26 @@
 			$qty = store_get_shipwire_qty($product);
 
 			// if there is inventory, update and mark as synced
-			if ( $qty ) {
+			if ( is_int($qty) ) {
 				$count++;
 				update_post_meta($product->ID, '_store_qty', $qty);
 				update_post_meta($product->ID, '_store_shipwire_synced', true);
 
 			// No inventory? mark as unsynced
 			} else {
+				update_post_meta($product->ID, '_store_qty', 0);
 				update_post_meta($product->ID, '_store_shipwire_synced', false);
 
 			}
-
+			
+			// Add product ID to array
+			$updated[] = $product->ID;
 		}
 
-		// if count is 0, set to output false
-		if ( ! $count ) $count = false;
+		// if no products updated, set to output false
+		if ( empty($updated) ) $updated = false;
 
-		return $count;
+		return $updated;
 	}
 
 
@@ -340,13 +383,13 @@
 			),
 			'shipTo'			=> array(
 				'email'				=> $email,
-				'name'				=> $ship_address['first'] . ' ' . $ship_address['last'],
+				'name'				=> $ship_address['first_name'] . ' ' . $ship_address['last_name'],
 				'address1'			=> $ship_address['line_1'],
 				'address2'			=> $ship_address['line_2'],
 				'city'				=> $ship_address['city'],
 				'state'				=> $ship_address['state'],
 				'postalCode'		=> $ship_address['zip'],
-				'country'			=> 'US',
+				'country'			=> $ship_address['country'],
 				'phone'				=> '',
 			)
 		);
@@ -356,7 +399,7 @@
 		$output = false;
 
 		// Set URL to send request to
-		$url = 'https://api.shipwire.com/api/v3/orders';
+		$url = store_get_shipwire_host() . '/api/v3/orders';
 
 		// Set authentication and content type
 		$headers = array( 
@@ -502,7 +545,7 @@
 					'city'				=> $address['city'],
 					'region'			=> $address['state'],
 					'postalCode'		=> $address['zip'],
-					'country'			=> 'US'
+					'country'			=> $address['country']
 				),
 				'items'				=> $json_items
 			)
@@ -513,7 +556,7 @@
 		$output = false;
 
 		// Set URL to send request to
-		$url = 'https://api.shipwire.com/api/v3/rate';
+		$url = store_get_shipwire_host() . '/api/v3/rate';
 
 		// Set authentication and content type
 		$headers = array( 
@@ -573,16 +616,18 @@
 		$i = 0;
 		$output = false;
 
-		foreach( $response['resource']['rates'][0]['serviceOptions'] as $quote ){
-
-			// Format relevant figures into output
-			$output[$i]['service'] = (string) $quote['shipments'][0]['carrier']['description'];
-			$output[$i]['method'] = (string) $quote['serviceLevelCode'];
-			$output[$i]['cost'] = (string) $quote['shipments'][0]['cost']['amount'];
-			$output[$i]['delivery']['min'] = (string) $quote['shipments'][0]['expectedDeliveryMinDate'];
-			$output[$i]['delivery']['max'] = (string) $quote['shipments'][0]['expectedDeliveryMaxDate'];
-
-			$i++;
+		if ( is_array($response['resource']['rates'][0]['serviceOptions']) ) {
+			foreach( $response['resource']['rates'][0]['serviceOptions'] as $quote ){
+	
+				// Format relevant figures into output
+				$output[$i]['service'] = (string) $quote['shipments'][0]['carrier']['description'];
+				$output[$i]['method'] = (string) $quote['serviceLevelCode'];
+				$output[$i]['cost'] = (string) $quote['shipments'][0]['cost']['amount'];
+				$output[$i]['delivery']['min'] = (string) $quote['shipments'][0]['expectedDeliveryMinDate'];
+				$output[$i]['delivery']['max'] = (string) $quote['shipments'][0]['expectedDeliveryMaxDate'];
+	
+				$i++;
+			}
 		}
 
 		return $output;

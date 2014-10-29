@@ -125,12 +125,12 @@
 
 		$output = '';
 
-		if ( $field === 'first' ){
+		if ( $field === 'first_name' ){
 
 			$current_user = wp_get_current_user();
 			$output = $current_user->user_firstname;
 
-		} elseif ( $field === 'last' ) {
+		} elseif ( $field === 'last_name' ) {
 
 			$current_user = wp_get_current_user();
 			$output = $current_user->user_lastname;
