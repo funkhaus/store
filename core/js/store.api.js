@@ -319,15 +319,31 @@ var storeAPI = {
 	 	// init output
 	 	var output = {};
 
-	 	// Set each address field, default to an input with the proper data-ship value set
-	 	output.first_name	= address.first_name 	|| address.find('[data-address="first_name"]').val();
-	 	output.last_name	= address.last_name		|| address.find('[data-address="last_name"]').val();
-	 	output.line_1		= address.line_1 		|| address.find('[data-address="line_1"]').val();
-	 	output.line_2		= address.line_2 		|| address.find('[data-address="line_2"]').val();
-	 	output.city			= address.city 			|| address.find('[data-address="city"]').val();
-	 	output.state		= address.state 		|| address.find('[data-address="state"]').val();
-	 	output.country		= address.country 		|| address.find('[data-address="country"]').val();
-	 	output.zip			= address.zip 			|| address.find('[data-address="zip"]').val();
+	 	if ( address instanceof jQuery ) {
+
+		 	// Set each address field, default to an input with the proper data-ship value set
+		 	output.first_name	= address.find('[data-address="first_name"]').not(':disabled').first().val();
+		 	output.last_name	= address.find('[data-address="last_name"]').not(':disabled').first().val();
+		 	output.line_1		= address.find('[data-address="line_1"]').not(':disabled').first().val();
+		 	output.line_2		= address.find('[data-address="line_2"]').not(':disabled').first().val();
+		 	output.city			= address.find('[data-address="city"]').not(':disabled').first().val();
+		 	output.state		= address.find('[data-address="state"]').not(':disabled').first().val();
+		 	output.country		= address.find('[data-address="country"]').not(':disabled').first().val();
+		 	output.zip			= address.find('[data-address="zip"]').not(':disabled').first().val();		 	
+
+	 	} else {
+
+		 	// Set each address field, default to an input with the proper data-ship value set
+		 	output.first_name	= address.first_name 	|| '';
+		 	output.last_name	= address.last_name		|| '';
+		 	output.line_1		= address.line_1 		|| '';
+		 	output.line_2		= address.line_2 		|| '';
+		 	output.city			= address.city 			|| '';
+		 	output.state		= address.state 		|| '';
+		 	output.country		= address.country 		|| '';
+		 	output.zip			= address.zip 			|| '';
+
+	 	}
 
 	 	return output;
  	},

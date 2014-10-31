@@ -73,19 +73,23 @@
 	// transfer newest cart
 	function store_transfer_cart($user_login, $user) {
 
-		if( isset($_COOKIE['_store_active_cart_id']) ) {
+		if( isset($_COOKIE['store_active_cart_id']) ) {
 
 			// check for cookie cart and user cart
-			$cookie_cart = $_COOKIE['_store_active_cart_id'];
+			$cookie_cart = $_COOKIE['store_active_cart_id'];
 			$user_cart = get_user_meta( $user->ID, '_store_active_cart_id', true );
 
-			// Does user have both types of cart?
-			if ( ! $cookie_cart ) return;
+			// get full cart object
+			$cookie_cart = get_post($cookie_cart);
+
+			if ( $cookie_cart->post_author !== $user->ID ) {
+				$cookie_cart->post_author = $user->ID;
+				wp_update_post($cookie_cart);
+			}
 
 			// User has cart
 			if ( $user_cart ) {
 
-				$cookie_cart = get_post($cookie_cart);
 				$user_cart = get_post($user_cart);
 
 				// check if cookie cart is newer...
@@ -98,7 +102,7 @@
 				} else {
 
 					//overwrite cookie cart
-					setcookie('_store_active_cart_id', $user_cart->ID, time()+3600*24*30, '/', store_get_cookie_url(), false);  /* expire in 30 days */
+					setcookie('store_active_cart_id', $user_cart->ID, time()+3600*24*30, '/', store_get_cookie_url(), false);  /* expire in 30 days */
 
 				}
 
@@ -106,7 +110,7 @@
 			} else {
 
 				// Set cookie as user cart
-				update_user_meta( $user->ID, '_store_active_cart_id', $cookie_cart);
+				update_user_meta( $user->ID, '_store_active_cart_id', $cookie_cart->ID);
 
 			}
 		}

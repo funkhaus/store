@@ -621,6 +621,7 @@
 	
 				// Format relevant figures into output
 				$output[$i]['service'] = (string) $quote['shipments'][0]['carrier']['description'];
+				$output[$i]['label'] = (string) $quote['serviceLevelName'];
 				$output[$i]['method'] = (string) $quote['serviceLevelCode'];
 				$output[$i]['cost'] = (string) $quote['shipments'][0]['cost']['amount'];
 				$output[$i]['delivery']['min'] = (string) $quote['shipments'][0]['expectedDeliveryMinDate'];
