@@ -429,7 +429,7 @@
 				unset($data['user_email']);
 		 	}
 
-		 	return wp_signon( $data, true );
+		 	return wp_signon( $data, false );
 	 	};
 
 	/*
