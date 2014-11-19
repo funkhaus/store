@@ -137,3 +137,42 @@
 		return $classes;
 	}
 	add_filter('body_class', 'store_add_bodyclasses');
+
+
+	// Send confirmation email if template is set
+	function store_send_order_confirmation($order_id){
+
+		// get full post object
+		$order = get_post($order_id);
+
+		// get full user object, then email
+		$userdata = get_userdata( $order->post_author );
+		$user_email = $userdata->data->user_email;
+
+		// if template has been set in the theme
+		if ( $path = locate_template('store/template-order-confirmation.php') ) {
+
+			// start buffer
+			ob_start();
+
+			// include template
+			include($path);
+
+			// load result into variable
+			$returned = ob_get_contents();
+
+			// clear buffer
+			ob_end_clean();
+
+			// send email
+			$headers = 'From: What Youth <hello@whatyouth.com>' . "\r\n";
+			$headers .= 'Content-type: text/html' . "\r\n";
+			wp_mail( $user_email, 'Thank You For Your Order', $returned, $headers );
+			wp_mail( 'john@funkhaus.us', 'Thank You For Your Order', $returned, $headers );
+
+		}
+
+	}
+	add_action('store_order_completed', 'store_send_order_confirmation');
+
+?>

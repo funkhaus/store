@@ -4,61 +4,65 @@
  * Make all possible combinations of array values,
  * return false on failure
  */
- 	function store_get_combinations( $arrays ){
+	function store_get_combinations( $arrays ){
 
-	 	$count = 0;
-	 	$output = array();
-	 	foreach ( $arrays as $meta_key => $array ) {
+		$count = 0;
+		$output = array();
+		foreach ( $arrays as $meta_key => $array ) {
 
-		 	// Convert string to array and clean
-		 	$array = explode(', ', $array);
-		 	$array = array_filter($array);
+			// Convert string to array and clean
+			$array = explode(', ', $array);
+			$array = array_filter($array);
 
-		 	// If no values, skip
-		 	if ( empty($array) ) continue;
+			// If no values, skip
+			if ( empty($array) ) continue;
 
-		 	// If this is the first array with values...
-		 	if ( $count === 0 ) {
+			// If this is the first array with values...
+			if ( $count === 0 ) {
 
-			 	foreach ( $array as $value ) {
+				foreach ( $array as $value ) {
 
-				 	// Set output array
-				 	$output[$value] = array($meta_key => $value);
+					$value = sanitize_title($value);
 
-			 	}
+					// Set output array
+					$output[$value] = array($meta_key => $value);
 
-			 	// Increment
-			 	$count++;
+				}
+
+				// Increment
+				$count++;
 
 			// If not the first array...
-		 	} else {
+			} else {
 
-			 	// Loop through each value
-			 	$temp = array();
-			 	foreach ( $array as $array_val ) {
+				// Loop through each value
+				$temp = array();
+				foreach ( $array as $array_val ) {
 
-				 	// Loop through each existing values in output
-				 	foreach ( $output as $output_key => $output_val ) {
+					$array_val = sanitize_title($array_val);
 
-					 	// Add meta property to output
-					 	$output_val[$meta_key] = $array_val;
+					// Loop through each existing values in output
+					foreach ( $output as $output_key => $output_val ) {
 
-					 	// Assign output value to new key
-					 	$temp[$output_key . '-' . $array_val] = $output_val;
+						// Add meta property to output
+						$output_val[$meta_key] = $array_val;
 
-				 	}
+						// Assign output value to new key
+						$temp[$output_key . '-' . $array_val] = $output_val;
 
-			 	}
+					}
 
-			 	// overwrite output and increment
-			 	$output = $temp;
-			 	$count++;
+				}
 
-		 	}
-	 	}
-	 	return $output;
+				// overwrite output and increment
+				$output = $temp;
+				$count++;
 
- 	}
+			}
+		}
+		return $output;
+
+	}
 
 /*
  * Get options/variations meta keys
@@ -68,17 +72,17 @@
 		// not array? abort
 		if ( ! is_array($meta_array) ) return false;
 
-	 	// Figure out the keys for the created options
-	 	$meta_keys = array();
-	 	foreach ( $meta_array as $post_key => $post_value ) {
-		 	if ( strstr($post_key, '_store_meta') ) {
-		 		// Make sure the value isn't an array (WordPress
-		 		if( is_array($post_value) ) {
-			 		$post_value = reset($post_value);
-		 		}
-		 		$meta_keys[ sanitize_key($post_key) ] = $post_value;
-		 	}
-	 	}
+		// Figure out the keys for the created options
+		$meta_keys = array();
+		foreach ( $meta_array as $post_key => $post_value ) {
+			if ( strstr($post_key, '_store_meta') ) {
+				// Make sure the value isn't an array (WordPress
+				if( is_array($post_value) ) {
+					$post_value = reset($post_value);
+				}
+				$meta_keys[ sanitize_key($post_key) ] = $post_value;
+			}
+		}
 
 		return $meta_keys;
 	}
@@ -86,45 +90,48 @@
 /*
  * Format an option key to be human readable, i.e. "_store_meta_size" becomes "size"
  */
- 	function store_format_option_key($option_key) {
-	 	return str_replace('_store_meta_', '', $option_key);
+	function store_format_option_key($option_key) {
+		return str_replace('_store_meta_', '', $option_key);
 	}
 
 
 /*
  * Make variation children on save of product
  */
- 	function store_variation_children( $post_id ){
+	function store_variation_children( $post_id ){
 
-	 	// Get post that's being saved
-	 	$post = get_post($post_id);
+		// Get post that's being saved
+		$post = get_post($post_id);
 
-	 	// If post has a parent, or is not a product abort.
- 		if ( $post->post_parent != 0 || $post->post_type !== 'product' ) return;
+		// If post has a parent, or is not a product abort.
+		if ( $post->post_parent != 0 || $post->post_type !== 'product' ) return;
 
- 		// Get any option keys
- 		$options = store_sort_options($_POST);
+		// Get any option keys
+		$options = store_sort_options($_POST);
 
-	 	// Give variantions to a function that returns an array containing all possible combinations 
-	 	$combinations = store_get_combinations($options);
+		// if options is an empty array, then no option keys were ever set
+		if ( is_array($options) && empty($options) ) return;
 
-	 	// Get any existing children of this post
-	 	$all_children = get_children('post_type="product"&post_parent=' . $post_id );
+		// Give variantions to a function that returns an array containing all possible combinations 
+		$combinations = store_get_combinations($options);
 
-	 	// Loop through children
-	 	foreach ( $all_children as $child ) {
+		// Get any existing children of this post
+		$all_children = get_children('post_type="product"&post_parent=' . $post_id );
 
-	 		// If child name is not in possible combinations, delete it
-		 	if ( ! array_key_exists($child->post_name, $combinations) ) {
-			 	wp_delete_post($child->ID, true);
-		 	}
+		// Loop through children
+		foreach ( $all_children as $child ) {
 
-	 	}
+			// If child name is not in possible combinations, delete it
+			if ( ! array_key_exists($child->post_name, $combinations) ) {
+				wp_delete_post($child->ID, true);
+			}
+
+		}
 
 		// Unhook this function to prevent inf. loop
 		remove_action( 'save_post', 'store_variation_children' );
 
-	 	// Set template for child posts
+		// Set template for child posts
 		$post_template = array(
 			'post_content'   => $post->post_content,
 			'post_status'    => 'publish',
@@ -174,26 +181,26 @@
 				foreach ( $combo_vals as $combo_val ) $title .= $combo_val . ' ';
 
 				// Set name and title in args
-			 	$post_template['post_name'] = $combo_slug;
-			 	$post_template['post_title'] = $title;
+				$post_template['post_name'] = $combo_slug;
+				$post_template['post_title'] = $title;
 
-			 	// init ID
-			 	$ID = false;
+				// init ID
+				$ID = false;
 
-			 	// Set Qty if applicable
-			 	$qty = false;
+				// Set Qty if applicable
+				$qty = false;
 
-			 	// Create/Update post info, if successful...
-			 	if ( $ID = wp_insert_post( $post_template ) ) {
+				// Create/Update post info, if successful...
+				if ( $ID = wp_insert_post( $post_template ) ) {
 
-				 	// Update store meta
-				 	if ( $_POST['_store_price'] ) update_post_meta( $ID, '_store_price', (int)($_POST['_store_price'] * 100) );
+					// Update store meta
+					if ( $_POST['_store_price'] ) update_post_meta( $ID, '_store_price', (int)($_POST['_store_price'] * 100) );
 
-				 	foreach ( $combo_vals as $combo_key => $combo_val ) {
-					 	update_post_meta( $ID, $combo_key, $combo_val );
-				 	}
+					foreach ( $combo_vals as $combo_key => $combo_val ) {
+						update_post_meta( $ID, $combo_key, $combo_val );
+					}
 
-			 	}
+				}
 
 			}
 

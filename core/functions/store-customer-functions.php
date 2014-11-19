@@ -159,6 +159,9 @@
 				case 'shipping_zip':
 					$output = $shipping['zip'];
 					break;
+				case 'shipping_country':
+					$output = $shipping['country'];
+					break;
 			}
 
 		} elseif ( strstr($field, 'billing') ) {
@@ -179,6 +182,9 @@
 					break;
 				case 'billing_zip':
 					$output = $billing['zip'];
+					break;
+				case 'billing_country':
+					$output = $billing['country'];
 					break;
 			}
 
@@ -429,7 +435,7 @@
 				unset($data['user_email']);
 		 	}
 
-		 	return wp_signon( $data, false );
+		 	return wp_signon( $data, true );
 	 	};
 
 	/*

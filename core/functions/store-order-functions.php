@@ -297,6 +297,27 @@
 
 
 /*
+ * @Description:
+ *
+ * @Param:
+ * @Return:
+ */
+	function store_get_order_url($order_id = null){
+
+		// get order URL
+		$permalink = get_permalink($order_id);
+
+		// Nothing came back? return false
+		if ( ! $permalink ) return false;
+
+		// get transaction metadata for order
+		$meta = get_post_meta($order_id, '_store_transaction_info', true);
+
+		// return permalink with token appended
+		return $permalink . '?token=' . $meta['token'];
+	}
+
+/*
  * @Description: Get billing address for an order
  *
  * @Param: INT, order ID. Required.
@@ -533,12 +554,13 @@
 
 		// Place order with shipwire
 		$ship_request = store_shipwire_request_order($order_id, $ship_method['method']);
+		//$ship_request = array('status' => 200);
 
 		// If order didn't go through...
 		if ( $ship_request['status'] !== 200 || isset($ship_request['errors']) ) {
 
 			$output['code'] = 'FAILED_SHIPPING';
-			$output['message'] = 'The order has been charged, but not shipped.';
+			$output['message'] = 'The order has been charged, but not shipped. It has been flagged for our staff to review.';
 			$output['vendor_response'] = (array) $ship_request;
 			$output['vendor_response']['vendor'] = 'shipwire';
 
@@ -587,23 +609,23 @@
 	}
 
 
-/*
- * @Description: Get all items in order by ID or obj
- *
- * @Param: MIXED, order ID or object. Required.
- * @Returns: MIXED, returns an array of cart items (value of _store_cart_products ), or false on failure
- */
- 	function store_get_order_items($order = null) {
+	/*
+	 * @Description: Get all items in order by ID or obj
+	 *
+	 * @Param: MIXED, order ID or object. Required.
+	 * @Returns: MIXED, returns an array of cart items (value of _store_cart_products ), or false on failure
+	 */
+	 	function store_get_order_items($order = null) {
 
-	 	// Get order object
-	 	$order = get_post($order);
+	 		// Get order object
+	 		$order = get_post($order);
 
- 		// Set output
- 		$output = false;
- 		if ( $order )
- 			$output = get_post_meta($order->ID, '_store_cart_products', true);
+	 		// Set output
+	 		$output = false;
+	 		if ( $order )
+	 			$output = get_post_meta($order->ID, '_store_cart_products', true);
 
-	 	return $output;
- 	}
+	 		return $output;
+	 	}
 
 ?>

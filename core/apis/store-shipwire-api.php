@@ -178,8 +178,7 @@
 
 				if ( $item['resource']['sku'] == $sku ) {
 					// Set output to be integer value of quantity
-					$output = intval( $item['resource']['good'] );
-					break;
+					$output = intval($output) + intval( $item['resource']['good'] );
 				}
 
 			}
@@ -352,7 +351,6 @@
 		if ( $order->post_author ) $customer = store_get_customer( $order->post_author );
 		$email = $customer->user_email ? $customer->user_email : '';
 
-
 		$json_items = array();
 
 		// loop through items
@@ -411,12 +409,27 @@
 		$response = wp_remote_post(
 		    $url,
 		    array(
-		        'headers'		=> $headers,
-		        'httpversion' 	=> '1.1',
-		        'body'			=> $request
+				'headers'		=> $headers,
+				'httpversion' 	=> '1.1',
+				'timeout'		=> 15,
+				'body'			=> $request
 			)
 		);
-		$body = wp_remote_retrieve_body( $response );
+
+		// Some error handling
+		if ( is_wp_error( $response ) ) {
+			$error_message = $response->get_error_message();
+
+			// Display message to user
+			$error = array(
+				'errors'					=> true,
+				'message'					=> $error_message,
+				'wp_remote_post_response'	=> $response
+			);
+			return $error;
+		}
+
+		$body = wp_remote_retrieve_body( $response );		
 
 		// Decode into array
 		$output = json_decode($body, true);
