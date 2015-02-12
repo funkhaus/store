@@ -36,7 +36,7 @@
 
 		// Build empty options meta
 		?>
-			<div id="store-edit-options" class="<?php echo $variations ? 'hidden' : ''; ?>">
+		<div id="store-edit-options" class="<?php echo $variations ? 'hidden' : ''; ?>">
 
 			<strong>Add New Option</strong>
 			<?php for ( $i = 0; $i < 1; $i++ ) : ?>
@@ -53,12 +53,12 @@
 		<?php
 
 		// Build already saved options meta
- 		$options = store_sort_options($meta);
- 		if ( $options ) {
- 		?>
- 			<p></p>
+		$options = store_sort_options($meta);
+		if ( $options ) :
+		?>
+			<p></p>
 			<strong>Edit Existing Option</strong> 		
-		 	<?php foreach($options as $key => $value) :  ?>
+			<?php foreach($options as $key => $value) :  ?>
 				<?php $i++; ?>
 
 				<div class="store-options-meta">
@@ -70,11 +70,11 @@
 
 			<?php endforeach; ?>
 
-			</div>
+		<?php endif; ?>
 
- 		<?php
-	 	}
+		</div>
 
+		<?php
 		// List out created options as a table
 		if ( $variations ) : ?>
 

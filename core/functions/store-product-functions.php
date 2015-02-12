@@ -465,6 +465,50 @@
 	}
 
 
+/*
+ * @Description: Get the quantity of items in stock based on option_key => option_value pair
+ *
+ * @Param: STRING, the key of the option to query for. Required.
+ * @Param: MIXED, the value of the option to query for. Optional.
+ * @Param: MIXED, product ID or object. If none provided all products will be queried. Optional.
+ * @Returns: INT, integer value of products returned
+ */
+	function store_get_option_quantity($option_key = '', $option_value = '', $product = null) {
+
+		// abort if no key provided
+		if ( !$option_key ) return 0;
+
+		// set variant parent product
+		$parent = '';
+		if ( $product ) {
+			$product = store_get_product($product);
+			$parent = $product->ID;
+		}
+
+		// ensure key is consistent
+		$option_key = '_store_meta_' . str_replace('_store_meta_', '', $option_key);
+
+		// query by meta
+	    $args = array(
+			'posts_per_page'   => -1,
+			'meta_key'         => $option_key,
+			'meta_value'       => $option_value,
+			'post_type'        => 'product',
+			'post_parent'      => $parent
+		);
+		$found = get_posts($args);
+
+		// total qtys
+		$total = 0;
+		foreach ( $found as $variant ) {
+			$total = intval( $total + $variant->_store_qty );
+		}
+
+		// return quantity
+		return $total;
+	}
+
+
 /* ------------ Higher level functions below ------------ */
 
 
@@ -476,10 +520,10 @@
  * @Param: BOOL, true to echo the value, false to return
  * @Returns: MIXED, quantity value of product
  */
- 	if ( ! function_exists('the_price') ) {
-	 	function the_price($before = '', $after = '', $echo = true) {
-		 	$price = store_get_product_price();
-		 	$price = number_format(($price / 100), 2, '.', ',');
+	if ( ! function_exists('the_price') ) {
+		function the_price($before = '', $after = '', $echo = true) {
+			$price = store_get_product_price();
+			$price = number_format(($price / 100), 2, '.', ',');
 
 	        $price = $before . $price . $after;
 
