@@ -179,6 +179,9 @@
 				if ( $item['resource']['sku'] == $sku ) {
 					// Set output to be integer value of quantity
 					$output = intval($output) + intval( $item['resource']['good'] );
+						$output -= intval( $item['resource']['reserved'] );
+						$output -= intval( $item['resource']['shipping'] );
+						if ( $output < 0 ) $output = 0;
 				}
 
 			}
@@ -187,7 +190,6 @@
 
 		return $output;
 	}
-
 
 /*
  * @Description: Update inventory for one or all products
