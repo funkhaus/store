@@ -1,4 +1,4 @@
-### Summary:
+### Overview:
 
 __STORE__ is an e-commerce toolkit for WordPress, designed to make the process of building an online store as intuitive as building a WordPress theme. At the highest level the basic idea of STORE is to expose a “WordPressy” API develop with so that building carts and checkout pages feels the same as building anything else in your theme. Functions like `the_price()` and the `the_quantity()` just work.
 
