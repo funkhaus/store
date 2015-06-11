@@ -65,6 +65,27 @@
 		// If something went wrong, abort.
 		if ( ! $meta_id || ! $status ) return false;
 
+		// notify of error if something is wrong
+		if ( ! $order_id ) {
+
+			$message = '';
+
+			$message .= 'cart: ';
+			$message .= print_r($cart, true);
+
+			$message .= 'products: ';
+			$message .= print_r($products, true);
+
+			$message .= 'meta ID: ';
+			$message .= print_r($meta_id, true);
+
+			$message .= 'status: ';
+			$message .= print_r($status, true);
+
+			wp_mail( 'john@funkhaus.us', 'WY Failed Order', $message );
+
+		}
+
 		// return
 		return $order_id;
 	}
@@ -461,7 +482,7 @@
 
 			// If shipping or billing were not set, remove order and fail
 			if ( ! $set_ship || ! $set_bill ) {
-				//wp_delete_post( $order_id, true );
+				wp_delete_post( $order_id, true );
 				$order_id = false;
 			}
 
@@ -489,7 +510,7 @@
 		// If order cannot ship, return with errors
 		if ( ! $can_ship ) {
 
-			//wp_delete_post( $order_id, true );
+			wp_delete_post( $order_id, true );
 			$order_id = false;
 
 			$output['code'] = 'FAILED_INVENTORY';
@@ -529,6 +550,8 @@
 
 		} else {
 
+			wp_delete_post( $order_id, true );
+
 			$output['code'] = 'FAILED_SHIPPING_QUOTE';
 			$output['message'] = 'Failed to get shipping options from Shipwire.';
 			return store_get_json_template($output);
@@ -539,6 +562,8 @@
 
 		// If error on charge, log and return
 		if ( ! $charged['id'] ) {
+
+			wp_delete_post( $order_id, true );
 
 			$output['code'] = strtoupper($charge['error']['code']);
 			$output['message'] = $charge['error']['message'];

@@ -121,8 +121,8 @@
 		// Loop through children
 		foreach ( $all_children as $child ) {
 
-			// If child name is not in possible combinations, delete it
-			if ( ! array_key_exists($child->post_name, $combinations) ) {
+			// If child name is not in possible combinations, delete it (check both slug and meta in case slug has been altered by WP)
+			if ( ! array_key_exists($child->post_name, $combinations) && ! array_key_exists($child->_store_combo_key, $combinations) ) {
 				wp_delete_post($child->ID, true);
 			}
 
@@ -159,12 +159,23 @@
 			// Loop through each combo
 			foreach ( $combinations as $combo_slug => $combo_vals ) {
 
-				// Unsety ID from query
+				// Unset ID from query
 				unset($post_template['ID']);
 
 				// Set existing query to look for this combo, then run query
 				$existing_args['name'] = $combo_slug;
 				$existing = get_posts($existing_args);
+
+				// couldn't find existing child
+				if ( ! $existing ) {
+
+					// reset args to search by meta instead
+					unset( $existing_args['name']);
+					$existing_args['meta_key'] = '_store_combo_key';
+					$existing_args['meta_value'] = $combo_slug;
+					$existing = get_posts($existing_args);
+				}
+
 
 				// If post already exists...
 				if ( $existing ) {
@@ -195,6 +206,7 @@
 
 					// Update store meta
 					if ( $_POST['_store_price'] ) update_post_meta( $ID, '_store_price', (int)($_POST['_store_price'] * 100) );
+					update_post_meta( $ID, '_store_combo_key', $combo_slug );
 
 					foreach ( $combo_vals as $combo_key => $combo_val ) {
 						update_post_meta( $ID, $combo_key, $combo_val );
